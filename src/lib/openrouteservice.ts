@@ -14,7 +14,7 @@ function getCached(key: string): string | null {
   try {
     return sessionStorage.getItem(key);
   } catch {
-    return null; // private browsing mode blocks sessionStorage
+    return null;
   }
 }
 
@@ -22,15 +22,40 @@ function setCached(key: string, value: string): void {
   if (typeof window === 'undefined') return;
   try {
     sessionStorage.setItem(key, value);
-  } catch {
-    // sessionStorage full or blocked — fail silently
+  } catch { /* quota */ }
+}
+
+// ── Fallback: Google Directions API via /api/directions ───────────────────
+async function fetchRouteViaGoogle(
+  waypoints: { lat: number; lng: number }[]
+): Promise<ORSRoute[]> {
+  const origin = `${waypoints[0].lat},${waypoints[0].lng}`;
+  const dest   = `${waypoints[waypoints.length - 1].lat},${waypoints[waypoints.length - 1].lng}`;
+
+  const url = new URL(
+    '/api/directions',
+    typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
+  );
+  url.searchParams.set('origin', origin);
+  url.searchParams.set('dest', dest);
+
+  const stops = waypoints.slice(1, -1);
+  if (stops.length > 0) {
+    url.searchParams.set('waypoints', stops.map(w => `${w.lat},${w.lng}`).join('|'));
   }
+
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error(`Directions request failed: ${res.status}`);
+
+  const result = await res.json() as Array<{ coordinates: [number,number][]; distance_km: number; duration_minutes: number }>;
+  if (!result.length) throw new Error('No route found');
+
+  return result.map(r => ({ ...r, summary: 'Fastest route' }));
 }
 
 export async function fetchRoute(
   waypoints: { lat: number; lng: number }[]
 ): Promise<ORSRoute[]> {
-  // Validate every waypoint — reject null-island coords and out-of-range values
   const valid = waypoints.filter(
     w =>
       w &&
@@ -41,54 +66,46 @@ export async function fetchRoute(
   );
 
   if (valid.length < 2) {
-    console.warn('[ORS] Not enough valid waypoints:', waypoints);
+    console.warn('[Route] Not enough valid waypoints:', waypoints);
     return [];
   }
 
   const cacheKey = valid.map(w => `${w.lat.toFixed(4)},${w.lng.toFixed(4)}`).join('→');
   const cached = getCached(`ors:${cacheKey}`);
   if (cached) {
-    try {
-      return JSON.parse(cached);
-    } catch {
-      // corrupted cache — fall through to re-fetch
-    }
+    try { return JSON.parse(cached); } catch { /* corrupted */ }
   }
 
   const apiKey = process.env.NEXT_PUBLIC_ORS_API_KEY;
+
+  // ── No ORS key — fall back to Google Directions ──────────────────────────
   if (!apiKey) {
-    console.error(
-      '[ORS] NEXT_PUBLIC_ORS_API_KEY is not set in .env.local\n' +
-      'Get a free key at https://openrouteservice.org/dev/#/signup'
-    );
-    return [];
+    try {
+      const routes = await fetchRouteViaGoogle(valid);
+      setCached(`ors:${cacheKey}`, JSON.stringify(routes));
+      return routes;
+    } catch (err) {
+      console.error('[Route] Google fallback failed:', err);
+      return [];
+    }
   }
 
+  // ── ORS path ─────────────────────────────────────────────────────────────
   try {
     const res = await fetch(ORS_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: apiKey,
-      },
-      body: JSON.stringify({
-        coordinates: valid.map(w => [w.lng, w.lat]),
-        // No alternative_routes — always return the single shortest route
-      }),
+      headers: { 'Content-Type': 'application/json', Authorization: apiKey },
+      body: JSON.stringify({ coordinates: valid.map(w => [w.lng, w.lat]) }),
     });
 
     if (!res.ok) {
       const text = await res.text();
       console.error(`[ORS] HTTP ${res.status}:`, text);
-      return [];
+      return fetchRouteViaGoogle(valid).then(r => { setCached(`ors:${cacheKey}`, JSON.stringify(r)); return r; }).catch(() => []);
     }
 
     const data = await res.json();
-
-    if (!data.features?.length) {
-      console.error('[ORS] No features in response:', data);
-      return [];
-    }
+    if (!data.features?.length) return [];
 
     const routes: ORSRoute[] = [data.features[0]].map((feature: { geometry: { coordinates: [number, number][] }; properties: { summary: { distance: number; duration: number } } }) => ({
       coordinates: (feature.geometry.coordinates as [number, number][]).map(

@@ -54,11 +54,15 @@ export default function DriverSignInForm() {
       <p style={{ fontSize: 14, color: '#5A6A7A', margin: '0 0 24px' }}>Enter your credentials to access the driver portal</p>
 
       {/* Demo credentials */}
-      <div style={{ marginBottom: 24, padding: '12px 14px', borderRadius: 10, background: '#EFF7F6', border: '1px solid #C0E6E1' }}>
-        <p style={{ fontSize: 13, fontWeight: 600, color: '#0B1E3D', margin: '0 0 4px' }}>Demo credentials</p>
+      <button
+        type="button"
+        onClick={() => { setEmail(DEMO.email); setPassword(DEMO.password); setEmailErr(''); setPwErr(''); }}
+        style={{ display: 'block', width: '100%', textAlign: 'left', marginBottom: 24, padding: '12px 14px', borderRadius: 10, background: '#EFF7F6', border: '1px solid #C0E6E1', cursor: 'pointer', fontFamily: 'inherit' }}
+      >
+        <p style={{ fontSize: 13, fontWeight: 600, color: '#0B1E3D', margin: '0 0 4px' }}>Demo credentials <span style={{ fontSize: 11, fontWeight: 400, color: '#00C2A8' }}>— click to fill</span></p>
         <p style={{ fontSize: 13, color: '#5A6A7A', margin: '0 0 2px' }}>Email: <strong style={{ color: '#0B1E3D' }}>{DEMO.email}</strong></p>
         <p style={{ fontSize: 13, color: '#5A6A7A', margin: 0 }}>Password: <strong style={{ color: '#0B1E3D' }}>{DEMO.password}</strong></p>
-      </div>
+      </button>
 
       {/* Email */}
       <div style={{ marginBottom: 16 }}>
