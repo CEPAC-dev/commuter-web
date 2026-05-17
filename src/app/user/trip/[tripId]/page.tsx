@@ -136,7 +136,7 @@ function StatusTimeline({ myStop }: { myStop: TripStop }) {
 
 // ── Live map placeholder ──────────────────────────────────────────────────────
 
-function LiveMap({ driverLocation, myStop }: {
+function LiveMap({ driverLocation }: {
   driverLocation: { lat: number; lng: number; heading: number } | null;
   myStop: TripStop;
 }) {
@@ -163,7 +163,7 @@ function LiveMap({ driverLocation, myStop }: {
 
 // ── In-car view ───────────────────────────────────────────────────────────────
 
-function InCarView({ trip, myStop, driverLocation, onChat }: {
+function InCarView({ myStop, driverLocation, onChat }: {
   trip: DailyTrip;
   myStop: TripStop;
   driverLocation: { lat: number; lng: number; heading: number } | null;
@@ -174,7 +174,7 @@ function InCarView({ trip, myStop, driverLocation, onChat }: {
       <LiveMap driverLocation={driverLocation} myStop={myStop} />
       <div className="px-4">
         <div className="bg-[#EFF7F6] rounded-2xl p-5 mb-4">
-          <p className="text-base font-bold text-[#0B1E3D] mb-1">You're on your way! 🎉</p>
+          <p className="text-base font-bold text-[#0B1E3D] mb-1">You&apos;re on your way! 🎉</p>
           <p className="text-xs text-[#5A6A7A] mb-2">Destination: {myStop.dropoff_address}</p>
           <p className="text-xs text-[#00C2A8] font-medium">ETA: {myStop.scheduled_dropoff} (estimated)</p>
         </div>
@@ -208,7 +208,7 @@ function TripCompletedView({ trip, myStop, onRate }: {
         padding: '28px 20px', textAlign: 'center', marginBottom: 16,
       }}>
         <p className="text-4xl mb-3">✅</p>
-        <p className="text-lg font-bold text-[#0B1E3D] mb-1">You've arrived!</p>
+        <p className="text-lg font-bold text-[#0B1E3D] mb-1">You&apos;ve arrived!</p>
         <p className="text-sm text-[#5A6A7A] mb-4">
           {myStop.dropoff_address} · {myStop.actual_dropoff ?? 'Now'}
         </p>

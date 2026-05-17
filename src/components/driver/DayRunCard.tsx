@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, parseISO } from 'date-fns';
 import type { DayRun } from '@/types/cycle';
-import { isStartUnlocked, timeUntilUnlock, formatTime12h } from '@/lib/tripUtils';
+import { timeUntilUnlock, formatTime12h } from '@/lib/tripUtils';
 
 export interface DayRunCardProps {
   run:     DayRun;
@@ -22,7 +22,7 @@ const RUN_STATUS_STYLE: Record<string, string> = {
   cancelled: 'bg-[#FDECEA] text-[#C62828]',
 };
 
-export default function DayRunCard({ run, dayDate, isToday, onStart }: DayRunCardProps) {
+export default function DayRunCard({ run, isToday, onStart }: DayRunCardProps) {
   const router = useRouter();
   const [expanded, setExpanded] = useState(isToday && run.status === 'unlocked');
   const [, setTick] = useState(0);

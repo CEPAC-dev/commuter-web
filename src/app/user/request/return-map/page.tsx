@@ -148,10 +148,6 @@ function ReturnMapInner() {
     router.push('/user/request/schedule');
   }
 
-  function handleBack() {
-    router.push('/user/request/schedule');
-  }
-
   // Slot number from wizard
   const slotIndex = wizard.time_slots.findIndex(s => s.id === slotId);
   const slotLabel = slotIndex >= 0 ? `Time slot ${slotIndex + 1}` : 'this time slot';

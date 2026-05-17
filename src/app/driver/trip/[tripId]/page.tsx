@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import type { DailyTrip, TripStop, TripStatus, StopStatus } from '@/types/trip';
+import type { DailyTrip, TripStop, StopStatus } from '@/types/trip';
 import { fetchTripState, saveTripState } from '@/lib/mockTrip';
 import {
   isStartUnlocked,
@@ -14,7 +14,7 @@ import { format, parseISO } from 'date-fns';
 
 // ── Stop number badge ─────────────────────────────────────────────────────────
 
-function StopNumberBadge({ number, active, locked }: { number: number; active?: boolean; locked?: boolean }) {
+function StopNumberBadge({ number, locked }: { number: number; active?: boolean; locked?: boolean }) {
   return (
     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0
       ${locked
@@ -159,7 +159,7 @@ function ActiveStopCard({ stop, tripId, onConfirmPickup, onNoShow }: ActiveStopC
           onClick={() => onNoShow(stop.stop_id)}
           className="mt-3 w-full py-2.5 border border-[#E74C3C] text-[#E74C3C] rounded-lg text-sm font-medium hover:bg-[#FDECEA] transition-colors"
         >
-          Passenger didn't show — continue route
+          Passenger didn&#39;t show — continue route
         </button>
       )}
     </div>
@@ -201,7 +201,7 @@ function TripStartScreen({ trip, onStartTrip }: { trip: DailyTrip; onStartTrip: 
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
       <div className="bg-[#0B1E3D] text-white px-6 py-5">
-        <p className="text-xs text-white/60 mb-1">Today's trip · {formatTripDate(trip.date)}</p>
+        <p className="text-xs text-white/60 mb-1">Today&apos;s trip · {formatTripDate(trip.date)}</p>
         <p className="text-base font-semibold">
           {trip.stops.length} pickup{trip.stops.length > 1 ? 's' : ''}
         </p>

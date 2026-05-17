@@ -20,8 +20,6 @@ export default function ProfilePage() {
     setProfile((p) => ({ ...p, ...updates }));
     toast.success('Profile updated!');
   }
-  const [userName, setUserName] = useState('User');
-
   const initials = profile.name
     .split(' ')
     .map((p) => p[0])
@@ -67,7 +65,7 @@ export default function ProfilePage() {
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
             <div>
               <h2 style={{ margin: '0 0 2px', fontSize: 22, fontWeight: 700, color: '#0B1E3D' }}>
-                {userName}
+                {profile.name}
               </h2>
               <div style={{ fontSize: 13, color: '#5A6A7A' }}>
                 Member since {formatDate(profile.joined_at)}

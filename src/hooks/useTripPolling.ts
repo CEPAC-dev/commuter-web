@@ -19,7 +19,7 @@ export function useTripPolling(
       const data = await fetchTripState(tripId);
       setTrip(data);
       setError(null);
-    } catch (e) {
+    } catch {
       setError('Failed to load trip');
     } finally {
       setLoading(false);

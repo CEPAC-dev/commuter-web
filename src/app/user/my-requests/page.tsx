@@ -27,7 +27,6 @@ export default function MyRequestsPage() {
   const [requests, setRequests] = useState<UserRequest[]>(mockRequests);
   const [activeTab, setActiveTab] = useState<Tab>('pending');
 
-  const priceRaisedRequests = requests.filter((r) => r.status === 'price_raised');
   const filtered = filterByTab(requests, activeTab);
 
   const tabCounts: Record<Tab, number> = {
@@ -41,24 +40,6 @@ export default function MyRequestsPage() {
       prev.map((r) => (r.id === id ? { ...r, status: 'cancelled' as RequestStatus } : r))
     );
     toast.success(t('toast_cancelled'));
-  }
-
-  function handleAcceptPrice(id: string) {
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === id ? { ...r, status: 'confirmed' as RequestStatus, base_price: r.offered_price ?? r.base_price } : r
-      )
-    );
-    toast.success(t('toast_confirmed'));
-  }
-
-  function handleDeclinePrice(id: string) {
-    setRequests((prev) =>
-      prev.map((r) =>
-        r.id === id ? { ...r, status: 'matching' as RequestStatus, offered_price: undefined } : r
-      )
-    );
-    toast(t('toast_finding_driver'), { icon: '🔍' });
   }
 
   const TABS: { key: Tab; label: string }[] = [

@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode } from 'react';
-import type { GeoLocation, WeekDay, TripType, TimeSlot } from '@/types/shared';
+import type { GeoLocation, TimeSlot } from '@/types/shared';
 import type { ORSRoute } from '@/lib/openrouteservice';
 
 // ── Types ─────────────────────────────────────────────────────────────────────

@@ -50,7 +50,6 @@ function RoutePickerInner({
   rideType,
   initialOrigin,
   initialDestination,
-  initialStops,
   onConfirm,
   onCancel,
 }: RoutePickerProps) {

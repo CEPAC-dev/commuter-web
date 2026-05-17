@@ -8,8 +8,6 @@ import { toast } from 'react-hot-toast';
 import PasswordInput from '@/components/shared/PasswordInput';
 import { signIn } from '@/lib/api/auth';
 import { saveSession } from '@/lib/auth';
-import type { SignInPayload } from '@/types/auth';
-
 export default function UserSignInForm() {
   const router = useRouter();
   const [email, setEmail]       = useState('');

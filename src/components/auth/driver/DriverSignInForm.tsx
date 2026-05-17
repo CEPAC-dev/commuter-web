@@ -9,6 +9,8 @@ import PasswordInput from '@/components/shared/PasswordInput';
 import { signIn } from '@/lib/api/auth';
 import { saveSession } from '@/lib/auth';
 
+const DEMO = { email: 'driver@commuter.eg', password: 'demo1234' };
+
 export default function DriverSignInForm() {
   const router = useRouter();
   const [email, setEmail]       = useState('');

@@ -19,10 +19,6 @@ import type { UserRequest } from '@/types/user';
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function makeDefaultSlot(usedDays: WeekDay[], inheritFrom?: WizardTimeSlot): WizardTimeSlot {
-  const available: WeekDay[] = (
-    ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'] as WeekDay[]
-  ).filter(d => !usedDays.includes(d));
-
   return {
     id:                 crypto.randomUUID(),
     trip_type:          'one_way',
@@ -68,7 +64,7 @@ export default function SchedulePage() {
   const wizard = useWizard();
   const {
     ride_type, group_type, passenger_count, seat_preference,
-    setTimeSlots, setPassengerCount, setSeatPreference,
+    setTimeSlots, setPassengerCount,
     updateSlotRoute, updateSlotReturnRoute,
   } = wizard;
 

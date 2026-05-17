@@ -116,18 +116,6 @@ export default function RequestForm({
     update({ time_slots: nextSlots });
   }
 
-  function updateSlotArrival(slotId: string, from: string, to: string) {
-    const nextSlots = data.time_slots.map((slot) => {
-      if (slot.id !== slotId) return slot;
-      return {
-        ...slot,
-        arrival_from: from,
-        arrival_to: to,
-      };
-    });
-    update({ time_slots: nextSlots });
-  }
-
   function updateSlotReturn(slotId: string, from: string, to: string) {
     const nextSlots = data.time_slots.map((slot) => {
       if (slot.id !== slotId) return slot;
@@ -135,18 +123,6 @@ export default function RequestForm({
         ...slot,
         return_pickup_from: from,
         return_pickup_to: to,
-      };
-    });
-    update({ time_slots: nextSlots });
-  }
-
-  function updateSlotReturnArrival(slotId: string, from: string, to: string) {
-    const nextSlots = data.time_slots.map((slot) => {
-      if (slot.id !== slotId) return slot;
-      return {
-        ...slot,
-        return_arrival_from: from,
-        return_arrival_to: to,
       };
     });
     update({ time_slots: nextSlots });

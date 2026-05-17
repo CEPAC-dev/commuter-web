@@ -35,7 +35,7 @@ export default function WeekCalendar({ days, onStartRun }: WeekCalendarProps) {
   function toggleDay(date: string) {
     setExpandedDays(prev => {
       const next = new Set(prev);
-      next.has(date) ? next.delete(date) : next.add(date);
+      if (next.has(date)) { next.delete(date); } else { next.add(date); }
       return next;
     });
   }
