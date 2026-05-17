@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import type { UserProfile } from '@/types/user';
 import EditProfileModal from '@/components/user/profile/EditProfileModal';
 import SavedLocationsSection from '@/components/user/profile/SavedLocationsSection';
+import ChangePasswordModal from '@/components/user/profile/ChangePasswordModal';
 import Link from 'next/link';
 
 function formatDate(iso: string) {
@@ -14,6 +15,7 @@ function formatDate(iso: string) {
 export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [changePwOpen, setChangePwOpen] = useState(false);
 
   useEffect(() => {
     // Backend endpoint /api/user/profile doesn't exist yet
@@ -353,11 +355,58 @@ export default function ProfilePage() {
         />
       </div>
 
+      {/* Security */}
+      <div
+        style={{
+          background: '#fff',
+          border: '1px solid #E2E8F0',
+          borderRadius: 16,
+          padding: 24,
+        }}
+      >
+        <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: '#0B1E3D' }}>Security</h3>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '12px 0',
+            borderBottom: '1px solid #F8F9FA',
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#0B1E3D' }}>Password</div>
+            <div style={{ fontSize: 12, color: '#5A6A7A', marginTop: 2 }}>Change your account password</div>
+          </div>
+          <button
+            onClick={() => setChangePwOpen(true)}
+            style={{
+              padding: '8px 16px',
+              border: '1.5px solid #00C2A8',
+              borderRadius: 8,
+              background: '#fff',
+              color: '#00C2A8',
+              fontWeight: 600,
+              fontSize: 13,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              minHeight: 38,
+            }}
+          >
+            Change
+          </button>
+        </div>
+      </div>
+
       <EditProfileModal
         isOpen={editOpen}
         onClose={() => setEditOpen(false)}
         profile={profile}
         onSave={handleSave}
+      />
+      <ChangePasswordModal
+        isOpen={changePwOpen}
+        onClose={() => setChangePwOpen(false)}
       />
     </div>
   );

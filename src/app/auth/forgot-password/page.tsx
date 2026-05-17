@@ -1,111 +1,95 @@
 'use client';
 
 import { useState } from 'react';
+import { Mail, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import toast, { Toaster } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
+import { forgotPassword } from '@/lib/api/auth';
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail]       = useState('');
-  const [loading, setLoading]   = useState(false);
-  const [sent, setSent]         = useState(false);
-  const [error, setError]       = useState('');
+  const router = useRouter();
+  const [email, setEmail]               = useState('');
+  const [emailErr, setEmailErr]         = useState('');
+  const [emailLoading, setEmailLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Enter a valid email address');
+      setEmailErr('Enter a valid email address.');
       return;
     }
-    setError('');
-    setLoading(true);
+    setEmailErr('');
+    setEmailLoading(true);
     try {
-      // Mock: simulate API
-      await new Promise((r) => setTimeout(r, 800));
-      // Real: await forgotPassword(email);
-      setSent(true);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Request failed';
-      toast.error(msg);
+      await forgotPassword(email);
+      // Redirect to OTP page with email
+      router.push(`/auth/forgot-password/otp?email=${encodeURIComponent(email)}`);
+    } catch (err: unknown) {
+      setEmailErr(err instanceof Error ? err.message : 'Failed to send code. Try again.');
     } finally {
-      setLoading(false);
+      setEmailLoading(false);
     }
   }
 
-  return (
-    <div className="min-h-screen bg-primary flex items-center justify-center px-4">
-      <Toaster position="top-right" />
-      <div className="bg-white rounded-2xl p-8 sm:p-10 w-full max-w-[420px] shadow-xl space-y-5">
-        {/* Logo */}
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-md bg-secondary flex items-center justify-center">
-            <span className="text-primary font-black text-sm">C</span>
-          </div>
-          <span className="text-primary font-bold text-lg tracking-wide">commuter</span>
-        </div>
-
-        {sent ? (
-          <div className="text-center space-y-3 py-4">
-            <div className="w-12 h-12 rounded-full bg-secondary-lt flex items-center justify-center mx-auto">
-              <svg className="w-6 h-6 text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-              </svg>
-            </div>
-            <h2 className="text-xl font-bold text-primary">Check your inbox</h2>
-            <p className="text-text-muted text-sm">
-              If <span className="font-medium text-primary">{email}</span> is registered, you&apos;ll receive a password reset link shortly.
-            </p>
-            <Link href="/auth/signin" className="block w-full text-center bg-secondary text-primary font-bold py-3 rounded-lg hover:bg-secondary/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary mt-2">
-              Back to sign in
-            </Link>
-          </div>
-        ) : (
-          <>
-            <div>
-              <h2 className="text-xl font-bold text-primary">Forgot your password?</h2>
-              <p className="text-text-muted text-sm mt-1">Enter your email and we&apos;ll send you a reset link.</p>
-            </div>
-            <form onSubmit={handleSubmit} noValidate className="space-y-4">
-              <div>
-                <label htmlFor="fp-email" className="block text-sm font-medium text-primary mb-1.5">Email address</label>
-                <input
-                  id="fp-email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@commuter.eg"
-                  disabled={loading}
-                  aria-invalid={!!error}
-                  className={[
-                    'w-full px-3 py-2.5 border rounded-lg text-primary text-sm bg-white focus:outline-none focus:ring-2 transition-shadow placeholder:text-text-muted/60',
-                    error ? 'border-danger focus:ring-danger' : 'border-gray-200 focus:ring-secondary',
-                  ].join(' ')}
-                />
-                {error && <p className="mt-1 text-xs text-danger">{error}</p>}
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-secondary text-primary font-bold py-3 rounded-lg hover:bg-secondary/90 disabled:opacity-60 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                    </svg>
-                    Sending…
-                  </>
-                ) : 'Send reset link'}
-              </button>
-            </form>
-            <p className="text-center text-sm text-text-muted">
-              Remembered it?{' '}
-              <Link href="/auth/signin" className="text-secondary font-medium hover:underline focus:outline-none focus-visible:ring-1 focus-visible:ring-secondary rounded">Sign in</Link>
-            </p>
-          </>
-        )}
+  const card = (children: React.ReactNode) => (
+    <div className="min-h-screen flex items-center justify-center px-6" style={{ background: '#0B1E3D' }}>
+      <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
+        {children}
       </div>
     </div>
+  );
+
+  return card(
+    <>
+      <Link href="/auth/signin" className="flex items-center gap-1.5 text-text-muted hover:text-primary text-sm mb-6 transition-colors w-fit">
+        <ArrowLeft size={14} /> Back to sign in
+      </Link>
+
+      <div className="flex items-center gap-2 mb-1">
+        <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+          <span className="text-primary font-black text-sm">c</span>
+        </div>
+        <span className="text-primary font-bold text-lg">commuter</span>
+      </div>
+
+      <h1 className="text-2xl font-bold text-primary mt-5 mb-1">Forgot your password?</h1>
+      <p className="text-sm text-text-muted mb-6">
+        Enter your email and we&apos;ll send you a verification code.
+      </p>
+
+      <form onSubmit={handleEmailSubmit} noValidate>
+        <div className="mb-5">
+          <label className="block text-sm font-medium text-primary mb-1.5">Email address</label>
+          <div className="relative">
+            <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" aria-hidden />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              autoComplete="email"
+              className={[
+                'w-full h-[52px] pl-10 pr-4 border rounded-lg text-sm text-primary bg-white',
+                'focus:outline-none transition-all placeholder:text-text-muted/60',
+                emailErr
+                  ? 'border-danger focus:border-danger focus:ring-2 focus:ring-danger/15'
+                  : 'border-[#D1D5DB] focus:border-secondary focus:ring-2 focus:ring-secondary/15',
+              ].join(' ')}
+            />
+          </div>
+          {emailErr && <p className="mt-1 text-xs text-danger">{emailErr}</p>}
+        </div>
+
+        <button
+          type="submit"
+          disabled={emailLoading}
+          className="w-full h-[52px] rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-60"
+          style={{ background: '#00C2A8', color: '#0B1E3D' }}
+        >
+          {emailLoading && <Loader2 size={16} className="animate-spin" />}
+          Send verification code
+        </button>
+      </form>
+    </>,
   );
 }

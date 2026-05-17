@@ -126,7 +126,7 @@ export async function updateUserProfile(updates: Partial<UserProfile>): Promise<
 }
 
 export async function forgotPassword(email: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/forgot-password`, {
+  const res = await fetch(`${API_BASE}/password/forgot`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
@@ -137,15 +137,48 @@ export async function forgotPassword(email: string): Promise<void> {
   }
 }
 
-export async function resetPassword(token: string, newPassword: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/reset-password`, {
+export async function verifyForgotOtp(email: string, code: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/password/verify-otp`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token, newPassword }),
+    body: JSON.stringify({ email, code }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: 'Invalid or expired code' }));
+    throw new Error(err.message ?? 'Invalid or expired code');
+  }
+}
+
+export async function resetPassword(
+  email: string,
+  code: string,
+  password: string,
+  password_confirmation: string,
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/password/reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, code, password, password_confirmation }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: 'Reset failed' }));
     throw new Error(err.message ?? 'Reset failed');
+  }
+}
+
+export async function changePassword(
+  current_password: string,
+  password: string,
+  password_confirmation: string,
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/password/change`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ current_password, password, password_confirmation }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: 'Password change failed' }));
+    throw new Error(err.message ?? 'Password change failed');
   }
 }
 
