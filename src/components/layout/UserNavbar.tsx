@@ -5,7 +5,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, LogOut, User, Wallet, Bell } from 'lucide-react';
 import { getName, clearSession } from '@/lib/auth';
-import { mockNotifications } from '@/lib/mockUser';
 import LanguageToggle from './LanguageToggle';
 
 export default function UserNavbar() {
@@ -22,7 +21,7 @@ export default function UserNavbar() {
   const [userName, setUserName] = useState('User');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const unreadCount = mockNotifications.filter((n) => !n.isRead).length;
+  const unreadCount = 0; // TODO: fetch from API when notifications endpoint available
 
   useEffect(() => {
     const n = getName();

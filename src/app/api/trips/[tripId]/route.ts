@@ -1,20 +1,16 @@
 import type { DailyTrip } from '@/types/trip';
-import { getTrip, seedTrip, setTrip } from '@/lib/tripStore';
-import { getMockTripById } from '@/lib/mockTrip';
+import { getTrip, setTrip } from '@/lib/tripStore';
+// Mock data removed
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ tripId: string }> },
 ) {
   const { tripId } = await params;
-  let trip = getTrip(tripId);
+  const trip = getTrip(tripId);
   if (!trip) {
-    const mock = getMockTripById(tripId);
-    if (!mock) {
-      return Response.json({ error: 'Trip not found' }, { status: 404 });
-    }
-    seedTrip(mock);
-    trip = getTrip(tripId)!;
+    // TODO: fetch trip from API backend when endpoint available
+    return Response.json({ error: 'Trip not found' }, { status: 404 });
   }
   return Response.json(trip);
 }
@@ -26,14 +22,10 @@ export async function PATCH(
   const { tripId } = await params;
   const body = (await req.json()) as Partial<DailyTrip>;
 
-  let trip = getTrip(tripId);
+  const trip = getTrip(tripId);
   if (!trip) {
-    const mock = getMockTripById(tripId);
-    if (!mock) {
-      return Response.json({ error: 'Trip not found' }, { status: 404 });
-    }
-    seedTrip(mock);
-    trip = getTrip(tripId)!;
+    // TODO: fetch trip from API backend when endpoint available
+    return Response.json({ error: 'Trip not found' }, { status: 404 });
   }
 
   const next: DailyTrip = { ...trip, ...body, trip_id: tripId };

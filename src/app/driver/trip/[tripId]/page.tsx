@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import type { DailyTrip, TripStop, StopStatus } from '@/types/trip';
-import { fetchTripState, saveTripState } from '@/lib/mockTrip';
+// Mock data removed - API endpoints should provide trip data
 import {
   isStartUnlocked,
   timeUntilUnlock,
@@ -375,10 +375,12 @@ export default function DriverTripPage() {
   const locationWatchRef = useRef<number | null>(null);
 
   useEffect(() => {
-    fetchTripState(tripId).then(data => {
-      setTrip(data);
-      setLoading(false);
-    });
+    // TODO: fetch trip state from API endpoint when available
+    // fetchTripState(tripId).then(data => {
+    //   setTrip(data);
+    //   setLoading(false);
+    // });
+    setLoading(false);
   }, [tripId]);
 
   const startLocationBroadcast = useCallback((id: string) => {
@@ -425,7 +427,7 @@ export default function DriverTripPage() {
 
   const persistTrip = useCallback((next: DailyTrip) => {
     setTrip(next);
-    void saveTripState(next);
+    // TODO: save to API endpoint when available
   }, []);
 
   function handleStartTrip() {

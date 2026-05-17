@@ -3,17 +3,24 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, parseISO } from 'date-fns';
-import { mockDriverCycleSchedule } from '@/lib/mockCycleSchedule';
+// Mock data removed
 import DayRunCard from '@/components/driver/DayRunCard';
 import WeekCalendar from '@/components/driver/WeekCalendar';
 import EmptyState from '@/components/shared/EmptyState';
+import type { DriverCycleSchedule } from '@/types/cycle';
 
 type TabKey = 'active' | 'pending' | 'completed';
 
 export default function MyCyclesPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabKey>('active');
-  const schedule = mockDriverCycleSchedule;
+  const schedule: DriverCycleSchedule = {
+    cycle_id: '',
+    status: 'confirmed',
+    days: [],
+    cycle_start_date: new Date().toISOString().split('T')[0],
+    cycle_end_date: new Date().toISOString().split('T')[0],
+  }; // TODO: fetch from API
 
   const todayDays     = schedule.days.filter(d => d.is_today);
   const pendingDays   = schedule.days.filter(d => !d.is_today && d.status === 'upcoming');

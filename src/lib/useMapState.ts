@@ -90,8 +90,11 @@ export function useMapState() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     // Stringify for deep equality — avoids stale closures on object identity changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     JSON.stringify(origin),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     JSON.stringify(stops),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     JSON.stringify(destination),
   ]);
 

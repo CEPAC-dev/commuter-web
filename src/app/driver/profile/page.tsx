@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useState, useCallback } from 'react';
-import { mockDriver, mockRequests } from '@/lib/mockDriver';
+// Mock data removed
 import { DriverProfile, DriverDocuments } from '@/types/driver';
 import DocumentUploadField from '@/components/driver/DocumentUploadField';
 import toast from 'react-hot-toast';
@@ -31,16 +31,41 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 }
 
 export default function ProfilePage() {
-  const [driver, setDriver] = useState<DriverProfile>(mockDriver);
+  // TODO: fetch driver profile from API
+  const [driver, setDriver] = useState<DriverProfile>({
+    id: '',
+    name: '',
+    phone: '',
+    email: '',
+    address: '',
+    nationalId: '',
+    drivingLicenseNumber: '',
+    carLicensePlate: '',
+    carModel: '',
+    carYear: new Date().getFullYear(),
+    carColor: '',
+    rating: 0,
+    totalTrips: 0,
+    walletBalance: 0,
+    joinedAt: new Date().toISOString(),
+    documents: {
+      nationalIdFront: null,
+      nationalIdBack: null,
+      drivingLicense: null,
+      carLicense: null,
+      criminalRecord: null,
+      profilePhoto: null,
+    },
+    isVerified: false,
+    completedCycles: 0,
+    activeCycles: 0,
+    gender: 'male',
+  });
   const [activeTab, setActiveTab] = useState<ProfileTab>('personal');
 
-  const completedCyclesCount = mockRequests.filter((r) => r.status === 'completed').length;
+  const completedCyclesCount = 0; // TODO: fetch from API
 
-  const activeCyclesCount = mockRequests.filter((r) => {
-    if (r.status !== 'confirmed') return false;
-    const now = new Date();
-    return now >= new Date(r.cycle_start_date) && now <= new Date(r.cycle_end_date);
-  }).length;
+  const activeCyclesCount = 0; // TODO: fetch from API
 
   const handleUpload = useCallback(
     async (fieldName: keyof DriverDocuments, file: File) => {

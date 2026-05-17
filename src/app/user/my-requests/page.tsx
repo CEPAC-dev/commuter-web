@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import type { UserRequest, RequestStatus } from '@/types/user';
-import { mockRequests } from '@/lib/mockUser';
+// Mock data removed
 import RequestStatusCard from '@/components/user/my-requests/RequestStatusCard';
 import EmptyState from '@/components/shared/EmptyState';
 import { useTranslations } from 'next-intl';
@@ -24,7 +24,7 @@ function filterByTab(requests: UserRequest[], tab: Tab): UserRequest[] {
 
 export default function MyRequestsPage() {
   const t = useTranslations('my_requests');
-  const [requests, setRequests] = useState<UserRequest[]>(mockRequests);
+  const [requests, setRequests] = useState<UserRequest[]>([]); // TODO: fetch from API
   const [activeTab, setActiveTab] = useState<Tab>('pending');
 
   const filtered = filterByTab(requests, activeTab);

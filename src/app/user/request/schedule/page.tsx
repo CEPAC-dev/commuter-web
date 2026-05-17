@@ -10,11 +10,10 @@ import RoutePicker, { type RoutePickerResult } from '@/components/user/request/R
 import ReviewModal from '@/components/user/request/ReviewModal';
 import PageHeader from '@/components/shared/PageHeader';
 import Section from '@/components/shared/Section';
-import { getNextAvailableCycleStart, formatCycleStartDate, getCycleEndDate } from '@/lib/cycleUtils';
+import { getNextAvailableCycleStart, formatCycleStartDate } from '@/lib/cycleUtils';
 import { calculatePriceRange } from '@/lib/pricing';
 import { computeArrivalFrom, computeArrivalTo } from '@/lib/timeUtils';
-import { mockRequests } from '@/lib/mockUser';
-import type { UserRequest } from '@/types/user';
+// Mock data removed
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -236,42 +235,9 @@ export default function SchedulePage() {
     await new Promise(r => setTimeout(r, 800));
 
     const firstSlot = slots[0];
-    const allDays = Array.from(new Set(slots.flatMap(s => s.days))) as WeekDay[];
-    const cycleStart = cycleStartDate.toISOString().split('T')[0];
-    const cycleEnd   = getCycleEndDate(cycleStartDate).toISOString().split('T')[0];
 
     if (firstSlot?.origin && firstSlot?.destination && firstSlot?.route) {
-      const newRequest: UserRequest = {
-        id:                  `req-${Date.now()}`,
-        status:              'submitted',
-        origin:              firstSlot.origin,
-        destination:         firstSlot.destination,
-        distance_km:         Math.round(firstSlot.route.distance_km * 10) / 10,
-        duration_minutes:    Math.round(firstSlot.route.duration_minutes),
-        route_coordinates:   firstSlot.route.coordinates as [number, number][],
-        trip_type:           firstSlot.trip_type,
-        ride_type:           ride_type ?? 'shared',
-        gender_pref:         'mixed',
-        seat_preference:     seat_preference,
-        walk_minutes:        0,
-        days:                allDays,
-        time_slots:          slots as TimeSlot[],
-        arrival_from:        firstSlot.arrival_from,
-        arrival_to:          firstSlot.arrival_to,
-        departure_from:      firstSlot.pickup_from,
-        departure_to:        firstSlot.pickup_to,
-        cycle_start_date:    cycleStart,
-        cycle_end_date:      cycleEnd,
-        base_price:          0,
-        estimated_price_min: priceMin,
-        estimated_price_max: priceMax,
-        passenger_count:     passenger_count,
-        group_type:          group_type,
-        group_action:        null,
-        pickup_points:       [],
-        created_at:          new Date().toISOString(),
-      };
-      mockRequests.unshift(newRequest);
+      // TODO: save request to API endpoint when available
     }
 
     setSubmitting(false);

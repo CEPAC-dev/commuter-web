@@ -3,11 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import type { DailyTrip, TripStop } from '@/types/trip';
-import { fetchTripState } from '@/lib/mockTrip';
-import { mockUser } from '@/lib/mockUser';
+// Mock data removed - API endpoints should provide trip data
 import { computeETA, formatTripDate } from '@/lib/tripUtils';
 
-const MY_PASSENGER_ID = mockUser.id;
+const MY_PASSENGER_ID = ''; // TODO: get from current user context
 
 // ── Live driver location hook ─────────────────────────────────────────────────
 
@@ -256,24 +255,27 @@ function NoShowView() {
 export default function PassengerTripPage() {
   const { tripId } = useParams<{ tripId: string }>();
   const router = useRouter();
-  const [trip, setTrip] = useState<DailyTrip | null>(null);
+  const [trip, setTrip] = useState<DailyTrip | null>(null); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [loading, setLoading] = useState(true);
   const driverLocation = useLiveDriverLocation(tripId);
 
   useEffect(() => {
-    fetchTripState(tripId).then(data => {
-      setTrip(data);
-      setLoading(false);
-    });
+    // TODO: fetch trip state from API endpoint when available
+    // fetchTripState(tripId).then(data => {
+    //   setTrip(data);
+    //   setLoading(false);
+    // });
+    setLoading(false);
   }, [tripId]);
 
   useEffect(() => {
     if (!trip || trip.status === 'completed' || trip.status === 'cancelled') return;
+    // TODO: poll trip state from API endpoint when available
     const interval = setInterval(() => {
-      fetchTripState(tripId).then(setTrip).catch(() => {});
+      // fetchTripState API call removed - needs backend implementation
     }, 10_000);
     return () => clearInterval(interval);
-  }, [tripId, trip?.status]);
+  }, [trip]);
 
   if (loading || !trip) {
     return (

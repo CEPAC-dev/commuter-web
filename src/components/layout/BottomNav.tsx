@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { mockNotifications } from '@/lib/mockUser';
 
 const NAV_ICONS = {
   create: (active: boolean) => (
@@ -36,7 +35,7 @@ const NAV_ICONS = {
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const unreadCount = mockNotifications.filter((n) => !n.isRead).length;
+  const unreadCount = 0; // TODO: fetch from API when notifications endpoint available
 
   const NAV_ITEMS = [
     { key: 'create' as const,        label: 'Create',       href: '/user/request/new' },

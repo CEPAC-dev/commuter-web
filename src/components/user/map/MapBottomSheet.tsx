@@ -5,14 +5,14 @@ import { useTranslations } from 'next-intl';
 import type { LocationValue } from './FloatingSearchBar';
 import RequestForm, { type RequestFormData } from '@/components/user/request/RequestForm';
 import RequestSummaryCard from '@/components/user/request/RequestSummaryCard';
-import { mockUser } from '@/lib/mockUser';
+// Mock data removed
 import { useMap } from '@/lib/MapContext';
 import { useMounted } from '@/lib/useMounted';
 import { timeDiffMinutes } from '@/lib/timeUtils';
 
 // ── Quick destination chips ────────────────────────────────────────────────
 function QuickChips({ onSelect }: { onSelect: (loc: LocationValue) => void }) {
-  const saved = mockUser.saved_locations;
+  const saved: Array<{ id: string; label: string; address: string; lat: number; lng: number; name: string }> = []; // TODO: fetch from user profile when API available
   if (saved.length === 0) return null;
   return (
     <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }} className="no-scrollbar">

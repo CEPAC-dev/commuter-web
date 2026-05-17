@@ -4,20 +4,22 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { signUpUser } from '@/lib/api/auth';
+import { signUpUser, sendOtp, verifyOtp } from '@/lib/api/auth';
 import { saveSession } from '@/lib/auth';
+import type { AuthResponse } from '@/types/auth';
 import Step1Info,    { type Step1Data } from './steps/Step1Info';
 import Step2Address, { type Step2Data } from './steps/Step2Address';
+import Step3Otp from './steps/Step3Otp';
 
 // ── Step indicator ────────────────────────────────────────────────────────────
 
-const STEPS = ['Personal info', 'Address'] as const;
+const STEPS = ['Personal info', 'Address', 'Verify email'] as const;
 
-function StepBar({ current }: { current: 1 | 2 }) {
+function StepBar({ current }: { current: 1 | 2 | 3 }) {
   return (
     <div className="flex items-center mb-8" role="list" aria-label="Sign-up progress">
       {STEPS.map((label, idx) => {
-        const n        = (idx + 1) as 1 | 2;
+        const n        = (idx + 1) as 1 | 2 | 3;
         const done     = n < current;
         const active   = n === current;
 
@@ -65,9 +67,13 @@ function StepBar({ current }: { current: 1 | 2 }) {
 export default function UserSignUpForm() {
   const router = useRouter();
 
-  const [step,      setStep]      = useState<1 | 2>(1);
-  const [step1Data, setStep1Data] = useState<Partial<Step1Data>>({});
-  const [loading,   setLoading]   = useState(false);
+  const [step,          setStep]          = useState<1 | 2 | 3>(1);
+  const [step1Data,     setStep1Data]     = useState<Partial<Step1Data>>({});
+  const [loading,       setLoading]       = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [otpError,      setOtpError]      = useState<string | null>(null);
+  // store auth response between step 2 and step 3
+  const [pendingAuth,   setPendingAuth]   = useState<AuthResponse | null>(null);
 
   function handleStep1(data: Step1Data) {
     setStep1Data(data);
@@ -95,13 +101,44 @@ export default function UserSignUpForm() {
         password:              step1Data.password!,
         password_confirmation: step1Data.password_confirmation!,
       });
-      saveSession(result);
-      toast.success(`Welcome to Commuter, ${step1Data.name!.trim()}! 🎉`);
-      router.push('/user/onboarding');
+      setPendingAuth(result);
+      // Send OTP to the registered email
+      await sendOtp(step1Data.email!.trim());
+      setStep(3);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Sign up failed. Please try again.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleVerifyOtp(code: string) {
+    if (!step1Data.email || !pendingAuth) return;
+    setLoading(true);
+    setOtpError(null);
+    try {
+      await verifyOtp(step1Data.email.trim(), code);
+      saveSession(pendingAuth);
+      toast.success(`Welcome to Commuter, ${step1Data.name!.trim()}! 🎉`);
+      router.push('/user/onboarding');
+    } catch (err: unknown) {
+      setOtpError(err instanceof Error ? err.message : 'Invalid or expired code. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleResendOtp() {
+    if (!step1Data.email) return;
+    setResendLoading(true);
+    setOtpError(null);
+    try {
+      await sendOtp(step1Data.email.trim());
+      toast.success('A new code has been sent to your email.');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to resend code.');
+    } finally {
+      setResendLoading(false);
     }
   }
 
@@ -121,6 +158,16 @@ export default function UserSignUpForm() {
           loading={loading}
           onBack={() => setStep(1)}
           onSubmit={handleStep2}
+        />
+      )}
+      {step === 3 && (
+        <Step3Otp
+          email={step1Data.email ?? ''}
+          loading={loading}
+          resendLoading={resendLoading}
+          error={otpError}
+          onVerify={handleVerifyOtp}
+          onResend={handleResendOtp}
         />
       )}
 

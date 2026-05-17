@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import type { WalletTransaction } from '@/types/user';
-import { mockUser, mockTransactions } from '@/lib/mockUser';
+// Mock data removed
 import BottomSheet from '@/components/shared/BottomSheet';
 
 const QUICK_AMOUNTS = [50, 100, 200, 500, 1000];
@@ -266,8 +266,8 @@ function TopUpModal({
 }
 
 export default function WalletPage() {
-  const [balance, setBalance] = useState(mockUser.wallet_balance);
-  const [transactions, setTransactions] = useState<WalletTransaction[]>(mockTransactions);
+  const [balance, setBalance] = useState(0); // TODO: fetch from API
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]); // TODO: fetch from API
   const [topUpOpen, setTopUpOpen] = useState(false);
 
   function handleTopUp(amount: number) {

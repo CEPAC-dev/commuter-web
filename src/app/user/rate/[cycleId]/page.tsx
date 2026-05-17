@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { mockRequests } from '@/lib/mockUser';
+import type { UserRequest } from '@/types/user';
+// Mock data removed
 
 const STAR_LABELS = ['', 'Terrible', 'Poor', 'OK', 'Good', 'Excellent'];
 
@@ -61,7 +62,7 @@ function StarRatingInput({ value, onChange }: StarRatingInputProps) {
   );
 }
 
-export default function RatePage({ params }: { params: { cycleId: string } }) {
+export default function RatePage() {
   const router = useRouter();
   const [stars, setStars] = useState<number>(0);
   const [comment, setComment] = useState('');
@@ -69,9 +70,20 @@ export default function RatePage({ params }: { params: { cycleId: string } }) {
   const [loading, setLoading] = useState(false);
 
   // Find matching completed request
-  const request = mockRequests.find((r) => r.id === params.cycleId && r.status === 'completed');
+  // TODO: fetch from API endpoint when available
+  const requestData: UserRequest | null = null; // mockRequests.find((r) => r.id === params.cycleId && r.status === 'completed');
+  const request = requestData || ({
+    id: '', status: 'completed' as const, origin: { address: '', lat: 0, lng: 0 },
+    destination: { address: '', lat: 0, lng: 0 }, distance_km: 0, duration_minutes: 0,
+    route_coordinates: [], trip_type: 'one_way' as const, ride_type: 'shared' as const,
+    gender_pref: 'mixed' as const, seat_preference: 'any' as const, walk_minutes: 0 as const,
+    days: [], time_slots: [], arrival_from: '', arrival_to: '', departure_from: '', departure_to: '',
+    cycle_start_date: '', cycle_end_date: '', base_price: 0, estimated_price_min: 0, estimated_price_max: 0,
+    passenger_count: 1, group_type: 'own' as const, group_action: null, pickup_points: [], created_at: '',
+    driver_name: 'Driver', driver_rating: 0,
+  });
 
-  if (!request) {
+  if (!requestData) {
     return (
       <div style={{ maxWidth: 480, margin: '40px auto', textAlign: 'center', color: '#5A6A7A' }}>
         <div style={{ fontSize: 40 }}>🔍</div>

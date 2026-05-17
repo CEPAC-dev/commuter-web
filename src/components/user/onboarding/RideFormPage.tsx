@@ -10,7 +10,7 @@ import { MapProvider, useMap } from '@/lib/MapContext';
 import { useIntent } from '@/lib/IntentContext';
 import { useUserLocation } from '@/lib/useUserLocation';
 import { reverseGeocode } from '@/lib/nominatim';
-import { mockUser } from '@/lib/mockUser';
+// Mock data removed
 import { getNextAvailableCycleStart } from '@/lib/cycleUtils';
 import { computeArrivalFrom, computeArrivalTo } from '@/lib/timeUtils';
 import RequestForm, { type RequestFormData } from '@/components/user/request/RequestForm';
@@ -136,7 +136,7 @@ function RideFormInner({ rideType, backHref }: RideFormInnerProps) {
           userLoc={userLat && userLng ? { lat: userLat, lng: userLng } : null}
           pickingField={pickingField}
           onMapPick={handleMapPick}
-          walk_minutes={mockUser.walk_minutes}
+          walk_minutes={0}
         />
         {(pickingField || pickingStopIdx >= 0) && (
           <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', background: '#0B1E3D', color: '#fff', borderRadius: 20, padding: '8px 16px', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', zIndex: 10 }}>
@@ -151,7 +151,7 @@ function RideFormInner({ rideType, backHref }: RideFormInnerProps) {
 
       {/* Location inputs */}
       <FloatingSearchBar
-        savedLocations={mockUser.saved_locations}
+        savedLocations={[]}
         onPickOnMap={(field) => setPickingField(field)}
         onCurrentLocation={handleCurrentLocation}
         onPickStopOnMap={(idx) => { setPickingStopIdx(idx); setPickingField('stop'); }}
@@ -205,7 +205,7 @@ function RideFormInner({ rideType, backHref }: RideFormInnerProps) {
         showErrors={showErrors}
         distanceKm={distanceKm}
         lockedToPrivate={isPrivate}
-        walkMinutes={mockUser.walk_minutes}
+        walkMinutes={0}
       />
     </div>
   );

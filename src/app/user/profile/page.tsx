@@ -1,8 +1,7 @@
 ﻿'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { mockUser } from '@/lib/mockUser';
 import type { UserProfile } from '@/types/user';
 import EditProfileModal from '@/components/user/profile/EditProfileModal';
 import SavedLocationsSection from '@/components/user/profile/SavedLocationsSection';
@@ -13,13 +12,53 @@ function formatDate(iso: string) {
 }
 
 export default function ProfilePage() {
-  const [profile, setProfile] = useState<UserProfile>(mockUser);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editOpen, setEditOpen] = useState(false);
 
+  useEffect(() => {
+    // Backend endpoint /api/user/profile doesn't exist yet
+    // For now, create minimal profile from localStorage (saved at sign-in)
+    const getName = () => {
+      if (typeof window === 'undefined') return '';
+      return localStorage.getItem('commuter_name') ?? '';
+    };
+
+    const name = getName();
+    if (name) {
+      setProfile({
+        id: '',
+        name,
+        email: '',
+        phone: '',
+        gender: 'male',
+        date_of_birth: '',
+        avatar_url: null,
+        joined_at: new Date().toISOString(),
+        rating: 0,
+        total_cycles: 0,
+        active_cycles: 0,
+        wallet_balance: 0,
+        gender_pref: 'mixed',
+        walk_minutes: 0 as 0 | 5 | 10,
+        seat_preference: 'any',
+        saved_locations: [],
+      });
+    }
+  }, []);
+
+  if (!profile) {
+    return (
+      <div style={{ maxWidth: 760, margin: '40px auto', textAlign: 'center', color: '#5A6A7A' }}>
+        Loading profile…
+      </div>
+    );
+  }
+
   function handleSave(updates: Partial<UserProfile>) {
-    setProfile((p) => ({ ...p, ...updates }));
+    setProfile((p) => p ? { ...p, ...updates } : null);
     toast.success('Profile updated!');
   }
+
   const initials = profile.name
     .split(' ')
     .map((p) => p[0])
@@ -226,7 +265,7 @@ export default function ProfilePage() {
           <div style={{ display: 'flex', gap: 8 }}>
             {(['mixed', 'same'] as const).map((val) => (
               <button key={val} type="button"
-                onClick={() => setProfile((p) => ({ ...p, gender_pref: val }))}
+                onClick={() => setProfile((p) => p ? { ...p, gender_pref: val } : null)}
                 style={{
                   padding: '7px 18px', borderRadius: 20, fontSize: 13, cursor: 'pointer',
                   fontFamily: 'inherit', border: '1.5px solid',
@@ -250,7 +289,7 @@ export default function ProfilePage() {
               [10, '10 min', '~800 m · -15%'],
             ] as const).map(([val, title, sub]) => (
               <button key={val} type="button"
-                onClick={() => setProfile((p) => ({ ...p, walk_minutes: val }))}
+                onClick={() => setProfile((p) => p ? { ...p, walk_minutes: val } : null)}
                 style={{
                   padding: '8px 14px', borderRadius: 10, fontSize: 13, cursor: 'pointer',
                   fontFamily: 'inherit', border: '1.5px solid', textAlign: 'left',
@@ -272,7 +311,7 @@ export default function ProfilePage() {
           <div style={{ display: 'flex', gap: 8 }}>
             {(['front', 'back', 'any'] as const).map((val) => (
               <button key={val} type="button"
-                onClick={() => setProfile((p) => ({ ...p, seat_preference: val }))}
+                onClick={() => setProfile((p) => p ? { ...p, seat_preference: val } : null)}
                 style={{
                   padding: '8px 18px', borderRadius: 20, fontSize: 13, cursor: 'pointer',
                   fontFamily: 'inherit', border: '1.5px solid',
@@ -310,7 +349,7 @@ export default function ProfilePage() {
       >
         <SavedLocationsSection
           locations={profile.saved_locations}
-          onUpdate={(locs) => setProfile((p) => ({ ...p, saved_locations: locs }))}
+          onUpdate={(locs) => setProfile((p) => p ? { ...p, saved_locations: locs } : null)}
         />
       </div>
 

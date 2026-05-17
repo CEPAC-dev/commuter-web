@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { DriverCycleRequest } from '@/types/driver';
-import { mockRequests, mockDriver } from '@/lib/mockDriver';
+// Mock data removed
 import RequestCard from '@/components/driver/RequestCard';
 import RequestDetailModal from '@/components/driver/RequestDetailModal';
 import RaisePriceModal from '@/components/driver/RaisePriceModal';
@@ -19,7 +19,7 @@ const TABS: { key: StatusFilter; label: string }[] = [
   { key: 'cancelled',  label: 'Cancelled' },
 ];
 
-const DRIVER_GENDER = mockDriver.gender;
+const DRIVER_GENDER = 'male'; // TODO: get from driver profile API
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'newest', label: 'Newest first' },
@@ -31,7 +31,7 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 const PAGE_SIZE = 10;
 
 export default function MyRequestsPage() {
-  const [requests, setRequests] = useState<DriverCycleRequest[]>(mockRequests);
+  const [requests, setRequests] = useState<DriverCycleRequest[]>([]); // TODO: fetch from API
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('confirmed');
   const [sortKey, setSortKey] = useState<SortKey>('newest');
   const [page, setPage] = useState(1);

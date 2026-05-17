@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { Notification } from '@/types/user';
-import { mockNotifications } from '@/lib/mockUser';
+// Mock data removed
 
 const TYPE_ICONS: Record<Notification['type'], string> = {
   request_matched: '✅',
@@ -100,7 +100,7 @@ function NotificationItem({
 }
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]); // TODO: fetch from API
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 

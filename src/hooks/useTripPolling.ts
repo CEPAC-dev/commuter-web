@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { DailyTrip } from '@/types/trip';
-import { fetchTripState } from '@/lib/mockTrip';
+// Mock data removed - API endpoints should provide data
 
 /**
  * Polls trip state at a fixed interval.
@@ -10,21 +10,22 @@ export function useTripPolling(
   tripId: string,
   intervalMs: number = 10_000,
 ) {
-  const [trip, setTrip] = useState<DailyTrip | null>(null);
+  const [trip, setTrip] = useState<DailyTrip | null>(null); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
-      const data = await fetchTripState(tripId);
-      setTrip(data);
+      // TODO: fetch trip state from API endpoint when available
+      // const data = await fetchTripState(tripId);
+      // setTrip(data);
       setError(null);
     } catch {
       setError('Failed to load trip');
     } finally {
       setLoading(false);
     }
-  }, [tripId]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Initial load
   useEffect(() => {

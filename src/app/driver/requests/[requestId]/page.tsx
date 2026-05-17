@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
-import { mockRequests } from '@/lib/mockDriver';
+// Mock data removed
 import RequestDetailModal from '@/components/driver/RequestDetailModal';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -11,7 +11,7 @@ import { DriverCycleRequest } from '@/types/driver';
 export default function RequestDetailPage() {
   const params = useParams();
   const requestId = params?.requestId as string;
-  const [requests, setRequests] = useState<DriverCycleRequest[]>(mockRequests);
+  const [requests, setRequests] = useState<DriverCycleRequest[]>([]); // TODO: fetch from API
 
   const request = requests.find((r) => r.id === requestId) ?? null;
 

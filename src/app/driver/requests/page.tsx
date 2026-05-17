@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { DriverCycleRequest } from '@/types/driver';
-import { mockRequests, mockDriver } from '@/lib/mockDriver';
+// Mock data removed
 import RequestCard from '@/components/driver/RequestCard';
 import RequestDetailDrawer from '@/components/driver/RequestDetailDrawer';
 import RaisePriceModal from '@/components/driver/RaisePriceModal';
@@ -15,7 +15,7 @@ type RideTypeFlt = 'any' | 'shared' | 'private';
 type GenderFlt   = 'any' | 'mixed' | 'same';
 type WalkFlt     = 'any' | '0' | '5' | '10';
 
-const DRIVER_GENDER = mockDriver.gender;
+const DRIVER_GENDER = 'male'; // TODO: get from driver profile API
 const PAGE_SIZE = 10;
 
 export default function RequestsPage() {
@@ -31,7 +31,7 @@ export default function RequestsPage() {
   ];
 
   const [requests,       setRequests]       = useState<DriverCycleRequest[]>(
-    () => mockRequests.filter((r) => r.status === 'available')
+    [] // TODO: fetch from API
   );
   const [sortKey,        setSortKey]        = useState<SortKey>('nearest-start');
   const [rideTypeFilter, setRideTypeFilter] = useState<RideTypeFlt>('any');

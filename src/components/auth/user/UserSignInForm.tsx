@@ -51,47 +51,6 @@ export default function UserSignInForm() {
       <h1 style={{ fontSize: 28, fontWeight: 700, color: '#0B1E3D', margin: '0 0 6px' }}>Welcome back</h1>
       <p style={{ fontSize: 14, color: '#5A6A7A', margin: '0 0 16px' }}>Sign in to your Commuter account</p>
 
-      {/* Demo credentials banner */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 12,
-          padding: '10px 14px',
-          marginBottom: 24,
-          background: '#EFF7F6',
-          border: '1.5px dashed #00C2A8',
-          borderRadius: 10,
-        }}
-      >
-        <div>
-          <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#0B1E3D' }}>Demo account</p>
-          <p style={{ margin: '2px 0 0', fontSize: 12, color: '#5A6A7A', fontFamily: 'monospace' }}>
-            sara@commuter.eg · user1234
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => { setEmail('sara@commuter.eg'); setPassword('user1234'); setEmailErr(''); setPwErr(''); }}
-          style={{
-            flexShrink: 0,
-            padding: '6px 14px',
-            border: 'none',
-            borderRadius: 8,
-            background: '#00C2A8',
-            color: '#0B1E3D',
-            fontSize: 12,
-            fontWeight: 700,
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            minHeight: 36,
-          }}
-        >
-          Fill in
-        </button>
-      </div>
-
       {/* Email */}
       <div style={{ marginBottom: 16 }}>
         <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#0B1E3D', marginBottom: 6 }}>Email address</label>
