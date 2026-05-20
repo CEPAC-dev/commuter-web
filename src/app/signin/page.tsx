@@ -43,7 +43,7 @@ export default function SignInPage() {
     if (email === MOCK_EMAIL && password === MOCK_PASSWORD) {
       toast.success('Welcome back, Ahmed!');
       await new Promise((res) => setTimeout(res, 600));
-      router.push('/driver/requests');
+      router.replace('/driver/requests');
     } else {
       setLoading(false);
       toast.error('Invalid email or password');

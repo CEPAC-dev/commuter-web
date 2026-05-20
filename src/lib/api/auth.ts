@@ -108,6 +108,13 @@ export async function getUserProfile(): Promise<UserProfile> {
     walk_minutes:    ([0, 5, 10].includes(Number(u.walk_minutes)) ? Number(u.walk_minutes) : 0) as 0 | 5 | 10,
     seat_preference: u.seat_preference ?? 'any',
     saved_locations: u.saved_locations ?? [],
+    whatsapp_number: u.whatsapp_number ?? '',
+    province:        u.province ?? '',
+    district:        u.district ?? '',
+    sub_district:    u.sub_district ?? '',
+    building:        u.building ?? '',
+    street:          u.street ?? '',
+    landmark:        u.landmark ?? '',
   };
   return profile;
 }

@@ -1,15 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Mail, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import PasswordInput from '@/components/shared/PasswordInput';
 import { signIn } from '@/lib/api/auth';
 import { saveSession } from '@/lib/auth';
 export default function UserSignInForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get('next');
+
+  // If already logged in (e.g. back button from bfcache), send to dashboard
+  useEffect(() => {
+    const token = localStorage.getItem('commuter_token');
+    if (!token) return;
+    const role = localStorage.getItem('commuter_role');
+    router.replace(role === 'driver' ? '/driver/requests' : '/user/my-requests');
+  }, [router]);
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [emailErr, setEmailErr] = useState('');
@@ -33,8 +43,9 @@ export default function UserSignInForm() {
     try {
       const result = await signIn({ email, password }, 'user');
       saveSession(result);
+      if (typeof window !== 'undefined') localStorage.setItem('commuter_email', email);
       toast.success(`Welcome back, ${result.name}! 👋`);
-      router.push('/user/my-requests');
+      router.replace(nextPath || '/user/my-requests');
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Sign in failed. Please try again.';
       toast.error(errorMsg);

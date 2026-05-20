@@ -24,6 +24,8 @@ interface WizardState {
   group_action:    'create' | 'join' | null;
   group_code:      string | null;
   passenger_count: number;
+  include_self:    boolean;
+  selected_passenger_ids: number[];
 
   // Step 2 — outbound route
   origin:      GeoLocation | null;
@@ -50,6 +52,8 @@ interface WizardActions {
   setGroupAction:    (action: 'create' | 'join') => void;
   setGroupCode:      (code: string) => void;
   setPassengerCount: (n: number) => void;
+  setIncludeSelf:    (v: boolean) => void;
+  setSelectedPassengerIds: (ids: number[]) => void;
   setRoute:          (
     origin:      GeoLocation,
     destination: GeoLocation,
@@ -76,6 +80,8 @@ const defaultState: WizardState = {
   group_action:     null,
   group_code:       null,
   passenger_count:  1,
+  include_self:     false,
+  selected_passenger_ids: [],
   origin:           null,
   stops:            [],
   destination:      null,
@@ -108,6 +114,12 @@ export function RequestWizardProvider({ children }: { children: ReactNode }) {
     },
     setPassengerCount(n) {
       setState(prev => ({ ...prev, passenger_count: n }));
+    },
+    setIncludeSelf(v) {
+      setState(prev => ({ ...prev, include_self: v }));
+    },
+    setSelectedPassengerIds(ids) {
+      setState(prev => ({ ...prev, selected_passenger_ids: ids }));
     },
     setRoute(origin, destination, stops, route) {
       setState(prev => ({

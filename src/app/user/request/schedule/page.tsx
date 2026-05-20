@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWizard } from '@/lib/RequestWizardContext';
 import type { WizardTimeSlot } from '@/lib/RequestWizardContext';
@@ -13,7 +13,41 @@ import Section from '@/components/shared/Section';
 import { getNextAvailableCycleStart, formatCycleStartDate } from '@/lib/cycleUtils';
 import { calculatePriceRange } from '@/lib/pricing';
 import { computeArrivalFrom, computeArrivalTo } from '@/lib/timeUtils';
+import { getPassengers, type ApiPassenger } from '@/lib/api/passengers';
+import { getName } from '@/lib/auth';
 // Mock data removed
+
+// ── Group code display card ────────────────────────────────────────────────────
+
+function GroupCodeCard({ code }: { code: string }) {
+  const [copied, setCopied] = React.useState(false);
+  const display = code.replace('-', ' – ');
+
+  function handleCopy() {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <div className="bg-[#EFF7F6] border border-[#C8E8E4] rounded-xl p-4 flex items-center justify-between">
+      <div>
+        <p className="text-xs font-semibold text-[#5A6A7A] mb-0.5">Your group code</p>
+        <p className="text-xl font-bold tracking-[0.18em] text-[#00C2A8]">{display}</p>
+        <p className="text-xs text-[#5A6A7A] mt-0.5">Share with friends · expires after 48 hours</p>
+      </div>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="ml-4 px-3 py-2 rounded-lg border border-[#C8E8E4] bg-white text-sm font-medium text-[#00C2A8] hover:bg-[#EFF7F6] transition-colors"
+        style={{ fontFamily: 'inherit' }}
+      >
+        {copied ? '✓ Copied' : '📋 Copy'}
+      </button>
+    </div>
+  );
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -53,6 +87,9 @@ function validateSchedule(slots: WizardTimeSlot[]): string | null {
     if (gap < 30 || gap > 120)
       return `Invalid pickup window for Time slot ${n}`;
   }
+  const totalDays = new Set(slots.flatMap(s => s.days)).size;
+  if (totalDays < 3)
+    return `Select at least 3 days in total (currently ${totalDays}/3)`;
   return null;
 }
 
@@ -62,10 +99,33 @@ export default function SchedulePage() {
   const router = useRouter();
   const wizard = useWizard();
   const {
-    ride_type, group_type, passenger_count, seat_preference,
-    setTimeSlots, setPassengerCount,
+    ride_type, group_type, group_code,
+    passenger_count, seat_preference,
+    include_self, selected_passenger_ids,
+    setTimeSlots, setPassengerCount, setIncludeSelf, setSelectedPassengerIds,
     updateSlotRoute, updateSlotReturnRoute,
   } = wizard;
+
+  // ── Passenger picker state (private rides) ──────────────────────────────────
+  const [ridePassengers,    setRidePassengers]    = useState<ApiPassenger[]>([]);
+  const [passengersLoading, setPassengersLoading] = useState(false);
+
+  useEffect(() => {
+    if (ride_type !== 'private') return;
+    setPassengersLoading(true);
+    getPassengers()
+      .then(setRidePassengers)
+      .catch(() => {})
+      .finally(() => setPassengersLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ride_type]);
+
+  // Keep passenger_count in sync whenever selections change
+  useEffect(() => {
+    const total = (include_self ? 1 : 0) + selected_passenger_ids.length;
+    setPassengerCount(total > 0 ? total : 1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [include_self, selected_passenger_ids]);
 
   const cycleStartDate  = getNextAvailableCycleStart();
   const cycleStartLabel = formatCycleStartDate(cycleStartDate, 'en');
@@ -138,6 +198,8 @@ export default function SchedulePage() {
 
   function handleAddSlot() {
     if (allDaysAssigned || slots.length >= 4) return;
+    const lastSlot = slots[slots.length - 1];
+    if (lastSlot && lastSlot.days.length === 0) return;
     persist([...slots, makeDefaultSlot(assignedDays, slots[0])]);
   }
 
@@ -270,31 +332,114 @@ export default function SchedulePage() {
 
         <div className="px-4 py-4 space-y-2">
 
-          {/* Passenger count — private only */}
+          {/* Group code card — shared friends flow only */}
+          {ride_type === 'shared' && group_type === 'friends' && group_code && (
+            <GroupCodeCard code={group_code} />
+          )}
+
+          {/* Who is riding — private only */}
           {ride_type === 'private' && (
-            <Section title="Passengers">
-              <p className="text-xs text-[#5A6A7A] mb-3">
-                How many people will ride with you?
+            <Section
+              title="Who is riding?"
+              rightLabel={`${(include_self ? 1 : 0) + selected_passenger_ids.length}/4 selected`}
+            >
+              <p className="text-xs text-[#5A6A7A] mb-4">
+                Select up to 4 passengers. You can include yourself or book for others only.
               </p>
-              <div className="flex gap-2 items-center">
-                {[1, 2, 3].map(n => (
+
+              {/* Me row */}
+              {(() => {
+                const myName = getName() ?? 'Me';
+                const checked = include_self;
+                const total = (include_self ? 1 : 0) + selected_passenger_ids.length;
+                const disabled = !checked && total >= 4;
+                return (
                   <button
-                    key={n}
-                    onClick={() => setPassengerCount(n)}
-                    className={`w-12 h-12 rounded-xl border-2 text-base font-bold transition-colors ${
-                      passenger_count === n
-                        ? 'border-[#00C2A8] bg-[#EFF7F6] text-[#0B1E3D]'
-                        : 'border-[#E2E8F0] bg-white text-[#5A6A7A]'
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => setIncludeSelf(!include_self)}
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl border-2 mb-3 text-left transition-colors ${
+                      checked
+                        ? 'border-[#00C2A8] bg-[#EFF7F6]'
+                        : disabled
+                        ? 'border-[#E2E8F0] bg-[#F8F9FA] opacity-50'
+                        : 'border-[#E2E8F0] bg-white hover:border-[#C8E8E4]'
                     }`}
-                    style={{ fontFamily: 'inherit', cursor: 'pointer' }}
                   >
-                    {n}
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${checked ? 'border-[#00C2A8] bg-[#00C2A8]' : 'border-[#C0CBD5]'}`}>
+                      {checked && <div className="w-2 h-2 rounded-full bg-white" />}
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-[#0B1E3D] text-[#00C2A8] flex items-center justify-center text-xs font-bold flex-shrink-0">
+                      {myName.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-[#0B1E3D]">Me ({myName})</p>
+                      <p className="text-xs text-[#8A9AB0]">Account holder</p>
+                    </div>
                   </button>
-                ))}
-                <span className="text-xs text-[#5A6A7A] ml-2">
-                  + you = <strong>{passenger_count + 1}</strong> total
-                </span>
-              </div>
+                );
+              })()}
+
+              {/* Related passengers */}
+              {passengersLoading ? (
+                <p className="text-xs text-[#8A9AB0] py-2">Loading passengers…</p>
+              ) : ridePassengers.length > 0 ? (
+                <>
+                  <p className="text-xs font-semibold text-[#8A9AB0] uppercase tracking-wide mb-2">
+                    Related passengers
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {ridePassengers.map((p) => {
+                      const checked = selected_passenger_ids.includes(p.id);
+                      const total = (include_self ? 1 : 0) + selected_passenger_ids.length;
+                      const disabled = !checked && total >= 4;
+                      const initials = p.name.split(' ').slice(0, 2).map((n) => n[0]?.toUpperCase() ?? '').join('');
+
+                      function toggle() {
+                        if (checked) {
+                          setSelectedPassengerIds(selected_passenger_ids.filter((id) => id !== p.id));
+                        } else if (!disabled) {
+                          setSelectedPassengerIds([...selected_passenger_ids, p.id]);
+                        }
+                      }
+
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          disabled={disabled}
+                          onClick={toggle}
+                          className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl border-2 text-left transition-colors ${
+                            checked
+                              ? 'border-[#00C2A8] bg-[#EFF7F6]'
+                              : disabled
+                              ? 'border-[#E2E8F0] bg-[#F8F9FA] opacity-50'
+                              : 'border-[#E2E8F0] bg-white hover:border-[#C8E8E4]'
+                          }`}
+                        >
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${checked ? 'border-[#00C2A8] bg-[#00C2A8]' : 'border-[#C0CBD5]'}`}>
+                            {checked && <div className="w-2 h-2 rounded-full bg-white" />}
+                          </div>
+                          <div className="w-8 h-8 rounded-full bg-[#E0F7F4] text-[#00917D] flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            {initials}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-[#0B1E3D]">{p.name}</p>
+                            <p className="text-xs text-[#8A9AB0]">
+                              {p.relation ? `${p.relation} · ` : ''}{p.age} yrs · {p.gender === 'male' ? 'Male' : 'Female'}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs text-[#8A9AB0] py-1">
+                  No related passengers saved. Add them in your{' '}
+                  <a href="/user/profile" className="text-[#00C2A8] font-medium hover:underline">profile</a>.
+                </p>
+              )}
             </Section>
           )}
 

@@ -37,6 +37,7 @@ export interface UserProfile {
   name:            string;
   email:           string;
   phone:           string;
+  whatsapp_number: string;
   gender:          'male' | 'female';
   date_of_birth:   string;
   avatar_url:      string | null;
@@ -49,6 +50,31 @@ export interface UserProfile {
   gender_pref:     GenderPref;
   walk_minutes:    WalkMinutes;
   seat_preference: 'front' | 'back' | 'any';
+  province:        string;
+  district:        string;
+  sub_district:    string;
+  building:        string;
+  street:          string;
+  landmark:        string;
+}
+
+// ── Related Passenger ─────────────────────────────────────────────────────────
+
+export interface RelatedPassenger {
+  id:        string;
+  name:      string;
+  phone?:    string;
+  age:       number;
+  gender:    'male' | 'female';
+  relation?: string;
+}
+
+export interface PassengerPayload {
+  name:      string;
+  phone?:    string;
+  age:       number;
+  gender:    'male' | 'female';
+  relation?: string;
 }
 
 export interface SavedLocation {

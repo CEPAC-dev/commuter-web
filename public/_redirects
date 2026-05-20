@@ -1,0 +1,3 @@
+# Netlify: handled by @netlify/plugin-nextjs — this file is a safety fallback
+# The Next.js plugin manages all routing; this catches any unhandled paths.
+/* /index.html 200

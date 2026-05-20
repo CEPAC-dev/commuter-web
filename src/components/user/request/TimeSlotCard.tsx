@@ -53,9 +53,8 @@ export default function TimeSlotCard({
   onRemove,
 }: TimeSlotCardProps) {
   const palette = SLOT_COLORS[(slotNumber - 1) % SLOT_COLORS.length];
-  const locked = !slot.route_set;
 
-  // Is this slot's route different from slot 1?
+  const routeLocked = !slot.route_set;
   const routeIsCustom =
     slotIndex === 0 ||
     slot.origin?.address !== slot1Origin ||
@@ -83,7 +82,7 @@ export default function TimeSlotCard({
     onReturnChange(newFrom, addMinutes(newFrom, 30));
   }
 
-  const disabledSection = locked ? 'opacity-40 pointer-events-none select-none' : '';
+  const disabledSection = routeLocked ? 'opacity-40 pointer-events-none select-none' : '';
 
   return (
     <div
@@ -189,7 +188,7 @@ export default function TimeSlotCard({
               <button
                 key={tt}
                 type="button"
-                disabled={locked}
+                disabled={routeLocked}
                 onClick={() => onTripTypeChange(tt)}
                 className="h-10 rounded-lg border text-sm font-medium transition-colors"
                 style={slot.trip_type === tt
@@ -210,7 +209,7 @@ export default function TimeSlotCard({
               <label className="block text-xs text-[#9AA0A6] mb-1">From</label>
               <select
                 value={slot.pickup_from}
-                disabled={locked}
+                disabled={routeLocked}
                 onChange={(e) => handleFromChange(e.target.value)}
                 className="w-full h-11 border border-[#E2E8F0] rounded-lg px-3 text-sm text-[#0B1E3D] bg-white focus:outline-none"
                 style={{ outlineColor: palette.accent }}
@@ -224,7 +223,7 @@ export default function TimeSlotCard({
               <label className="block text-xs text-[#9AA0A6] mb-1">To</label>
               <select
                 value={slot.pickup_to}
-                disabled={locked}
+                disabled={routeLocked}
                 onChange={(e) => onPickupChange(slot.pickup_from, e.target.value)}
                 className="w-full h-11 border border-[#E2E8F0] rounded-lg px-3 text-sm text-[#0B1E3D] bg-white focus:outline-none"
                 style={{ outlineColor: palette.accent }}
@@ -241,7 +240,7 @@ export default function TimeSlotCard({
         </div>
 
         {/* Estimated arrival — computed, read-only */}
-        {!locked && slot.arrival_from && slot.arrival_to && (
+        {!routeLocked && slot.arrival_from && slot.arrival_to && (
           <div>
             <label className="block text-xs font-medium text-[#5A6A7A] mb-1">Estimated arrival</label>
             <div className="bg-[#F8F9FA] border border-[#E2E8F0] rounded-xl px-3 py-2 text-sm text-[#0B1E3D] font-medium">
@@ -252,7 +251,7 @@ export default function TimeSlotCard({
         )}
 
         {/* Round trip return section */}
-        {slot.trip_type === 'round_trip' && !locked && (
+        {slot.trip_type === 'round_trip' && !routeLocked && (
           <div className="pt-3 border-t border-[#F1F3F4] space-y-3">
             {/* Return route summary */}
             <div className="bg-[#F8F9FA] rounded-xl p-3 border border-[#E2E8F0]">
@@ -329,42 +328,42 @@ export default function TimeSlotCard({
             )}
           </div>
         )}
+      </div>
 
-        {/* Days */}
-        <div>
-          <label className="block text-xs font-medium text-[#5A6A7A] mb-2">Days for this slot</label>
-          <div className="flex gap-1.5 flex-wrap">
-            {ALL_DAYS.map((day) => {
-              const isSelected   = slot.days.includes(day);
-              const takenByOther = !isSelected && assignedDays.includes(day);
-              return (
-                <button
-                  key={day}
-                  type="button"
-                  disabled={locked || takenByOther}
-                  onClick={() => !takenByOther && onDayToggle(day)}
-                  className={`w-10 h-10 rounded-full text-xs font-medium border transition-colors ${
-                    isSelected
-                      ? 'text-white'
-                      : takenByOther
-                        ? 'bg-[#F1F3F4] border-[#E2E8F0] text-[#C5CDD6] cursor-not-allowed'
-                        : 'bg-white border-[#E2E8F0] text-[#5A6A7A]'
-                  }`}
-                  style={isSelected
-                    ? { background: palette.accent, borderColor: palette.accent }
-                    : !takenByOther
-                      ? { borderColor: palette.border, color: palette.deep }
-                      : undefined}
-                >
-                  {day}
-                </button>
-              );
-            })}
-          </div>
-          {!locked && slot.days.length === 0 && (
-            <p className="text-xs text-[#E74C3C] mt-1">Select at least one day for this slot</p>
-          )}
+      {/* ── Days — always interactive, at the bottom ── */}
+      <div>
+        <label className="block text-xs font-medium text-[#5A6A7A] mb-2">Days for this slot</label>
+        <div className="flex gap-1.5 flex-wrap">
+          {ALL_DAYS.map((day) => {
+            const isSelected   = slot.days.includes(day);
+            const takenByOther = !isSelected && assignedDays.includes(day);
+            return (
+              <button
+                key={day}
+                type="button"
+                disabled={takenByOther}
+                onClick={() => !takenByOther && onDayToggle(day)}
+                className={`w-10 h-10 rounded-full text-xs font-medium border transition-colors ${
+                  isSelected
+                    ? 'text-white'
+                    : takenByOther
+                      ? 'bg-[#F1F3F4] border-[#E2E8F0] text-[#C5CDD6] cursor-not-allowed'
+                      : 'bg-white border-[#E2E8F0] text-[#5A6A7A]'
+                }`}
+                style={isSelected
+                  ? { background: palette.accent, borderColor: palette.accent }
+                  : !takenByOther
+                    ? { borderColor: palette.border, color: palette.deep }
+                    : undefined}
+              >
+                {day}
+              </button>
+            );
+          })}
         </div>
+        {slot.days.length === 0 && (
+          <p className="text-xs text-[#E74C3C] mt-1.5">Select at least one day for this slot</p>
+        )}
       </div>
     </div>
   );

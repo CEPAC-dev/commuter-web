@@ -120,7 +120,7 @@ export default function UserSignUpForm() {
       await verifyOtp(step1Data.email.trim(), code);
       saveSession(pendingAuth);
       toast.success(`Welcome to Commuter, ${step1Data.name!.trim()}! 🎉`);
-      router.push('/user/onboarding');
+      router.replace('/user/onboarding');
     } catch (err: unknown) {
       setOtpError(err instanceof Error ? err.message : 'Invalid or expired code. Please try again.');
     } finally {

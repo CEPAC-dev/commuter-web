@@ -32,6 +32,10 @@ export default function ScheduleBuilder({
 }: ScheduleBuilderProps) {
   const slot1 = timeSlots[0];
 
+  const lastSlot = timeSlots[timeSlots.length - 1];
+  const lastSlotNeedsDay = !!lastSlot && lastSlot.days.length === 0;
+  const addDisabled = allDaysAssigned || timeSlots.length >= 4 || lastSlotNeedsDay;
+
   return (
     <div className="space-y-3">
       {timeSlots.map((slot, index) => (
@@ -57,10 +61,10 @@ export default function ScheduleBuilder({
       <button
         type="button"
         onClick={onAddSlot}
-        disabled={allDaysAssigned || timeSlots.length >= 4}
+        disabled={addDisabled}
         className={`
           w-full py-3 rounded-xl border-2 border-dashed text-sm font-medium transition-colors
-          ${allDaysAssigned || timeSlots.length >= 4
+          ${addDisabled
             ? 'border-[#E2E8F0] text-[#C5CDD6] cursor-not-allowed'
             : 'border-[#00C2A8] text-[#00C2A8] hover:bg-[#EFF7F6]'}
         `}
@@ -69,7 +73,9 @@ export default function ScheduleBuilder({
           ? 'All 7 days scheduled'
           : timeSlots.length >= 4
             ? 'Maximum 4 slots reached'
-            : '+ Add time slot'}
+            : lastSlotNeedsDay
+              ? 'Select days for current slot first'
+              : '+ Add time slot'}
       </button>
 
       <div className="w-full bg-[#F1F3F4] rounded-full h-1.5">

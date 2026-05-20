@@ -6,6 +6,8 @@ import { searchAddress, formatDisplayName, getPlaceDetails, type NominatimResult
 import type { SavedLocation } from '@/types/user';
 import { useMap } from '@/lib/MapContext';
 import { useIntent } from '@/lib/IntentContext';
+import { getFavouritePlaces, type FavouritePlace } from '@/lib/api/savedLocations';
+
 
 export interface LocationValue {
   address: string;
@@ -46,7 +48,6 @@ interface Props {
 }
 
 export default function FloatingSearchBar({
-  savedLocations = [],
   onPickOnMap,
   onCurrentLocation,
   onPickStopOnMap,
@@ -65,6 +66,7 @@ export default function FloatingSearchBar({
   // activeField: 'from' | 'to' | number (stop index) | null
   const [activeField, setActiveField] = useState<'from' | 'to' | number | null>(null);
   const [recentRoutes, setRecentRoutes] = useState<RecentRoute[]>([]);
+  const [favPlaces, setFavPlaces] = useState<FavouritePlace[]>([]);
 
   const [stopTexts, setStopTexts] = useState<string[]>(() => stops.map(s => s?.address ?? ''));
   const [stopResults, setStopResults] = useState<NominatimResult[][]>(() => stops.map(() => []));
@@ -89,6 +91,11 @@ export default function FloatingSearchBar({
   useEffect(() => {
     if (expanded) setRecentRoutes(getRecentRoutes());
   }, [expanded]);
+
+  // Fetch favourite places once on mount
+  useEffect(() => {
+    getFavouritePlaces().then(setFavPlaces).catch(() => {});
+  }, []);
 
   useEffect(() => { setFromText(from?.address ?? ''); }, [from]);
   useEffect(() => { setToText(to?.address ?? ''); }, [to]);
@@ -222,7 +229,7 @@ export default function FloatingSearchBar({
           />
         </div>
 
-        {(showSuggestions ? (recentRoutes.length > 0 || savedLocations.length > 0) : results.length > 0 || loading) && (
+        {(showSuggestions ? (recentRoutes.length > 0 || favPlaces.length > 0) : results.length > 0 || loading) && (
           <div style={{ height: 1, background: '#F3F4F6', margin: '0 14px' }} />
         )}
 
@@ -255,25 +262,31 @@ export default function FloatingSearchBar({
           </div>
         )}
 
-        {showSuggestions && savedLocations.length > 0 && (
+        {showSuggestions && favPlaces.length > 0 && (
           <div style={{ padding: '8px 0' }}>
-            <SectionHeader label={t('saved_label')} />
-            {savedLocations.map((s) => {
-              const isHome = s.label === 'home';
-              const isWork = s.label === 'work';
-              const bg = isHome ? '#EFF7F6' : isWork ? '#F0F4FF' : '#FFFBEB';
+            <SectionHeader label="Favourite Places" />
+            {favPlaces.map((fp) => {
+              const nick = fp.nickname.toLowerCase();
+              const isHome = nick === 'home';
+              const isWork = nick === 'work';
+              const bg     = isHome ? '#EFF7F6' : isWork ? '#F0F4FF' : '#FFFBEB';
               const stroke = isHome ? '#00C2A8' : isWork ? '#4A6CF7' : '#F59E0B';
               const svgPath = isHome
                 ? <><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>
                 : isWork
                   ? <><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></>
                   : <><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></>;
+              const loc = {
+                address: fp.location_name,
+                lat:     parseFloat(fp.latitude),
+                lng:     parseFloat(fp.longitude),
+              };
               return (
-                <DropItem key={s.id}
+                <DropItem key={fp.id}
                   icon={<IconBox bg={bg}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{svgPath}</svg></IconBox>}
-                  title={s.name}
-                  subtitle={s.address}
-                  onClick={() => select({ address: s.address, lat: s.lat, lng: s.lng })}
+                  title={fp.location_name}
+                  subtitle={fp.nickname}
+                  onClick={() => select(loc)}
                 />
               );
             })}

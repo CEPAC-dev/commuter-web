@@ -1,5 +1,7 @@
 import type { AuthResponse, UserRole } from '@/types/auth';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+
 export function saveSession(response: AuthResponse): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem('commuter_token', response.token);
@@ -33,6 +35,24 @@ export function clearSession(): void {
   localStorage.removeItem('commuter_name');
   document.cookie = 'commuter_token=; path=/; max-age=0; SameSite=Lax';
   document.cookie = 'commuter_role=; path=/; max-age=0; SameSite=Lax';
+}
+
+export async function logout(): Promise<void> {
+  const token = getToken();
+  try {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+    await fetch(`${API_BASE}/api/logout`, {
+      method: 'POST',
+      headers,
+    });
+  } catch {
+    // Ignore errors on logout API call
+  } finally {
+    clearSession();
+  }
 }
 
 // Legacy aliases used by older driver portal code

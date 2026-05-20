@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { UserProfile } from '@/types/user';
 import BottomSheet from '@/components/shared/BottomSheet';
 
 interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  profile: UserProfile;
+  profile: UserProfile | null;
   onSave: (updates: Partial<UserProfile>) => void;
 }
 
@@ -17,9 +17,17 @@ export default function EditProfileModal({
   profile,
   onSave,
 }: EditProfileModalProps) {
-  const [name, setName] = useState(profile.name);
-  const [phone, setPhone] = useState(profile.phone);
-  const [gender, setGender] = useState(profile.gender);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [gender, setGender] = useState<'male' | 'female'>('male');
+
+  useEffect(() => {
+    if (profile && isOpen) {
+      setName(profile.name);
+      setPhone(profile.phone);
+      setGender(profile.gender);
+    }
+  }, [profile, isOpen]);
 
   function handleSave() {
     onSave({ name, phone, gender });

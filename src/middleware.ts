@@ -1,6 +1,5 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { jwtDecode } from 'jwt-decode';
 
 const LOCALES = ['en', 'ar'] as const;
 const DEFAULT_LOCALE = 'en';
@@ -13,55 +12,119 @@ function detectLocale(request: NextRequest): string {
   return DEFAULT_LOCALE;
 }
 
-// Public paths — no auth required
+// Routes that NEVER require auth — let through unconditionally
 const PUBLIC_PATHS = [
   '/',
   '/sign-in',
   '/sign-up',
+  '/signin',
+  '/signup',
   '/driver/sign-in',
   '/driver/sign-up',
+  '/auth',
   '/forgot-password',
+  '/reset-password',
+  '/user/request/new',
 ];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const locale = detectLocale(request);
 
-  // Inject locale header so next-intl server functions (getLocale/getMessages) can read it
+  // Inject locale header so next-intl server functions can read it
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('X-NEXT-INTL-LOCALE', locale);
 
   const base = NextResponse.next({ request: { headers: requestHeaders } });
   base.cookies.set('NEXT_LOCALE', locale, { path: '/', maxAge: 31536000, sameSite: 'lax' });
 
-  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
-    return base;
+  // Auth entry pages: redirect already-authenticated users to their dashboard
+  const AUTH_ENTRY_PATHS = ['/sign-in', '/sign-up', '/driver/sign-in', '/driver/sign-up', '/signin', '/signup'];
+  const isAuthEntry = AUTH_ENTRY_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
+  if (isAuthEntry) {
+    const existingToken = request.cookies.get('commuter_token')?.value;
+    if (existingToken) {
+      // Only redirect if we can confirm a valid role — avoids redirect loops
+      const roleCookie = request.cookies.get('commuter_role')?.value as 'driver' | 'user' | undefined;
+      let confirmedRole: 'driver' | 'user' | undefined = roleCookie;
+
+      if (!confirmedRole) {
+        try {
+          const parts = existingToken.split('.');
+          if (parts.length === 3) {
+            const payload = JSON.parse(
+              Buffer.from(parts[1], 'base64').toString()
+            ) as { role?: 'driver' | 'user'; exp?: number };
+            const notExpired = !payload.exp || payload.exp * 1000 > Date.now();
+            if (notExpired && (payload.role === 'driver' || payload.role === 'user')) {
+              confirmedRole = payload.role;
+            }
+          }
+        } catch {
+          // Malformed token — fall through and show the sign-in page
+        }
+      }
+
+      if (confirmedRole === 'driver') {
+        return NextResponse.redirect(new URL('/driver/requests', request.url));
+      }
+      if (confirmedRole === 'user') {
+        return NextResponse.redirect(new URL('/user/my-requests', request.url));
+      }
+      // Role unknown — fall through and let the user sign in again
+    }
   }
 
+  // Always allow public paths — no token check, no redirect loop possible
+  const isPublic = PUBLIC_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(p + '/')
+  );
+  if (isPublic) return base;
+
+  // Check auth token
   const token = request.cookies.get('commuter_token')?.value;
   if (!token) {
-    return NextResponse.redirect(new URL('/', request.url));
+    const isDriverPath = pathname.startsWith('/driver');
+    const signInUrl = new URL(
+      isDriverPath ? '/driver/sign-in' : '/sign-in',
+      request.url
+    );
+    signInUrl.searchParams.set('next', pathname);
+    return NextResponse.redirect(signInUrl);
   }
 
-  // Read role from the dedicated cookie first (reliable); fall back to JWT claim
+  // Read role from dedicated cookie first; fall back to JWT payload
   let role: 'driver' | 'user' | undefined =
-    (request.cookies.get('commuter_role')?.value as 'driver' | 'user' | undefined);
+    request.cookies.get('commuter_role')?.value as 'driver' | 'user' | undefined;
 
   try {
-    const decoded = jwtDecode<{ role?: 'driver' | 'user'; exp?: number }>(token);
-    // Only use exp from JWT if present
-    if (decoded.exp && decoded.exp * 1000 < Date.now()) {
-      return NextResponse.redirect(new URL('/', request.url));
+    // Decode without verification — we only need role + exp for routing
+    const payload = JSON.parse(
+      Buffer.from(token.split('.')[1], 'base64').toString()
+    ) as { role?: 'driver' | 'user'; exp?: number };
+
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      const expired = NextResponse.redirect(
+        new URL(role === 'driver' ? '/driver/sign-in' : '/sign-in', request.url)
+      );
+      expired.cookies.delete('commuter_token');
+      expired.cookies.delete('commuter_role');
+      return expired;
     }
-    // Use JWT role if the cookie role isn't set
-    if (!role && decoded.role) role = decoded.role;
+
+    if (!role && payload.role) role = payload.role;
   } catch {
-    // Token is not a decodable JWT — rely solely on the role cookie
-    if (!role) return NextResponse.redirect(new URL('/', request.url));
+    // Token not a standard JWT — rely on role cookie alone
+    if (!role) {
+      const malformed = NextResponse.redirect(new URL('/', request.url));
+      malformed.cookies.delete('commuter_token');
+      return malformed;
+    }
   }
 
+  // Enforce role-based path access
   if (pathname.startsWith('/driver') && role !== 'driver') {
-    return NextResponse.redirect(new URL('/user/request', request.url));
+    return NextResponse.redirect(new URL('/user/my-requests', request.url));
   }
   if (pathname.startsWith('/user') && role !== 'user') {
     return NextResponse.redirect(new URL('/driver/requests', request.url));
@@ -71,5 +134,7 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next|.*\\..*).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|ico|css|js|woff|woff2|ttf|map)).*)',
+  ],
 };
