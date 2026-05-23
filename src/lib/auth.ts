@@ -4,9 +4,14 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 export function saveSession(response: AuthResponse): void {
   if (typeof window === 'undefined') return;
+  if (!response?.token || (response.role !== 'user' && response.role !== 'driver')) {
+    // Refuse to write a half-baked session — would otherwise produce
+    // `commuter_token=undefined` cookies and break middleware routing.
+    throw new Error('Invalid auth response: missing token or role');
+  }
   localStorage.setItem('commuter_token', response.token);
   localStorage.setItem('commuter_role', response.role);
-  localStorage.setItem('commuter_name', response.name);
+  localStorage.setItem('commuter_name', response.name ?? '');
   const maxAge = 7 * 24 * 60 * 60;
   // Persist token + role as cookies so the middleware (server-side) can read them
   document.cookie = `commuter_token=${response.token}; path=/; max-age=${maxAge}; SameSite=Lax`;

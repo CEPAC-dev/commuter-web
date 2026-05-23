@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 import StepIndicator from '@/components/auth/driver/StepIndicator';
 import Step1Personal, { type Step1Data } from '@/components/auth/driver/steps/Step1Personal';
 import Step2CarInfo, { type Step2Data } from '@/components/auth/driver/steps/Step2CarInfo';
 import Step3Documents, { type Step3Data } from '@/components/auth/driver/steps/Step3Documents';
+import authApi from '@/lib/api/auth';
+import { useRedirectIfAuth } from '@/lib/auth/useRedirectIfAuth';
 import { CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
@@ -42,6 +45,10 @@ export default function DriverSignUpWizard() {
   const [submittedEmail, setSubmittedEmail] = useState('');
   const [success, setSuccess] = useState(false);
 
+  // Redirect already-authenticated users away from the sign-up wizard
+  // (also handles bfcache restores from the back button).
+  useRedirectIfAuth();
+
   // Restore from sessionStorage
   useEffect(() => {
     const saved = loadWizard();
@@ -64,17 +71,60 @@ export default function DriverSignUpWizard() {
   }
 
   async function handleStep3(docs: Step3Data) {
-    // In production: build FormData and POST to /api/auth/driver/sign-up
-    const formData = new FormData();
-    Object.entries(step1Data).forEach(([k, v]) => formData.append(k, String(v)));
-    Object.entries(step2Data).forEach(([k, v]) => formData.append(k, String(v)));
-    Object.entries(docs).forEach(([k, v]) => { if (v) formData.append(`documents[${k}]`, v); });
+    // Pull whatever the wizard collected. Driver step1/step2 may not cover every
+    // backend field — we send safe fallbacks; the backend will reject anything
+    // truly required so the user sees a real error message.
+    const s1 = step1Data as Partial<Step1Data> & Record<string, unknown>;
 
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 1200));
-    setSubmittedEmail(step1Data.email ?? '');
-    clearWizard();
-    setSuccess(true);
+    try {
+      const email = String(s1.email ?? '');
+      const password = String((s1 as { password?: string }).password ?? '');
+      const passwordConfirmation = String(
+        (s1 as { password_confirmation?: string; confirmPassword?: string })
+          .password_confirmation
+        ?? (s1 as { confirmPassword?: string }).confirmPassword
+        ?? password,
+      );
+
+      await authApi.register({
+        role:                  'driver',
+        name:                  String(s1.name ?? '').trim(),
+        email,
+        phone_number:          String((s1 as { phone_number?: string; phone?: string }).phone_number ?? (s1 as { phone?: string }).phone ?? ''),
+        whatsapp_number:       String((s1 as { whatsapp_number?: string }).whatsapp_number ?? (s1 as { phone?: string }).phone ?? ''),
+        province:              String((s1 as { province?: string }).province ?? ''),
+        gender:                ((s1 as { gender?: 'male' | 'female' }).gender) ?? 'male',
+        birthdate:             String((s1 as { birthdate?: string; date_of_birth?: string; dateOfBirth?: string }).birthdate ?? (s1 as { date_of_birth?: string }).date_of_birth ?? (s1 as { dateOfBirth?: string }).dateOfBirth ?? ''),
+        district:              String((s1 as { district?: string }).district ?? ''),
+        sub_district:          String((s1 as { sub_district?: string }).sub_district ?? ''),
+        building:              String((s1 as { building?: string }).building ?? ''),
+        street:                String((s1 as { street?: string }).street ?? ''),
+        landmark:              String((s1 as { landmark?: string; address?: string }).landmark ?? (s1 as { address?: string }).address ?? ''),
+        password,
+        password_confirmation: passwordConfirmation,
+      });
+
+      // Upload documents (best-effort; backend may want them on the same request)
+      try {
+        for (const [field, file] of Object.entries(docs)) {
+          if (file instanceof File) {
+            const fd = new FormData();
+            fd.append(field, file);
+            // Fire and forget — if endpoint not ready, we still complete signup
+            const { call } = await import('@/lib/api/client');
+            await call(`driver/documents/${field}`, { method: 'POST', body: fd, auth: false }).catch(() => undefined);
+          }
+        }
+      } catch {
+        // Ignore document upload errors — driver can re-upload from profile
+      }
+
+      setSubmittedEmail(email);
+      clearWizard();
+      setSuccess(true);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Registration failed. Please try again.');
+    }
   }
 
   const stepTitles: Record<1 | 2 | 3, string> = {

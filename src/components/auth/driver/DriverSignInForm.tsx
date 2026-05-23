@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Mail, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import PasswordInput from '@/components/shared/PasswordInput';
-import { signIn } from '@/lib/api/auth';
-import { saveSession } from '@/lib/auth';
+import authApi, { extractToken, extractRole, extractName, extractId } from '@/lib/api/auth';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { useRedirectIfAuth } from '@/lib/auth/useRedirectIfAuth';
 
 const DEMO = { email: 'driver@commuter.eg', password: 'demo1234' };
 
@@ -15,14 +16,10 @@ export default function DriverSignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get('next');
+  const { login } = useAuth();
 
-  // If already logged in (e.g. back button from bfcache), send to dashboard
-  useEffect(() => {
-    const token = localStorage.getItem('commuter_token');
-    if (!token) return;
-    const role = localStorage.getItem('commuter_role');
-    router.replace(role === 'driver' ? '/driver/requests' : '/user/my-requests');
-  }, [router]);
+  // If already logged in, bounce to dashboard (also handles bfcache).
+  useRedirectIfAuth();
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [emailErr, setEmailErr] = useState('');
@@ -44,10 +41,23 @@ export default function DriverSignInForm() {
     if (!validate()) return;
     setLoading(true);
     try {
-      const result = await signIn({ email, password }, 'driver');
-      saveSession(result);
-      toast.success(`Welcome back, ${result.name}! 👋`);
-      router.replace(nextPath || '/driver/requests');
+      const res = await authApi.login({ email, password });
+      const token = extractToken(res);
+      if (!token) throw new Error('No token received from server');
+      const name = extractName(res) || email;
+
+      login({
+        token,
+        role: extractRole(res) || 'driver',
+        name,
+        id:   extractId(res),
+      });
+
+      toast.success(`Welcome back, ${name}! 👋`);
+      const safeNext = nextPath && !nextPath.startsWith('/driver/sign') && !nextPath.startsWith('/sign')
+        ? nextPath
+        : '/driver/requests';
+      router.replace(safeNext);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Sign in failed. Please try again.');
     } finally {

@@ -38,3 +38,23 @@ export function formatCycleStartDate(date: Date, locale: string): string {
 export function getCycleEndDate(startDate: Date): Date {
   return addDays(startDate, 6);
 }
+
+/**
+ * Return the calendar date for a given day-of-week (Sun=0..Sat=6) within
+ * a cycle week that starts on `cycleStart` (always a Saturday).
+ */
+export function cycleDateForDayOfWeek(cycleStart: Date, dayOfWeek: number): Date {
+  // Saturday is index 6 in the API (Sun=0..Sat=6).
+  // Cycle starts on Saturday → that's offset 0; Sunday → 1; Monday → 2; …; Friday → 6.
+  const SAT = 6;
+  const offset = (dayOfWeek - SAT + 7) % 7;
+  return addDays(cycleStart, offset);
+}
+
+/** Format Date as YYYY-MM-DD (local time). */
+export function toApiDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}

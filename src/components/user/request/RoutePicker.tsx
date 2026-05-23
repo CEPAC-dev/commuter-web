@@ -34,6 +34,8 @@ interface RoutePickerProps {
   mode:             'outbound' | 'return';
   slotNumber:       number;
   rideType:         'private' | 'shared';
+  /** Max intermediate stops shown in FloatingSearchBar. Default 2. */
+  maxStops?:        number;
   /** Pre-fill values */
   initialOrigin?:      GeoLocation | null;
   initialDestination?: GeoLocation | null;
@@ -48,6 +50,7 @@ function RoutePickerInner({
   mode,
   slotNumber,
   rideType,
+  maxStops,
   initialOrigin,
   initialDestination,
   onConfirm,
@@ -58,13 +61,13 @@ function RoutePickerInner({
   const { lat: userLat, lng: userLng, locate } = useUserLocation();
   const [pendingLocField, setPendingLocField] = useState<'from' | 'to' | null>(null);
 
-  // Push ride_type into intent so FloatingSearchBar shows stops for private only
+  // Push ride_type + maxStops into intent so FloatingSearchBar respects them
   useEffect(() => {
-    setIntent({ ride_type: rideType });
-    // Disable stops for return-route picker
-    if (mode === 'return') setIntent({ ride_type: 'shared' });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rideType, mode]);
+    const effectiveRideType = mode === 'return' ? 'shared' : rideType;
+    const effectiveMaxStops = mode === 'return' ? 0 : (maxStops ?? 2);
+    setIntent({ ride_type: effectiveRideType, maxStops: effectiveMaxStops });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rideType, mode, maxStops]);
 
   // Pre-fill
   useEffect(() => {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Cairo } from "next/font/google";
 import { getLocale, getMessages } from "next-intl/server";
 import { NextIntlClientProvider } from "next-intl";
+import { AuthProvider } from "@/lib/auth/AuthContext";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -24,9 +25,11 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={dir} className={`${inter.variable} ${cairo.variable}`}>
       <body className={`antialiased bg-surface text-primary ${locale === "ar" ? cairo.className : inter.className}`}>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
-        </NextIntlClientProvider>
+        <AuthProvider>
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            {children}
+          </NextIntlClientProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -15,6 +15,7 @@ import { calculatePriceRange } from '@/lib/pricing';
 import { computeArrivalFrom, computeArrivalTo } from '@/lib/timeUtils';
 import { getPassengers, type ApiPassenger } from '@/lib/api/passengers';
 import { getName } from '@/lib/auth';
+import PrivateSchedulePage from '@/components/user/request/private/PrivateSchedulePage';
 // Mock data removed
 
 // ── Group code display card ────────────────────────────────────────────────────
@@ -284,6 +285,11 @@ export default function SchedulePage() {
   const [showReview, setShowReview] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Private rides use a dedicated UI flow — early return after all hooks.
+  if ((ride_type as string | null) === 'private') {
+    return <PrivateSchedulePage />;
+  }
 
   function handleReviewClick() {
     const err = validateSchedule(slots);

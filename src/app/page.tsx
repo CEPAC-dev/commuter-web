@@ -5,11 +5,14 @@ import Link from 'next/link';
 import { Car, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import LanguageToggle from '@/components/layout/LanguageToggle';
+import { useRedirectIfAuth } from '@/lib/auth/useRedirectIfAuth';
 
 type Role = 'driver' | 'passenger';
 
 export default function Home() {
   const t = useTranslations('home');
+  // If already signed in, bounce to the matching dashboard.
+  useRedirectIfAuth();
 
   const ROLES = {
     driver: {

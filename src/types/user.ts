@@ -15,6 +15,25 @@ export type {
   CycleDayRecord,
 } from './shared';
 
+// ── Commute Preferences (GET /preferences · POST /preferences) ────────────────
+
+export type GenderPreference     = 'male' | 'female' | 'any';
+export type InteractionLevel     = 'quiet' | 'normal' | 'talkative';
+export type MusicPreference      = 'no_music' | 'low' | 'normal';
+export type WalkingDistancePref  = 'no_walk' | 'less_than_5_min' | '5_to_10_min' | 'more_than_10_min';
+export type AirConditioningPref  = 'not_important' | 'preferred_if_available' | 'mandatory';
+
+export interface CommutePreferences {
+  gender_preference:            GenderPreference;
+  smoking_allowed:              boolean;
+  interaction_level:            InteractionLevel;
+  children_allowed:             boolean;
+  music_preference:             MusicPreference;
+  seat_preference:              'front' | 'back' | 'any';
+  walking_distance_preference:  WalkingDistancePref;
+  air_conditioning_preference:  AirConditioningPref;
+}
+
 // ── User-side request (extends shared core) ───────────────────────────────────
 
 export interface UserRequest extends CycleRequestCore {
@@ -36,9 +55,10 @@ export interface UserProfile {
   id:              string;
   name:            string;
   email:           string;
-  phone:           string;
+  phone:           string;       // normalised from phone_number
+  phone_number?:   string;       // raw API field
   whatsapp_number: string;
-  gender:          'male' | 'female';
+  gender:          'male' | 'female' | '';
   date_of_birth:   string;
   avatar_url:      string | null;
   joined_at:       string;

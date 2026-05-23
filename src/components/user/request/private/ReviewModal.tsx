@@ -1,0 +1,274 @@
+'use client';
+
+import type { TimeSlot, GeoLocation, WeekDay } from '@/types/shared';
+import { PRIVATE_SEAT_LABELS } from '@/types/shared';
+import type { ApiPassenger } from '@/lib/api/passengers';
+import { ALL_DAYS_SUN_FIRST, formatTime12h } from '@/lib/timeUtils';
+
+// ── Props ─────────────────────────────────────────────────────────────────────
+
+interface Props {
+  origin:          GeoLocation;
+  destination:     GeoLocation;
+  routeStop:       GeoLocation | null;
+  pickupPoint:     GeoLocation | null;
+  tripType:        'one_way' | 'round_trip';
+  slots:           TimeSlot[];
+  passengers:      ApiPassenger[];
+  priceMin:        number;
+  priceMax:        number;
+  cycleStartLabel: string;
+  notes:           string;
+  submitting:      boolean;
+  error:           string | null;
+  onConfirm:       () => void;
+  onCancel:        () => void;
+}
+
+// ── Small helpers ─────────────────────────────────────────────────────────────
+
+function tw(t: string) { return formatTime12h(t); }
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="border border-[#E2E8F0] rounded-xl overflow-hidden">
+      <div className="px-4 py-2.5 bg-[#F8F9FA] border-b border-[#E2E8F0]">
+        <p className="text-xs font-bold text-[#5A6A7A] uppercase tracking-wide">{title}</p>
+      </div>
+      <div className="px-4 py-3 space-y-2">{children}</div>
+    </div>
+  );
+}
+
+function Row({ icon, label, value }: { icon: string; label: string; value: string }) {
+  return (
+    <div className="flex items-start gap-2">
+      <span className="text-[#00C2A8] text-sm w-4 flex-shrink-0 mt-0.5">{icon}</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide">{label}</p>
+        <p className="text-sm text-[#0B1E3D] leading-snug">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function DayChip({ day }: { day: WeekDay }) {
+  return (
+    <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-[#EFF7F6] text-[#00C2A8] text-xs font-bold border border-[#C8E8E4]">
+      {day}
+    </span>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+
+export default function ReviewModal({
+  origin, destination, routeStop, pickupPoint,
+  tripType, slots, passengers,
+  priceMin, priceMax, cycleStartLabel,
+  notes, submitting, error,
+  onConfirm, onCancel,
+}: Props) {
+  const passengerMap = new Map(passengers.map(p => [p.id, p.name]));
+
+  return (
+    <div
+      className="fixed inset-0 z-[800] bg-white flex flex-col"
+      style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
+    >
+      {/* ── Header ── */}
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-[#E2E8F0] flex-shrink-0">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={submitting}
+          className="text-sm text-[#5A6A7A] hover:text-[#0B1E3D] transition-colors disabled:opacity-40"
+          style={{ background: 'none', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
+        >
+          ← Back
+        </button>
+        <h2 className="text-base font-bold text-[#0B1E3D] flex-1">Review your request</h2>
+        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#EFF7F6] text-[#00C2A8] border border-[#C8E8E4]">
+          Private
+        </span>
+      </div>
+
+      {/* ── Scrollable body ── */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+
+        {/* Route */}
+        <Section title="Route">
+          <Row icon="📍" label="From"        value={origin.address} />
+          {routeStop  && <Row icon="🔵" label="Route stop"   value={routeStop.address} />}
+          <Row icon="🏁" label="Destination" value={destination.address} />
+          {pickupPoint && <Row icon="🤝" label="Pickup point" value={pickupPoint.address} />}
+          <div className="flex items-center gap-2 pt-1">
+            <span
+              className="text-xs font-semibold px-3 py-1 rounded-full"
+              style={{
+                background: tripType === 'round_trip' ? '#EFF7F6' : '#F1F3F4',
+                color:      tripType === 'round_trip' ? '#00C2A8' : '#5A6A7A',
+              }}
+            >
+              {tripType === 'round_trip' ? '↕ Round trip' : '→ One way'}
+            </span>
+          </div>
+        </Section>
+
+        {/* Schedule — one card per time slot */}
+        {slots.map((slot, i) => {
+          const sortedDays = ALL_DAYS_SUN_FIRST.filter(d => slot.days.includes(d));
+          const hasAnyDayStop = Object.values(slot.day_stops ?? {}).some(arr => arr && arr.length > 0);
+
+          return (
+            <Section key={slot.id} title={`Time slot ${i + 1}`}>
+              {/* Days */}
+              <div>
+                <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide mb-1.5">Days</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {sortedDays.map(d => <DayChip key={d} day={d} />)}
+                </div>
+              </div>
+
+              {/* Pickup & Arrival */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <div>
+                  <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide mb-0.5">Pickup window</p>
+                  <p className="text-sm font-semibold text-[#0B1E3D]">
+                    {tw(slot.pickup_from)} – {tw(slot.pickup_to)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide mb-0.5">Arrival window</p>
+                  <p className="text-sm font-semibold text-[#0B1E3D]">
+                    {tw(slot.arrival_from)} – {tw(slot.arrival_to)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Passengers */}
+              {slot.seat_assignments && Object.keys(slot.seat_assignments).length > 0 && (
+                <div className="pt-1">
+                  <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide mb-1.5">Passengers</p>
+                  <div className="space-y-1">
+                    {Object.entries(slot.seat_assignments).map(([key, seat]) => {
+                      const name = key === 'me' ? 'Me' : passengerMap.get(Number(key)) ?? `Passenger ${key}`;
+                      return (
+                        <div key={key} className="flex items-center justify-between text-sm">
+                          <span className="text-[#0B1E3D] font-medium">{name}</span>
+                          <span className="text-xs text-[#5A6A7A] bg-[#F1F3F4] px-2 py-0.5 rounded-full">
+                            {PRIVATE_SEAT_LABELS[seat]}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Per-day stops */}
+              {hasAnyDayStop && (
+                <div className="pt-1">
+                  <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide mb-1.5">Stops by day</p>
+                  <div className="space-y-1.5">
+                    {sortedDays.map(day => {
+                      const dayStops = slot.day_stops?.[day] ?? [];
+                      if (dayStops.length === 0) return null;
+                      return (
+                        <div key={day}>
+                          <span className="text-xs font-bold text-[#0B1E3D]">{day}:</span>
+                          <div className="ml-2 mt-0.5 space-y-0.5">
+                            {dayStops.map((s, si) => (
+                              <p key={si} className="text-xs text-[#5A6A7A]">📍 {s.address}</p>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Return (if round trip) */}
+              {tripType === 'round_trip' && slot.return_pickup_from && (
+                <div className="border-t border-[#F1F3F4] pt-2 mt-1">
+                  <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide mb-1">Return trip</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-[10px] text-[#9AA0A6] mb-0.5">Pickup</p>
+                      <p className="text-sm font-semibold text-[#0B1E3D]">
+                        {tw(slot.return_pickup_from!)} – {tw(slot.return_pickup_to!)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-[#9AA0A6] mb-0.5">Arrival</p>
+                      <p className="text-sm font-semibold text-[#0B1E3D]">
+                        {tw(slot.return_arrival_from!)} – {tw(slot.return_arrival_to!)}
+                      </p>
+                    </div>
+                  </div>
+                  {slot.return_pickup_point && (
+                    <p className="text-xs text-[#5A6A7A] mt-1">
+                      🤝 {slot.return_pickup_point.address}
+                    </p>
+                  )}
+                </div>
+              )}
+            </Section>
+          );
+        })}
+
+        {/* Price */}
+        <div className="bg-[#EFF7F6] border border-[#C8E8E4] rounded-xl px-4 py-3 flex items-center gap-3">
+          <span className="text-2xl">💰</span>
+          <div>
+            <p className="text-xs font-semibold text-[#5A6A7A]">Estimated weekly cost</p>
+            <p className="text-lg font-extrabold text-[#0B1E3D]">
+              EGP {priceMin.toLocaleString()} – {priceMax.toLocaleString()}
+            </p>
+          </div>
+        </div>
+
+        {/* Cycle start */}
+        <div className="bg-[#F8F9FA] border border-[#E2E8F0] rounded-xl px-4 py-3 flex items-center gap-3">
+          <span className="text-xl">📅</span>
+          <div>
+            <p className="text-xs font-semibold text-[#5A6A7A]">Cycle start</p>
+            <p className="text-sm font-bold text-[#0B1E3D]">{cycleStartLabel}</p>
+          </div>
+        </div>
+
+        {/* Notes */}
+        {notes.trim().length > 0 && (
+          <Section title="Notes for driver">
+            <p className="text-sm text-[#0B1E3D] leading-relaxed">{notes}</p>
+          </Section>
+        )}
+
+        {error && (
+          <p className="text-sm text-[#E74C3C] font-medium px-1">{error}</p>
+        )}
+
+        <div className="h-4" />
+      </div>
+
+      {/* ── Footer: Confirm button ── */}
+      <div className="px-4 py-3 border-t border-[#E2E8F0] bg-white flex-shrink-0">
+        <button
+          type="button"
+          onClick={onConfirm}
+          disabled={submitting}
+          className="w-full py-4 rounded-xl text-white font-bold text-sm transition-colors"
+          style={{
+            background: submitting ? '#7C8794' : '#0B1E3D',
+            border: 'none',
+            cursor: submitting ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
+          {submitting ? 'Submitting…' : 'Confirm & Submit ✓'}
+        </button>
+      </div>
+    </div>
+  );
+}

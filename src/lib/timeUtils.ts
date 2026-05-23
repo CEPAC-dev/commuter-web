@@ -2,6 +2,23 @@ import type { WeekDay } from '@/types/shared';
 
 export const ALL_DAYS: WeekDay[] = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 
+/** Sun→Sat ordering (matches API day_of_week where Sun=0). */
+export const ALL_DAYS_SUN_FIRST: WeekDay[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/** Map WeekDay → API day_of_week index (Sun=0 … Sat=6). */
+export const WEEKDAY_INDEX: Record<WeekDay, number> = {
+  Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
+};
+
+/** Inverse of WEEKDAY_INDEX. */
+export const INDEX_WEEKDAY: WeekDay[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/** Long display label for each WeekDay. */
+export const WEEKDAY_LONG: Record<WeekDay, string> = {
+  Sun: 'Sunday', Mon: 'Monday', Tue: 'Tuesday',
+  Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday',
+};
+
 /**
  * Compute departure time given an arrival time and trip duration.
  * Both times are "HH:MM" 24-hour strings.

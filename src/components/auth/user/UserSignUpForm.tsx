@@ -4,9 +4,14 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { signUpUser, sendOtp, verifyOtp } from '@/lib/api/auth';
-import { saveSession } from '@/lib/auth';
-import type { AuthResponse } from '@/types/auth';
+import authApi, {
+  extractToken, extractRole, extractName, extractId,
+  type AuthApiResponse,
+} from '@/lib/api/auth';
+import { sendOtp, verifyOtp } from '@/lib/api/auth';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { useRedirectIfAuth } from '@/lib/auth/useRedirectIfAuth';
+import { saveUserData } from '@/lib/auth/tokenStorage';
 import Step1Info,    { type Step1Data } from './steps/Step1Info';
 import Step2Address, { type Step2Data } from './steps/Step2Address';
 import Step3Otp from './steps/Step3Otp';
@@ -66,6 +71,7 @@ function StepBar({ current }: { current: 1 | 2 | 3 }) {
 
 export default function UserSignUpForm() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const [step,          setStep]          = useState<1 | 2 | 3>(1);
   const [step1Data,     setStep1Data]     = useState<Partial<Step1Data>>({});
@@ -73,7 +79,10 @@ export default function UserSignUpForm() {
   const [resendLoading, setResendLoading] = useState(false);
   const [otpError,      setOtpError]      = useState<string | null>(null);
   // store auth response between step 2 and step 3
-  const [pendingAuth,   setPendingAuth]   = useState<AuthResponse | null>(null);
+  const [pendingAuth,   setPendingAuth]   = useState<AuthApiResponse | null>(null);
+
+  // If already logged in, skip the wizard entirely (handles bfcache too)
+  useRedirectIfAuth();
 
   function handleStep1(data: Step1Data) {
     setStep1Data(data);
@@ -84,7 +93,7 @@ export default function UserSignUpForm() {
     if (!step1Data.name) return; // guard
     setLoading(true);
     try {
-      const result = await signUpUser({
+      const result = await authApi.register({
         role:                  'user',
         name:                  step1Data.name!.trim(),
         email:                 step1Data.email!.trim(),
@@ -93,6 +102,8 @@ export default function UserSignUpForm() {
                                  ? step1Data.phone_number!
                                  : step1Data.whatsapp_number!,
         province:              addrData.province.trim(),
+        gender:                step1Data.gender ?? 'male',
+        birthdate:             step1Data.birthdate ?? '',
         district:              addrData.district.trim(),
         sub_district:          addrData.sub_district.trim(),
         building:              addrData.building.trim(),
@@ -118,9 +129,32 @@ export default function UserSignUpForm() {
     setOtpError(null);
     try {
       await verifyOtp(step1Data.email.trim(), code);
-      saveSession(pendingAuth);
-      toast.success(`Welcome to Commuter, ${step1Data.name!.trim()}! 🎉`);
-      router.replace('/user/onboarding');
+      const token = extractToken(pendingAuth);
+      if (token) {
+        login({
+          token,
+          role: extractRole(pendingAuth) || 'user',
+          name: extractName(pendingAuth) || step1Data.name!.trim(),
+          id:   extractId(pendingAuth),
+        });
+        if (typeof window !== 'undefined') localStorage.setItem('commuter_email', step1Data.email!.trim());
+        // Store everything we submitted so the profile shows real data immediately
+        const registeredUser = (pendingAuth as AuthApiResponse & { user?: Record<string, unknown> }).user ?? {};
+        saveUserData({
+          ...registeredUser,
+          name:            step1Data.name!.trim(),
+          email:           step1Data.email!.trim(),
+          phone_number:    step1Data.phone_number ?? '',
+          whatsapp_number: step1Data.whatsapp_same_as_phone ? step1Data.phone_number : (step1Data.whatsapp_number ?? ''),
+          gender:          step1Data.gender ?? 'male',
+          date_of_birth:   step1Data.birthdate ?? '',
+        });
+        toast.success(`Welcome to Commuter, ${step1Data.name!.trim()}! 🎉`);
+        router.replace('/user/onboarding');
+      } else {
+        // No auto-login token from backend — send to sign-in with success flag
+        router.replace('/sign-in?registered=true');
+      }
     } catch (err: unknown) {
       setOtpError(err instanceof Error ? err.message : 'Invalid or expired code. Please try again.');
     } finally {

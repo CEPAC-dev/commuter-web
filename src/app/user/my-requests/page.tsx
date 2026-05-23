@@ -1,135 +1,166 @@
 'use client';
 
-import { useState } from 'react';
-import toast from 'react-hot-toast';
-import type { UserRequest, RequestStatus } from '@/types/user';
-// Mock data removed
-import RequestStatusCard from '@/components/user/my-requests/RequestStatusCard';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { getCourses, type ApiCourse } from '@/lib/api/courses';
+import { getLastBalance } from '@/lib/api/wallet';
+import CourseCard from '@/components/user/my-requests/CourseCard';
 import EmptyState from '@/components/shared/EmptyState';
 import { useTranslations } from 'next-intl';
 
-type Tab = 'pending' | 'active' | 'completed';
+type Filter = 'all' | 'group' | 'individual';
 
-const PENDING_STATUSES: RequestStatus[] = [
-  'submitted', 'matching', 'finding_driver', 'driver_offered', 'price_raised', 'confirmed',
-];
+function filterByType(courses: ApiCourse[], f: Filter): ApiCourse[] {
+  if (f === 'all')        return courses;
+  if (f === 'individual') return courses.filter(c => c.trip_type === 'individual');
+  if (f === 'group')      return courses.filter(c => c.trip_type !== 'individual');
+  return courses;
+}
 
-function filterByTab(requests: UserRequest[], tab: Tab): UserRequest[] {
-  switch (tab) {
-    case 'pending':   return requests.filter((r) => PENDING_STATUSES.includes(r.status));
-    case 'active':    return requests.filter((r) => r.status === 'active');
-    case 'completed': return requests.filter((r) => r.status === 'completed');
-  }
+// Wallet banner — gradient card matching the screenshot
+function WalletBanner({ balance, onClick }: { balance: number; onClick: () => void }) {
+  return (
+    <div
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => e.key === 'Enter' && onClick()}
+      style={{
+        background: 'linear-gradient(135deg, #0B1E3D 0%, #00C2A8 100%)',
+        borderRadius: 16,
+        padding: '18px 20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        color: '#fff',
+        marginBottom: 20,
+        cursor: 'pointer',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 12,
+            background: 'rgba(255,255,255,0.15)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 20,
+          }}
+        >
+          💳
+        </div>
+        <div>
+          <p style={{ margin: 0, fontSize: 12, opacity: 0.8 }}>Available balance</p>
+          <p style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>
+            EGP {balance.toFixed(2)}
+          </p>
+        </div>
+      </div>
+      <span style={{ fontSize: 20, opacity: 0.7 }}>›</span>
+    </div>
+  );
 }
 
 export default function MyRequestsPage() {
   const t = useTranslations('my_requests');
-  const [requests, setRequests] = useState<UserRequest[]>([]); // TODO: fetch from API
-  const [activeTab, setActiveTab] = useState<Tab>('pending');
+  const router = useRouter();
+  const [courses,  setCourses]  = useState<ApiCourse[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [fetchErr, setFetchErr] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<Filter>('all');
+  const [balance, setBalance] = useState<number>(0);
 
-  const filtered = filterByTab(requests, activeTab);
-
-  const tabCounts: Record<Tab, number> = {
-    pending:   filterByTab(requests, 'pending').length,
-    active:    filterByTab(requests, 'active').length,
-    completed: filterByTab(requests, 'completed').length,
-  };
-
-  function handleCancel(id: string) {
-    setRequests((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: 'cancelled' as RequestStatus } : r))
-    );
-    toast.success(t('toast_cancelled'));
+  function loadData() {
+    setLoading(true);
+    Promise.all([
+      getCourses(),
+      getLastBalance().catch(() => null),
+    ]).then(([coursesRes, balanceRes]) => {
+      setCourses(coursesRes.data);
+      if (balanceRes) setBalance(balanceRes.data.last_balance);
+    }).catch(() => setFetchErr('Failed to load requests.'))
+      .finally(() => setLoading(false));
   }
 
-  const TABS: { key: Tab; label: string }[] = [
-    { key: 'pending',   label: t('tab_pending') },
-    { key: 'active',    label: t('tab_active') },
-    { key: 'completed', label: t('tab_completed') },
+  useEffect(() => { loadData(); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  const displayed = filterByType(courses, activeFilter);
+
+  const FILTERS: { key: Filter; label: string }[] = [
+    { key: 'all',        label: 'All' },
+    { key: 'group',      label: 'Group' },
+    { key: 'individual', label: 'Individual' },
   ];
 
   return (
-    <div style={{ maxWidth: 760, margin: '0 auto' }}>
-      <style>{`
-        .req-tab { padding: 8px 14px; border: none; background: none; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500; color: #5A6A7A; border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; min-height: 44px; }
-        .req-tab.active { color: #00C2A8; border-bottom-color: #00C2A8; font-weight: 700; }
-        .req-tab:hover:not(.active) { color: #0B1E3D; }
-      `}</style>
+    <div style={{ maxWidth: 640, margin: '0 auto', fontFamily: 'Inter, system-ui, sans-serif' }}>
 
       {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ margin: '0 0 4px', fontSize: 24, fontWeight: 700, color: '#0B1E3D' }}>
+      <div style={{ marginBottom: 16 }}>
+        <h1 style={{ margin: '0 0 2px', fontSize: 26, fontWeight: 800, color: '#0B1E3D' }}>
           {t('page_title')}
         </h1>
-        <p style={{ margin: 0, fontSize: 14, color: '#5A6A7A' }}>
+        <p style={{ margin: 0, fontSize: 13, color: '#5A6A7A' }}>
           {t('page_subtitle')}
         </p>
       </div>
 
-      {/* Tabs */}
-      <div
-        style={{
-          display: 'flex',
-          borderBottom: '1px solid #E2E8F0',
-          overflowX: 'auto',
-          marginBottom: 20,
-          gap: 0,
-        }}
-      >
-        {TABS.map(({ key, label }) => (
-          <button
-            key={key}
-            className={`req-tab${activeTab === key ? ' active' : ''}`}
-            onClick={() => setActiveTab(key)}
-          >
-            {label}
-            {tabCounts[key] > 0 && (
-              <span
-                style={{
-                  marginLeft: 6,
-                  background: activeTab === key ? '#00C2A8' : '#E2E8F0',
-                  color: activeTab === key ? '#0B1E3D' : '#5A6A7A',
-                  fontSize: 11,
-                  fontWeight: 700,
-                  borderRadius: 10,
-                  padding: '1px 6px',
-                }}
-              >
-                {tabCounts[key]}
-              </span>
-            )}
-          </button>
-        ))}
+      {/* Wallet banner */}
+      <WalletBanner balance={balance} onClick={() => router.push('/user/wallet')} />
+
+      {/* Type filter chips */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20, overflowX: 'auto' }}>
+        {FILTERS.map(({ key, label }) => {
+          const active = activeFilter === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveFilter(key)}
+              style={{
+                padding: '7px 18px',
+                borderRadius: 50,
+                border: active ? '2px solid #00C2A8' : '1.5px solid #E2E8F0',
+                background: active ? '#00C2A8' : '#fff',
+                color: active ? '#0B1E3D' : '#5A6A7A',
+                fontSize: 13,
+                fontWeight: active ? 700 : 500,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Request list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {filtered.length === 0 ? (
+      {/* Content */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '48px 0', color: '#9AA0A6', fontSize: 14 }}>
+            Loading…
+          </div>
+        ) : fetchErr ? (
+          <div style={{ textAlign: 'center', padding: '48px 0', color: '#E74C3C', fontSize: 14 }}>
+            {fetchErr}
+          </div>
+        ) : displayed.length === 0 ? (
           <EmptyState
-            icon={activeTab === 'completed' ? '🏁' : '📋'}
-            title={
-              activeTab === 'pending'
-                ? t('empty_pending')
-                : activeTab === 'active'
-                ? t('empty_active')
-                : t('empty_completed')
-            }
-            description={
-              activeTab === 'pending' || activeTab === 'active'
-                ? t('empty_active_desc')
-                : undefined
-            }
+            icon="📋"
+            title={t('empty_pending')}
+            description={t('empty_active_desc')}
           />
         ) : (
-          filtered.map((r) => (
-            <RequestStatusCard
-              key={r.id}
-              request={r}
-              onCancel={handleCancel}
-            />
-          ))
+          displayed.map(c => <CourseCard key={c.id} course={c} onPaid={loadData} />)
         )}
       </div>
     </div>
   );
 }
+

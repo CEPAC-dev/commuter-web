@@ -19,6 +19,8 @@ export interface Intent {
   group_action:    GroupAction | null;
   group_code:      string | null;
   passenger_count: number;
+  /** Maximum number of stops allowed in FloatingSearchBar. Default 2. */
+  maxStops:        number;
   /** Legacy prefill used by join-group flow */
   prefillRoute:    RouteData | null;
 }
@@ -35,6 +37,7 @@ const defaultIntent: Intent = {
   group_action:    null,
   group_code:      null,
   passenger_count: 1,
+  maxStops:        2,
   prefillRoute:    null,
 };
 

@@ -505,8 +505,8 @@ export default function FloatingSearchBar({
                 </div>
               </div>
 
-              {/* Add stop — private only */}
-              {isPrivate && stops.length < 2 && (
+              {/* Add stop — private only, up to intent.maxStops */}
+              {isPrivate && stops.length < (intent.maxStops ?? 2) && (
                 <button
                   onClick={() => { const ni = stops.length; addStop(); setActiveField(ni); setTimeout(() => stopInputRefs.current[ni]?.focus(), 50); }}
                   style={{ marginTop: 10, marginLeft: 28, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: '#00C2A8', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0', fontFamily: 'inherit' }}

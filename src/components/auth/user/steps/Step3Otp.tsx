@@ -137,7 +137,7 @@ export default function Step3Otp({
               color: '#0B1E3D', background: '#fff',
               outline: 'none',
               transition: 'border-color 0.15s',
-              caretColor: 'transparent',
+              caretColor: '#00C2A8',
             }}
           />
         ))}

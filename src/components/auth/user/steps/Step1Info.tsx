@@ -4,15 +4,18 @@ import { useState, useCallback } from 'react';
 import { Mail, Phone } from 'lucide-react';
 import PasswordInput from '@/components/shared/PasswordInput';
 import PasswordStrengthMeter from '@/components/shared/PasswordStrengthMeter';
+import AgeGateInput from '@/components/shared/AgeGateInput';
 
 export interface Step1Data {
-  name:                  string;
-  email:                 string;
-  phone_number:          string;
-  whatsapp_number:       string;
+  name:                   string;
+  birthdate:              string;  // YYYY-MM-DD
+  gender:                 'male' | 'female';
+  email:                  string;
+  phone_number:           string;
+  whatsapp_number:        string;
   whatsapp_same_as_phone: boolean;
-  password:              string;
-  password_confirmation: string;
+  password:               string;
+  password_confirmation:  string;
 }
 
 interface Step1Props {
@@ -45,6 +48,8 @@ function iconFieldCls(err?: string) {
 export default function Step1Info({ initial, onNext }: Step1Props) {
   const [form, setForm] = useState<Step1Data>({
     name:                   initial.name                   ?? '',
+    birthdate:              initial.birthdate              ?? '',
+    gender:                 initial.gender                 ?? 'male',
     email:                  initial.email                  ?? '',
     phone_number:           initial.phone_number           ?? '',
     whatsapp_number:        initial.whatsapp_number        ?? '',
@@ -73,6 +78,8 @@ export default function Step1Info({ initial, onNext }: Step1Props) {
     const e: Partial<Record<keyof Step1Data, string>> = {};
     if (!NAME_RE.test(form.name.trim()))
       e.name = 'Enter your full name (at least 3 letters, no numbers).';
+    if (!form.birthdate)
+      e.birthdate = 'Please select your date of birth.';
     if (!EMAIL_RE.test(form.email))
       e.email = 'Enter a valid email address.';
     if (!EGYPT_PHONE.test(form.phone_number))
@@ -106,6 +113,38 @@ export default function Step1Info({ initial, onNext }: Step1Props) {
           className={fieldCls(errors.name)}
         />
         {errors.name && <p className="mt-1 text-xs text-[#E74C3C]">{errors.name}</p>}
+      </div>
+
+      {/* Date of birth */}
+      <div>
+        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">Date of birth</label>
+        <AgeGateInput
+          onChange={(val) => setForm((f) => ({ ...f, birthdate: val }))}
+          error={errors.birthdate}
+        />
+        {errors.birthdate && <p className="mt-1 text-xs text-[#E74C3C]">{errors.birthdate}</p>}
+      </div>
+
+      {/* Gender */}
+      <div>
+        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">Gender</label>
+        <div className="grid grid-cols-2 gap-3">
+          {(['male', 'female'] as const).map((g) => (
+            <button
+              key={g}
+              type="button"
+              onClick={() => setForm((f) => ({ ...f, gender: g }))}
+              className={[
+                'h-[52px] rounded-lg border text-sm font-semibold capitalize transition-all',
+                form.gender === g
+                  ? 'border-[#00C2A8] bg-[#00C2A8]/5 text-[#0B1E3D]'
+                  : 'border-[#D1D5DB] bg-white text-[#0B1E3D] hover:border-[#00C2A8]',
+              ].join(' ')}
+            >
+              {g === 'male' ? 'Male' : 'Female'}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Email */}
@@ -202,7 +241,7 @@ export default function Step1Info({ initial, onNext }: Step1Props) {
         type="submit"
         className="w-full h-[52px] rounded-lg text-sm font-bold bg-[#00C2A8] text-[#0B1E3D] flex items-center justify-center gap-2 transition-opacity hover:opacity-90 mt-2"
       >
-        Continuo 
+        continue
       </button>
     </form>
   );

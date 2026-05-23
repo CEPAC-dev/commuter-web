@@ -1,272 +1,251 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import Link from 'next/link';
-import toast from 'react-hot-toast';
-import { getName } from '@/lib/auth';
-import { getLastBalance } from '@/lib/api/wallet';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  Wallet, Bookmark, Users, Sliders, Shield, LogOut, ChevronRight,
+  Phone, MessageSquare, MapPin, Calendar, Pencil,
+} from 'lucide-react';
+import userApi from '@/lib/api/user';
+import { useAuth } from '@/lib/auth/AuthContext';
 import type { UserProfile } from '@/types/user';
 import EditProfileModal from '@/components/user/profile/EditProfileModal';
-import SavedLocationsSection from '@/components/user/profile/SavedLocationsSection';
+import PreferencesModal from '@/components/user/profile/PreferencesModal';
 import ChangePasswordModal from '@/components/user/profile/ChangePasswordModal';
-import RelatedPassengersSection from '@/components/user/profile/RelatedPassengersSection';
+import FavoritePlacesModal from '@/components/user/profile/FavoritePlacesModal';
+import RelatedPassengersModal from '@/components/user/profile/RelatedPassengersModal';
+import authApi from '@/lib/api/auth';
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-EG', { month: 'short', year: 'numeric' });
+const menuItems = [
+  { label: 'My Wallet', icon: Wallet, href: '/user/wallet' },
+] as const;
+
+function formatAddress(p: UserProfile) {
+  return [p.building, p.street, p.sub_district, p.district, p.province, p.landmark]
+    .filter(Boolean).join(', ') || '—';
 }
 
-function buildDefaultProfile(name: string, email: string): UserProfile {
-  return {
-    id: '',
-    name,
-    email,
-    phone: '',
-    whatsapp_number: '',
-    gender: 'male',
-    date_of_birth: '',
-    avatar_url: null,
-    joined_at: new Date().toISOString(),
-    rating: 0,
-    total_cycles: 0,
-    active_cycles: 0,
-    wallet_balance: 0,
-    gender_pref: 'mixed',
-    walk_minutes: 0,
-    seat_preference: 'any',
-    saved_locations: [],
-    province: '',
-    district: '',
-    sub_district: '',
-    building: '',
-    street: '',
-    landmark: '',
-  };
+function formatJoinDate(iso: string) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  const day   = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year  = d.getFullYear();
+  const h12   = d.getHours() % 12 || 12;
+  const mins  = String(d.getMinutes()).padStart(2, '0');
+  const ampm  = d.getHours() >= 12 ? 'PM' : 'AM';
+  return `${day}/${month}/${year} · ${String(h12).padStart(2, '0')}:${mins} ${ampm}`;
 }
 
 export default function ProfileDesktop() {
-  const [profile, setProfile]       = useState<UserProfile | null>(null);
-  const [editOpen, setEditOpen]     = useState(false);
+  const router = useRouter();
+  const { logout, updateName } = useAuth();
+  const [profile,      setProfile]      = useState<UserProfile | null>(null);
+  const [loading,      setLoading]      = useState(true);
+  const [editOpen,     setEditOpen]     = useState(false);
+  const [prefOpen,     setPrefOpen]     = useState(false);
   const [changePwOpen, setChangePwOpen] = useState(false);
-  const loadProfile = useCallback(() => {
-    const name  = getName() ?? '';
-    const email = typeof window !== 'undefined'
-      ? (localStorage.getItem('commuter_email') ?? '')
-      : '';
-    if (name) {
-      setProfile((prev) =>
-        prev
-          ? { ...prev, name, email }
-          : buildDefaultProfile(name, email)
-      );
-    }
-  }, []);
+  const [placesOpen,   setPlacesOpen]   = useState(false);
+  const [passOpen,     setPassOpen]     = useState(false);
 
   useEffect(() => {
-    loadProfile();
-    // Fetch wallet balance
-    async function loadWallet() {
-      try {
-        const res = await getLastBalance();
-        setProfile((prev) =>
-          prev ? { ...prev, wallet_balance: res.data.last_balance } : null
-        );
-      } catch (err) {
-        console.error('Failed to load wallet balance:', err);
-      }
-    }
-    loadWallet();
-  }, [loadProfile]);
+    userApi.getProfile()
+      .then((p) => setProfile(p))
+      .catch(() => setProfile(null))
+      .finally(() => setLoading(false));
+  }, []);
 
   function handleSave(updates: Partial<UserProfile>) {
     setProfile((p) => (p ? { ...p, ...updates } : null));
-    toast.success('Profile updated!');
+    if (updates.name) updateName(updates.name);
+  }
+
+  async function handleLogout() {
+    try { await authApi.logout(); } catch { /* ignore */ }
+    logout();
+    router.replace('/');
+  }
+
+  const initials = profile?.name
+    ? profile.name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()
+    : '?';
+
+  /* ── Loading skeleton ────────────────────────────────────────── */
+  if (loading) {
+    return (
+      <div style={{ maxWidth: 820, margin: '0 auto', padding: '40px 32px', fontFamily: 'Inter, system-ui, sans-serif' }}>
+        <div style={{ height: 34, width: 160, background: '#E2E8F0', borderRadius: 8, marginBottom: 6 }} />
+        <div style={{ height: 18, width: 200, background: '#E2E8F0', borderRadius: 6, marginBottom: 28 }} />
+        <div style={{ height: 260, background: '#E2E8F0', borderRadius: 24, marginBottom: 16 }} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
+          {[1, 2, 3].map((i) => <div key={i} style={{ height: 80, background: '#E2E8F0', borderRadius: 18 }} />)}
+        </div>
+        <div style={{ height: 58, background: '#E2E8F0', borderRadius: 18 }} />
+      </div>
+    );
   }
 
   if (!profile) return null;
 
-  const initials = profile.name
-    .split(' ')
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-
-  const personalFields: [string, string][] = [
-    ['Name',  profile.name],
-    ['Email', profile.email],
+  const infoRows: { icon: React.ReactNode; label: string; value: string; wide?: boolean }[] = [
+    { icon: <Phone        size={20} color="#00C2A8" />, label: 'Mobile',       value: profile.phone             || '—' },
+    { icon: <MessageSquare size={20} color="#00C2A8" />, label: 'WhatsApp',   value: profile.whatsapp_number   || '—' },
+    { icon: <MapPin       size={20} color="#00C2A8" />, label: 'Address',      value: formatAddress(profile),       wide: true },
+    { icon: <Calendar     size={20} color="#00C2A8" />, label: 'Member since', value: formatJoinDate(profile.joined_at), wide: true },
   ];
 
+  /* ── Render ──────────────────────────────────────────────────── */
   return (
-    <div className="max-w-3xl mx-auto px-6 py-8 flex flex-col gap-5">
+    <div style={{ maxWidth: 820, margin: '0 auto', padding: '40px 32px 60px', fontFamily: 'Inter, system-ui, sans-serif' }}>
 
-      {/* Hero card */}
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 flex items-start gap-4 flex-wrap">
-        <div className="w-[72px] h-[72px] rounded-full bg-[#0B1E3D] flex items-center justify-center text-[#00C2A8] font-extrabold text-2xl flex-shrink-0">
-          {initials}
-        </div>
-        <div className="flex-1">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <h2 className="text-xl font-bold text-[#0B1E3D] mb-0.5">{profile.name}</h2>
-              <p className="text-sm text-[#5A6A7A]">Member since {formatDate(profile.joined_at)}</p>
-              <p className="text-sm text-[#5A6A7A]">Cairo, Egypt</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <span className="text-[#F5A623] text-lg">★</span>
-                <span className="text-base font-bold text-[#0B1E3D]">{profile.rating.toFixed(1)}</span>
-              </div>
-              <button
-                onClick={() => setEditOpen(true)}
-                className="px-4 py-2 border border-[#00C2A8] rounded-lg text-[#00C2A8] text-sm font-semibold hover:bg-[#EFF7F6] transition-colors"
-              >
-                Edit profile
-              </button>
-            </div>
+      {/* Page header */}
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={{ fontSize: 30, fontWeight: 800, color: '#0B1E3D', margin: 0, lineHeight: 1.2 }}>Profile</h1>
+        <p style={{ fontSize: 14, color: '#8A9AB0', margin: '5px 0 0' }}>Your account and settings</p>
+      </div>
+
+      {/* ── Profile card ─────────────────────────────────────────── */}
+      <div style={{ background: '#EFF7F6', border: '1px solid #C8E6E2', borderRadius: 24, padding: '28px 32px', marginBottom: 20 }}>
+
+        {/* Avatar + name + edit button */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 24 }}>
+          <div style={{
+            width: 80, height: 80, borderRadius: '50%',
+            background: '#00C2A8', color: '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: 800, fontSize: 26, flexShrink: 0,
+          }}>
+            {initials}
           </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#0B1E3D', lineHeight: 1.2 }}>{profile.name || '—'}</div>
+            <div style={{ fontSize: 14, color: '#5A6A7A', marginTop: 4 }}>{profile.email || '—'}</div>
+          </div>
+          <button
+            onClick={() => setEditOpen(true)}
+            style={{
+              width: 52, height: 52, borderRadius: 14,
+              background: '#fff', border: '1.5px solid #00C2A8',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', flexShrink: 0,
+            }}
+          >
+            <Pencil size={20} color="#00C2A8" />
+          </button>
         </div>
-      </div>
 
-      {/* Stats strip */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 text-center">
-          <div className="text-3xl font-extrabold text-[#0B1E3D] leading-none">{profile.total_cycles}</div>
-          <div className="text-xs text-[#5A6A7A] mt-2">Past Cycles</div>
-        </div>
-        <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 text-center">
-          <div className="text-3xl font-extrabold text-[#00C2A8] leading-none">{profile.active_cycles}</div>
-          <div className="text-xs text-[#5A6A7A] mt-2">Active Cycles</div>
-        </div>
-        <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 text-center">
-          <div className="text-3xl font-extrabold text-[#F5A623] leading-none">{profile.wallet_balance}</div>
-          <div className="text-[10px] text-[#5A6A7A] mt-1">EGP</div>
-          <div className="text-xs text-[#5A6A7A] mt-1">Wallet</div>
-          <Link href="/user/wallet" className="text-xs text-[#00C2A8] font-semibold block mt-1 no-underline hover:underline">
-            Add funds
-          </Link>
-        </div>
-      </div>
+        {/* Divider */}
+        <div style={{ height: 1, background: '#C8E6E2', marginBottom: 24 }} />
 
-      {/* Personal Information */}
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6">
-        <h3 className="text-base font-bold text-[#0B1E3D] mb-4">Personal Information</h3>
-        <div className="flex flex-col">
-          {personalFields.map(([label, value], i) => (
+        {/* Info rows — 2-col grid, Address & Member since span full width */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '18px 40px', marginBottom: 24 }}>
+          {infoRows.map(({ icon, label, value, wide }) => (
             <div
               key={label}
-              className={`flex justify-between items-center py-3 gap-3 ${i < personalFields.length - 1 ? 'border-b border-[#F1F5F9]' : ''}`}
+              style={{ display: 'flex', gap: 14, alignItems: 'flex-start', ...(wide ? { gridColumn: 'span 2' } : {}) }}
             >
-              <span className="text-sm text-[#5A6A7A] font-medium flex-shrink-0">{label}</span>
-              <span className={`text-sm font-semibold text-right ${value ? 'text-[#0B1E3D]' : 'text-[#CBD5E1]'}`}>
-                {value || '—'}
-              </span>
+              <div style={{ marginTop: 2, flexShrink: 0 }}>{icon}</div>
+              <div>
+                <div style={{ fontSize: 12, color: '#6B82A0', fontWeight: 500, marginBottom: 2 }}>{label}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#0B1E3D', lineHeight: 1.4 }}>{value}</div>
+              </div>
             </div>
           ))}
         </div>
-      </div>
 
-      {/* Related Passengers */}
-      <RelatedPassengersSection />
+        {/* Divider */}
+        <div style={{ height: 1, background: '#C8E6E2', marginBottom: 20 }} />
 
-      {/* Commute Preferences */}
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6">
-        <h3 className="text-base font-bold text-[#0B1E3D] mb-5">Commute Preferences</h3>
-
-        {/* Gender preference */}
-        <div className="mb-5">
-          <p className="text-sm text-[#5A6A7A] font-medium mb-2">Gender preference</p>
-          <div className="flex gap-2">
-            {(['mixed', 'same'] as const).map((val) => (
-              <button
-                key={val}
-                type="button"
-                onClick={() => setProfile((p) => (p ? { ...p, gender_pref: val } : null))}
-                className={`px-4 py-1.5 rounded-full text-sm border transition-colors ${profile.gender_pref === val ? 'border-[#00C2A8] bg-[#EFF7F6] text-[#0B1E3D] font-semibold' : 'border-[#D1D5DB] bg-white text-[#5A6A7A]'}`}
-              >
-                {val === 'mixed' ? 'Mixed' : 'Same gender'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Walk to pickup */}
-        <div className="mb-5">
-          <p className="text-sm text-[#5A6A7A] font-medium mb-2">Walk to pickup</p>
-          <div className="flex gap-2 flex-wrap">
-            {([
-              [0, 'No walk', 'Door pickup'],
-              [5, '5 min', '~400 m · -8%'],
-              [10, '10 min', '~800 m · -15%'],
-            ] as const).map(([val, title, sub]) => (
-              <button
-                key={val}
-                type="button"
-                onClick={() => setProfile((p) => (p ? { ...p, walk_minutes: val } : null))}
-                className={`px-3 py-2 rounded-xl text-left border transition-colors text-sm ${profile.walk_minutes === val ? 'border-[#00C2A8] bg-[#EFF7F6]' : 'border-[#D1D5DB] bg-white'}`}
-              >
-                <div className="font-semibold text-[#0B1E3D]">{title}</div>
-                <div className="text-[11px] text-[#5A6A7A] mt-0.5">{sub}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Preferred seat */}
-        <div className="mb-5">
-          <p className="text-sm text-[#5A6A7A] font-medium mb-1">Preferred seat</p>
-          <p className="text-xs text-[#94A3B8] mb-2">{"We'll try to match this, but it's not guaranteed."}</p>
-          <div className="flex gap-2">
-            {(['front', 'back', 'any'] as const).map((val) => (
-              <button
-                key={val}
-                type="button"
-                onClick={() => setProfile((p) => (p ? { ...p, seat_preference: val } : null))}
-                className={`px-4 py-1.5 rounded-full text-sm border capitalize transition-colors ${profile.seat_preference === val ? 'border-[#00C2A8] bg-[#EFF7F6] text-[#0B1E3D] font-semibold' : 'border-[#D1D5DB] bg-white text-[#5A6A7A]'}`}
-              >
-                {val}
-              </button>
-            ))}
-          </div>
-        </div>
-
+        {/* My preferences */}
         <button
-          onClick={() => toast.success('Commute preferences saved!')}
-          className="px-5 py-2.5 rounded-lg bg-[#00C2A8] text-[#0B1E3D] font-semibold text-sm hover:bg-[#00AD98] transition-colors"
+          onClick={() => setPrefOpen(true)}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left', fontFamily: 'inherit' }}
         >
-          Save preferences
+          <div style={{ width: 48, height: 48, borderRadius: 14, background: '#fff', border: '1px solid #C8E6E2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Sliders size={22} color="#00C2A8" strokeWidth={1.8} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#0B1E3D', lineHeight: 1.2 }}>My preferences</div>
+            <div style={{ fontSize: 13, color: '#5A6A7A', marginTop: 3 }}>Set your ride preferences to help drivers match your style.</div>
+          </div>
+          <ChevronRight size={20} color="#94A3B8" />
         </button>
       </div>
 
-      {/* Favourite Places */}
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6">
-        <SavedLocationsSection />
-      </div>
-
-      {/* Security */}
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6">
-        <h3 className="text-base font-bold text-[#0B1E3D] mb-4">Security</h3>
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium text-[#0B1E3D]">Password</p>
-            <p className="text-xs text-[#5A6A7A] mt-0.5">Change your account password</p>
-          </div>
-          <button
-            onClick={() => setChangePwOpen(true)}
-            className="px-4 py-2 border border-[#E2E8F0] rounded-lg text-sm font-semibold text-[#0B1E3D] hover:bg-[#F8F9FA] transition-colors flex-shrink-0"
+      {/* ── Menu items — 2-col grid ───────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+        {menuItems.map(({ label, icon: Icon, href }) => (
+          <a
+            key={href}
+            href={href}
+            style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '18px 20px', borderRadius: 18, border: '1px solid #E2E8F0', background: '#fff', textDecoration: 'none' }}
           >
-            Change
-          </button>
-        </div>
+            <div style={{ width: 52, height: 52, borderRadius: 14, background: '#EFF7F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Icon size={24} color="#00C2A8" strokeWidth={1.8} />
+            </div>
+            <span style={{ flex: 1, fontSize: 15, fontWeight: 700, color: '#0B1E3D' }}>{label}</span>
+            <ChevronRight size={20} color="#94A3B8" />
+          </a>
+        ))}
+
+        {/* Favorite Places */}
+        <button
+          onClick={() => setPlacesOpen(true)}
+          style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '18px 20px', borderRadius: 18, border: '1px solid #E2E8F0', background: '#fff', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}
+        >
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: '#EFF7F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Bookmark size={24} color="#00C2A8" strokeWidth={1.8} />
+          </div>
+          <span style={{ flex: 1, fontSize: 15, fontWeight: 700, color: '#0B1E3D' }}>Favorite Places</span>
+          <ChevronRight size={20} color="#94A3B8" />
+        </button>
+
+        {/* Related Passengers */}
+        <button
+          onClick={() => setPassOpen(true)}
+          style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '18px 20px', borderRadius: 18, border: '1px solid #E2E8F0', background: '#fff', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}
+        >
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: '#EFF7F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Users size={24} color="#00C2A8" strokeWidth={1.8} />
+          </div>
+          <span style={{ flex: 1, fontSize: 15, fontWeight: 700, color: '#0B1E3D' }}>Related Passengers</span>
+          <ChevronRight size={20} color="#94A3B8" />
+        </button>
+
+        {/* Security */}
+        <button
+          onClick={() => setChangePwOpen(true)}
+          style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '18px 20px', borderRadius: 18, border: '1px solid #E2E8F0', background: '#fff', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}
+        >
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: '#EFF7F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Shield size={24} color="#00C2A8" strokeWidth={1.8} />
+          </div>
+          <span style={{ flex: 1, fontSize: 15, fontWeight: 700, color: '#0B1E3D' }}>Security</span>
+          <ChevronRight size={20} color="#94A3B8" />
+        </button>
       </div>
 
-      {/* Modals */}
+      {/* ── Log out ───────────────────────────────────────────────── */}
+      <button
+        onClick={handleLogout}
+        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '16px', borderRadius: 18, border: '1.5px solid #EF4444', background: '#fff', color: '#EF4444', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+      >
+        <LogOut size={20} color="#EF4444" />
+        Log out
+      </button>
+
+      {/* ── Modals ───────────────────────────────────────────────── */}
       <EditProfileModal
         profile={profile}
         isOpen={editOpen}
         onClose={() => setEditOpen(false)}
         onSave={handleSave}
       />
+      <PreferencesModal isOpen={prefOpen} onClose={() => setPrefOpen(false)} />
       <ChangePasswordModal isOpen={changePwOpen} onClose={() => setChangePwOpen(false)} />
+      <FavoritePlacesModal isOpen={placesOpen} onClose={() => setPlacesOpen(false)} />
+      <RelatedPassengersModal isOpen={passOpen} onClose={() => setPassOpen(false)} />
     </div>
   );
 }

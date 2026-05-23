@@ -86,7 +86,9 @@ export interface TimeSlot {
 
   // Route for this slot
   origin:               GeoLocation | null;
-  stops:                GeoLocation[];         // private only, max 2
+  stops:                GeoLocation[];         // shared-ride flow only, max 2
+  /** Private ride only — per-day intermediate stops (up to 2 per day). */
+  day_stops?:           Partial<Record<WeekDay, GeoLocation[]>>;
   destination:          GeoLocation | null;
   route:                import('@/lib/openrouteservice').ORSRoute | null;
   route_set:            boolean;               // true once user confirmed the route
@@ -111,9 +113,35 @@ export interface TimeSlot {
   return_arrival_from?: string;               // computed
   return_arrival_to?:   string;               // computed
 
+  // ── Private-ride additions ───────────────────────────────────────────────
+  /** Optional meeting point for outbound pickup (private only) */
+  pickup_point?:        GeoLocation | null;
+  /** Optional meeting point for return pickup (private only, round trip) */
+  return_pickup_point?: GeoLocation | null;
+  /** Per-passenger seat assignment (private only).
+   *  Key is "me" for the account holder or stringified passenger id. */
+  seat_assignments?:    Record<string, PrivateSeatPosition>;
+  /** User-picked arrival window (private flow makes these editable). */
+  return_stops?:        GeoLocation[];
+
   // Days assigned to this slot
   days:                 WeekDay[];
 }
+
+// ── Private ride seat positions ──────────────────────────────────────────────
+
+export type PrivateSeatPosition =
+  | 'front'
+  | 'back_left'
+  | 'back_center'
+  | 'back_right';
+
+export const PRIVATE_SEAT_LABELS: Record<PrivateSeatPosition, string> = {
+  front:        'Front',
+  back_left:    'Back left',
+  back_center:  'Back center',
+  back_right:   'Back right',
+};
 
 // ── Group ─────────────────────────────────────────────────────────────────────
 

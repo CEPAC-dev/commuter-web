@@ -7,10 +7,76 @@ import {
   getTransactions,
   getLastBalance,
   deleteTransaction,
+  updateTransaction,
   type WalletTransaction,
 } from '@/lib/api/wallet';
 
 const QUICK_AMOUNTS = [50, 100, 250, 500];
+
+function ConfirmDialog({
+  title,
+  message,
+  confirmLabel,
+  confirmColor,
+  onConfirm,
+  onCancel,
+}: {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  confirmColor: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onCancel}
+        style={{
+          position: 'fixed', inset: 0,
+          background: 'rgba(0,0,0,0.35)',
+          zIndex: 400,
+        }}
+      />
+      {/* Dialog */}
+      <div
+        style={{
+          position: 'fixed',
+          top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 'min(88vw, 340px)',
+          background: '#fff',
+          borderRadius: 20,
+          padding: '28px 24px 22px',
+          zIndex: 401,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12,
+          boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
+          fontFamily: 'Inter, system-ui, sans-serif',
+        }}
+      >
+        <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#0B1E3D' }}>{title}</h3>
+        <p style={{ margin: 0, fontSize: 14, color: '#5A6A7A', lineHeight: 1.6 }}>{message}</p>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 24, marginTop: 8 }}>
+          <button
+            onClick={onCancel}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: 700, color: '#00C2A8', fontFamily: 'inherit', padding: '4px 0' }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: 700, color: confirmColor, fontFamily: 'inherit', padding: '4px 0' }}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -44,14 +110,21 @@ function StatusBadge({ status }: { status: string }) {
 
 function TransactionCard({
   tx,
-  paymentUrl,
   onDelete,
+  onConfirm,
+  onUpdate,
 }: {
   tx: WalletTransaction;
-  paymentUrl?: string;
   onDelete: (id: number) => void;
+  onConfirm: (id: number, updated: WalletTransaction) => void;
+  onUpdate: (id: number, updated: WalletTransaction) => void;
 }) {
-  const [deleting, setDeleting] = useState(false);
+  const [deleting, setDeleting]     = useState(false);
+  const [confirming, setConfirming]  = useState(false);
+  const [editing, setEditing]        = useState(false);
+  const [editAmount, setEditAmount]  = useState(String(tx.transaction_amount));
+  const [saving, setSaving]          = useState(false);
+  const [showDeleteDlg, setShowDeleteDlg] = useState(false);
 
   async function handleDelete() {
     setDeleting(true);
@@ -66,18 +139,57 @@ function TransactionCard({
     }
   }
 
-  function handleConfirmPayment() {
-    if (paymentUrl) {
-      window.open(paymentUrl, '_blank', 'noopener,noreferrer');
+  async function handleConfirm() {
+    setConfirming(true);
+    try {
+      const base = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.commuter.site/api';
+      const paymentUrl = `${base}/kashier/payment/${tx.id}`;
+      onConfirm(tx.id, tx);
+      window.location.href = paymentUrl;
+      // keep confirming=true so button shows "Redirecting…" while browser navigates
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Redirect failed');
+      setConfirming(false);
+    }
+  }
+
+  async function handleSaveEdit() {
+    const amount = Number(editAmount);
+    if (!amount || amount < 1) { toast.error('Enter a valid amount'); return; }
+    setSaving(true);
+    try {
+      const res = await updateTransaction(tx.id, {
+        operation_type: tx.operation_type,
+        transaction_amount: amount,
+        reason: tx.reason ?? '',
+      });
+      onUpdate(tx.id, res.data);
+      setEditing(false);
+      toast.success('Transaction updated');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Update failed');
+    } finally {
+      setSaving(false);
     }
   }
 
   return (
-    <div
-      style={{
-        background: '#fff',
-        borderRadius: 14,
-        border: '1px solid #E2E8F0',
+    <>
+      {showDeleteDlg && (
+        <ConfirmDialog
+          title="Delete transaction?"
+          message={`Are you sure you want to delete this EGP ${Number(tx.transaction_amount).toFixed(2)} ${tx.operation_type}? This cannot be undone.`}
+          confirmLabel={deleting ? 'Deleting…' : 'Delete'}
+          confirmColor="#E74C3C"
+          onConfirm={() => { setShowDeleteDlg(false); handleDelete(); }}
+          onCancel={() => setShowDeleteDlg(false)}
+        />
+      )}
+      <div
+        style={{
+          background: '#fff',
+          borderRadius: 14,
+          border: '1px solid #E2E8F0',
         padding: '16px 18px',
         display: 'flex',
         flexDirection: 'column',
@@ -91,19 +203,57 @@ function TransactionCard({
         <StatusBadge status={tx.status} />
       </div>
 
-      <div style={{ fontSize: 20, fontWeight: 800, color: '#0B1E3D' }}>
-        EGP {Number(tx.transaction_amount).toFixed(2)}
-      </div>
+      {editing ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+          <input
+            type="number"
+            min={1}
+            value={editAmount}
+            onChange={(e) => setEditAmount(e.target.value)}
+            autoFocus
+            style={{
+              flex: 1,
+              height: 40,
+              border: '1.5px solid #00C2A8',
+              borderRadius: 8,
+              padding: '0 10px',
+              fontSize: 15,
+              fontWeight: 700,
+              color: '#0B1E3D',
+              outline: 'none',
+              fontFamily: 'inherit',
+            }}
+          />
+          <button
+            onClick={handleSaveEdit}
+            disabled={saving}
+            style={{ height: 40, padding: '0 14px', border: 'none', borderRadius: 8, background: '#00C2A8', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.6 : 1 }}
+          >
+            {saving ? '…' : 'Save'}
+          </button>
+          <button
+            onClick={() => { setEditing(false); setEditAmount(String(tx.transaction_amount)); }}
+            style={{ height: 40, padding: '0 12px', border: '1.5px solid #D4DCE8', borderRadius: 8, background: '#fff', color: '#5A6A7A', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <div style={{ fontSize: 20, fontWeight: 800, color: '#0B1E3D' }}>
+          EGP {Number(tx.transaction_amount).toFixed(2)}
+        </div>
+      )}
 
       <div style={{ fontSize: 12, color: '#8A9AB0' }}>
         {formatDate(tx.created_at)}
       </div>
 
-      {tx.status === 'pending' && (
+      {tx.status === 'pending' && !editing && (
         <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+          {/* Confirm payment */}
           <button
-            onClick={handleConfirmPayment}
-            disabled={!paymentUrl}
+            onClick={handleConfirm}
+            disabled={confirming}
             style={{
               flex: 1,
               padding: '11px 0',
@@ -113,23 +263,45 @@ function TransactionCard({
               color: '#00C2A8',
               fontWeight: 700,
               fontSize: 14,
-              cursor: paymentUrl ? 'pointer' : 'not-allowed',
+              cursor: confirming ? 'not-allowed' : 'pointer',
               fontFamily: 'inherit',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 7,
-              opacity: paymentUrl ? 1 : 0.5,
+              opacity: confirming ? 0.6 : 1,
             }}
           >
             <svg width="17" height="14" viewBox="0 0 17 14" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="0.5" y="0.5" width="16" height="13" rx="2.5" stroke="#00C2A8"/>
               <rect x="0.5" y="3.5" width="16" height="3" fill="#00C2A8" stroke="#00C2A8"/>
             </svg>
-            Confirm payment
+            {confirming ? 'Redirecting…' : 'Confirm payment'}
           </button>
+          {/* Edit */}
           <button
-            onClick={handleDelete}
+            onClick={() => setEditing(true)}
+            style={{
+              width: 44,
+              height: 44,
+              border: '1.5px solid #00C2A8',
+              borderRadius: 10,
+              background: '#fff',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+            aria-label="Edit amount"
+          >
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10.586 1.586a2 2 0 0 1 2.828 2.828l-9 9A2 2 0 0 1 3 14H1v-2a2 2 0 0 1 .586-1.414l9-9z" stroke="#00C2A8" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          {/* Delete */}
+          <button
+            onClick={() => setShowDeleteDlg(true)}
             disabled={deleting}
             style={{
               width: 44,
@@ -154,19 +326,23 @@ function TransactionCard({
         </div>
       )}
     </div>
+    </>
   );
 }
 
 export default function WalletPage() {
   const [balance, setBalance] = useState<number>(0);
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
-  const [paymentUrls, setPaymentUrls] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [showTopUpDlg, setShowTopUpDlg] = useState(false);
+  const [showPendingDlg, setShowPendingDlg] = useState(false);
 
   const finalAmount = selectedAmount ?? (customAmount ? parseInt(customAmount) || 0 : 0);
+  const pendingCount = transactions.filter((t) => t.status === 'pending').length;
+  const maxPendingReached = pendingCount >= 2;
 
   useEffect(() => {
     async function load() {
@@ -191,13 +367,19 @@ export default function WalletPage() {
       toast.error('Please enter a valid amount');
       return;
     }
+    setShowTopUpDlg(true);
+  }
+
+  async function doTopUp() {
+    setShowTopUpDlg(false);
+    if (maxPendingReached) {
+      setShowPendingDlg(true);
+      return;
+    }
     setSubmitting(true);
     try {
       const res = await topUp(finalAmount);
       setTransactions((prev) => [res.data, ...prev]);
-      if (res.payment_url) {
-        setPaymentUrls((prev) => ({ ...prev, [res.data.id]: res.payment_url }));
-      }
       setSelectedAmount(null);
       setCustomAmount('');
       toast.success('Top-up initiated — confirm payment to complete');
@@ -210,15 +392,43 @@ export default function WalletPage() {
 
   function handleDelete(id: number) {
     setTransactions((prev) => prev.filter((t) => t.id !== id));
-    setPaymentUrls((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
+  }
+
+  async function handleConfirm(id: number, updated: WalletTransaction) {
+    setTransactions((prev) => prev.map((t) => (t.id === id ? updated : t)));
+    // Refresh balance
+    try {
+      const balRes = await getLastBalance();
+      setBalance(balRes.data.last_balance);
+    } catch { /* silent */ }
+  }
+
+  function handleUpdate(id: number, updated: WalletTransaction) {
+    setTransactions((prev) => prev.map((t) => (t.id === id ? updated : t)));
   }
 
   return (
     <div style={{ maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20, padding: '0 4px' }}>
+      {showTopUpDlg && (
+        <ConfirmDialog
+          title="Confirm top up?"
+          message={`You are about to top up EGP ${Number(finalAmount).toFixed(2)}. You will need to confirm payment after this.`}
+          confirmLabel="Top up"
+          confirmColor="#00C2A8"
+          onConfirm={doTopUp}
+          onCancel={() => setShowTopUpDlg(false)}
+        />
+      )}
+      {showPendingDlg && (
+        <ConfirmDialog
+          title="Pending transactions"
+          message={`You already have ${pendingCount} pending transaction${pendingCount > 1 ? 's' : ''}. Confirm, update, or delete them before topping up again.`}
+          confirmLabel="OK"
+          confirmColor="#00C2A8"
+          onConfirm={() => setShowPendingDlg(false)}
+          onCancel={() => setShowPendingDlg(false)}
+        />
+      )}
       {/* Balance card */}
       <div
         style={{
@@ -265,7 +475,15 @@ export default function WalletPage() {
           {QUICK_AMOUNTS.map((a) => (
             <button
               key={a}
-              onClick={() => { setSelectedAmount(a === selectedAmount ? null : a); setCustomAmount(''); }}
+              onClick={() => {
+                if (a === selectedAmount) {
+                  setSelectedAmount(null);
+                  setCustomAmount('');
+                } else {
+                  setSelectedAmount(a);
+                  setCustomAmount(String(a));
+                }
+              }}
               style={{
                 padding: '10px 18px',
                 border: `1.5px solid ${selectedAmount === a ? '#00C2A8' : '#D4DCE8'}`,
@@ -363,7 +581,7 @@ export default function WalletPage() {
       </div>
 
       {/* Transactions */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 40 }}>
         <div style={{ fontSize: 15, fontWeight: 700, color: '#0B1E3D' }}>Your transactions</div>
 
         {loading ? (
@@ -379,8 +597,9 @@ export default function WalletPage() {
             <TransactionCard
               key={tx.id}
               tx={tx}
-              paymentUrl={paymentUrls[tx.id]}
               onDelete={handleDelete}
+              onConfirm={handleConfirm}
+              onUpdate={handleUpdate}
             />
           ))
         )}

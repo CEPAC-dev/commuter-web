@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, LogOut, User, Wallet, Bell } from 'lucide-react';
-import { getName, clearSession } from '@/lib/auth';
+import { useAuth } from '@/lib/auth/AuthContext';
+import authApi from '@/lib/api/auth';
 import LanguageToggle from './LanguageToggle';
 
 export default function UserNavbar() {
@@ -20,13 +21,13 @@ export default function UserNavbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [userName, setUserName] = useState('User');
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { name: authName, logout } = useAuth();
 
   const unreadCount = 0; // TODO: fetch from API when notifications endpoint available
 
   useEffect(() => {
-    const n = getName();
-    if (n) setUserName(n);
-  }, []);
+    if (authName) setUserName(authName);
+  }, [authName]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -38,9 +39,14 @@ export default function UserNavbar() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  function handleLogout() {
-    clearSession();
-    router.push('/');
+  async function handleLogout() {
+    try {
+      await authApi.logout();
+    } catch {
+      // ignore — clear client session regardless
+    }
+    logout();
+    router.replace('/');
   }
 
   const initials = userName

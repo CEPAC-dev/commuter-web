@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { Menu, X, ChevronDown, LogOut, User } from 'lucide-react';
-import { getName, clearSession } from '@/lib/auth';
+import { useAuth } from '@/lib/auth/AuthContext';
+import authApi from '@/lib/api/auth';
 import LanguageToggle from './LanguageToggle';
 import { useTranslations } from 'next-intl';
 
@@ -23,11 +24,11 @@ export default function DriverNavbar() {
   const [dropdownOpen,  setDropdownOpen]  = useState(false);
   const [driverName,    setDriverName]    = useState('Driver');
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { name: authName, logout } = useAuth();
 
   useEffect(() => {
-    const n = getName();
-    if (n) setDriverName(n);
-  }, []);
+    if (authName) setDriverName(authName);
+  }, [authName]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -44,9 +45,14 @@ export default function DriverNavbar() {
     setMobileOpen(false);
   }, [pathname]);
 
-  function handleLogout() {
-    clearSession();
-    router.push('/');
+  async function handleLogout() {
+    try {
+      await authApi.logout();
+    } catch {
+      // ignore — clear client session regardless
+    }
+    logout();
+    router.replace('/');
   }
 
   const initials = driverName

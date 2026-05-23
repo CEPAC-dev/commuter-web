@@ -44,6 +44,20 @@ interface WizardState {
 
   // Meta
   cycle_start_date: string;
+
+  // ── Private ride globals ──────────────────────────────────────────────
+  /** Global outbound route shared by every slot in private rides. */
+  private_outbound_origin:       GeoLocation | null;
+  private_outbound_destination:  GeoLocation | null;
+  /** Optional meeting point for outbound pickup. */
+  private_outbound_pickup_point: GeoLocation | null;
+  /** Optional intermediate stop on the outbound route (for routing). */
+  private_outbound_stop:         GeoLocation | null;
+  private_outbound_route:        ORSRoute | null;
+  /** Global trip type for private rides (locked for every slot). */
+  private_trip_type:             'one_way' | 'round_trip';
+  /** Optional notes for the driver. */
+  notes: string;
 }
 
 interface WizardActions {
@@ -67,6 +81,12 @@ interface WizardActions {
   updateSlotReturnRoute: (slotId: string, patch: Partial<WizardTimeSlot>) => void;
   setSeatPreference: (seat: WizardState['seat_preference']) => void;
   setCycleStartDate: (date: string) => void;
+  setPrivateOutbound: (patch: Partial<Pick<WizardState,
+    'private_outbound_origin' | 'private_outbound_destination' |
+    'private_outbound_pickup_point' | 'private_outbound_stop' |
+    'private_outbound_route'>>) => void;
+  setPrivateTripType: (t: 'one_way' | 'round_trip') => void;
+  setNotes:          (n: string) => void;
   reset:             () => void;
 }
 
@@ -90,6 +110,13 @@ const defaultState: WizardState = {
   time_slots:       [],
   seat_preference:  'any',
   cycle_start_date: '',
+  private_outbound_origin:       null,
+  private_outbound_destination:  null,
+  private_outbound_pickup_point: null,
+  private_outbound_stop:         null,
+  private_outbound_route:        null,
+  private_trip_type:             'one_way',
+  notes:                         '',
 };
 
 // ── Context ───────────────────────────────────────────────────────────────────
@@ -169,6 +196,15 @@ export function RequestWizardProvider({ children }: { children: ReactNode }) {
     },
     setCycleStartDate(date) {
       setState(prev => ({ ...prev, cycle_start_date: date }));
+    },
+    setPrivateOutbound(patch) {
+      setState(prev => ({ ...prev, ...patch }));
+    },
+    setPrivateTripType(t) {
+      setState(prev => ({ ...prev, private_trip_type: t }));
+    },
+    setNotes(n) {
+      setState(prev => ({ ...prev, notes: n }));
     },
     reset() {
       setState(defaultState);

@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import type { UserProfile } from '@/types/user';
 import BottomSheet from '@/components/shared/BottomSheet';
+import userApi from '@/lib/api/user';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -17,21 +19,28 @@ export default function EditProfileModal({
   profile,
   onSave,
 }: EditProfileModalProps) {
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [gender, setGender] = useState<'male' | 'female'>('male');
+  const [name,   setName]   = useState('');
+  const [phone,  setPhone]  = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (profile && isOpen) {
       setName(profile.name);
       setPhone(profile.phone);
-      setGender(profile.gender);
     }
   }, [profile, isOpen]);
 
-  function handleSave() {
-    onSave({ name, phone, gender });
-    onClose();
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await userApi.updateProfile({ name, phone_number: phone });
+      onSave({ name, phone });
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Update failed');
+    } finally {
+      setSaving(false);
+    }
   }
 
   const content = (
@@ -64,57 +73,28 @@ export default function EditProfileModal({
         />
       </div>
 
-      <div>
-        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#5A6A7A', marginBottom: 8 }}>
-          Gender
-        </label>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {(['male', 'female'] as const).map((g) => (
-            <button
-              key={g}
-              type="button"
-              onClick={() => setGender(g)}
-              style={{
-                flex: 1,
-                padding: '10px',
-                border: `1.5px solid ${gender === g ? '#00C2A8' : '#E2E8F0'}`,
-                borderRadius: 8,
-                background: gender === g ? '#00C2A8' : '#fff',
-                color: gender === g ? '#0B1E3D' : '#5A6A7A',
-                fontWeight: gender === g ? 700 : 500,
-                fontSize: 14,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                minHeight: 44,
-              }}
-            >
-              {g === 'male' ? 'Male' : 'Female'}
-            </button>
-          ))}
-        </div>
-      </div>
-
       <div style={{ padding: '8px 12px', background: '#F8F9FA', borderRadius: 8, fontSize: 12, color: '#5A6A7A' }}>
         Email and date of birth cannot be changed after registration.
       </div>
 
       <button
         onClick={handleSave}
+        disabled={saving}
         style={{
           width: '100%',
           padding: '14px',
           border: 'none',
           borderRadius: 10,
-          background: '#00C2A8',
+          background: saving ? '#7DDDD5' : '#00C2A8',
           color: '#0B1E3D',
           fontWeight: 700,
           fontSize: 15,
-          cursor: 'pointer',
+          cursor: saving ? 'not-allowed' : 'pointer',
           fontFamily: 'inherit',
           minHeight: 48,
         }}
       >
-        Save changes
+        {saving ? 'Saving…' : 'Save changes'}
       </button>
     </div>
   );

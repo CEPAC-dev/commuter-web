@@ -41,7 +41,17 @@ export async function signUpUser(payload: UserSignupPayload): Promise<AuthRespon
     const err = await res.json().catch(() => ({ message: 'Signup failed' }));
     throw new Error(err.message ?? 'Signup failed');
   }
-  return res.json();
+  const data = await res.json();
+  // Map backend response { token, user: { id, name, ... } } → AuthResponse.
+  // Always force role='user' here — this endpoint only registers users.
+  return {
+    token:      data.token       ?? data.access_token ?? '',
+    role:       'user',
+    userId:     String(data.user?.id ?? data.userId ?? ''),
+    name:       data.user?.name  ?? data.name ?? payload.name,
+    isVerified: Boolean(data.user?.email_verified_at ?? data.isVerified ?? false),
+    isApproved: true,
+  };
 }
 
 export async function signUpDriver(formData: FormData): Promise<{ message: string; userId: string }> {
@@ -81,7 +91,7 @@ export async function verifyOtp(email: string, code: string): Promise<void> {
 }
 
 export async function getUserProfile(): Promise<UserProfile> {
-  const res = await fetch(`${API_BASE}/user/profile`, {
+  const res = await fetch(`${API_BASE}/profile`, {
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
   });
   if (!res.ok) {
@@ -120,7 +130,7 @@ export async function getUserProfile(): Promise<UserProfile> {
 }
 
 export async function updateUserProfile(updates: Partial<UserProfile>): Promise<UserProfile> {
-  const res = await fetch(`${API_BASE}/user/profile`, {
+  const res = await fetch(`${API_BASE}/profile`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(updates),
@@ -197,3 +207,103 @@ export async function refreshToken(): Promise<AuthResponse> {
   if (!res.ok) throw new Error('Token refresh failed');
   return res.json();
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// New flexible auth API — uses the shared `call` client and the confirmed
+// backend /register schema. Use this for any NEW code. Legacy helpers above
+// stay for back-compat with existing call sites.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { call } from './client';
+
+export interface RegisterPayload {
+  role:                  'driver' | 'user';
+  name:                  string;
+  email:                 string;
+  phone_number:          string;
+  whatsapp_number?:      string;
+  province:              string;
+  gender:                'male' | 'female';
+  birthdate:             string;          // "YYYY-MM-DD"
+  district:              string;
+  sub_district?:         string;
+  building?:             string;
+  street?:               string;
+  landmark?:             string;
+  password:              string;
+  password_confirmation: string;
+}
+
+export interface LoginPayload {
+  email:    string;
+  password: string;
+}
+
+// Response shapes are intentionally loose — adjust as backend confirms schema.
+export interface AuthApiResponse {
+  token?:        string;
+  access_token?: string;
+  role?:         string;
+  user?: {
+    id:    string | number;
+    name:  string;
+    email: string;
+    role:  string;
+  };
+  message?: string;
+}
+
+export function extractToken(res: AuthApiResponse): string {
+  return res.token ?? res.access_token ?? '';
+}
+export function extractRole(res: AuthApiResponse): string {
+  return res.role ?? res.user?.role ?? '';
+}
+export function extractName(res: AuthApiResponse): string {
+  return res.user?.name ?? '';
+}
+export function extractId(res: AuthApiResponse): string {
+  return String(res.user?.id ?? '');
+}
+
+const authApi = {
+  register: (payload: RegisterPayload) =>
+    call<AuthApiResponse>('register', {
+      method: 'POST',
+      body:   payload as unknown as Record<string, unknown>,
+      auth:   false,
+    }),
+
+  login: (payload: LoginPayload) =>
+    call<AuthApiResponse>('login', {
+      method: 'POST',
+      body:   payload as unknown as Record<string, unknown>,
+      auth:   false,
+    }),
+
+  logout: () => call<{ message: string }>('logout', { method: 'POST' }),
+
+  refresh: () => call<AuthApiResponse>('auth/refresh', { method: 'POST' }),
+
+  forgotPassword: (email: string) =>
+    call<{ message: string }>('forgot-password', {
+      method: 'POST',
+      body:   { email },
+      auth:   false,
+    }),
+
+  resetPassword: (payload: {
+    token:                 string;
+    email:                 string;
+    password:              string;
+    password_confirmation: string;
+  }) =>
+    call<{ message: string }>('reset-password', {
+      method: 'POST',
+      body:   payload as unknown as Record<string, unknown>,
+      auth:   false,
+    }),
+};
+
+export default authApi;
+

@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import UserNavbar from '@/components/layout/UserNavbar';
 import BottomNav from '@/components/layout/BottomNav';
 import { RequestWizardProvider } from '@/lib/RequestWizardContext';
+import AuthGuard from '@/lib/auth/AuthGuard';
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -24,14 +25,17 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   // Onboarding wizard pages: full-screen, no navbar, no bottom nav
   if (isOnboardingPage || isTripPage) {
     return (
-      <RequestWizardProvider>
-        <Toaster position="top-right" />
-        {children}
-      </RequestWizardProvider>
+      <AuthGuard role="user">
+        <RequestWizardProvider>
+          <Toaster position="top-right" />
+          {children}
+        </RequestWizardProvider>
+      </AuthGuard>
     );
   }
 
   return (
+    <AuthGuard role="user">
     <RequestWizardProvider>
       <div style={{ minHeight: '100vh', background: isFullBleedPage ? 'transparent' : '#F8F9FA', fontFamily: 'Inter, system-ui, sans-serif', overflowX: 'hidden' }}>
         <Toaster position="top-right" />
@@ -59,6 +63,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
         <BottomNav />
       </div>
     </RequestWizardProvider>
+    </AuthGuard>
   );
 }
 
