@@ -7,11 +7,6 @@ import { INDEX_WEEKDAY } from '@/lib/timeUtils';
 import { getLastBalance } from '@/lib/api/wallet';
 import PageHeader from '@/components/shared/PageHeader';
 
-const FULL_DAY: Record<string, string> = {
-  Sun: 'Sunday', Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday',
-  Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday',
-};
-
 // ── Status config ─────────────────────────────────────────────────────────────
 
 const STATUS_CONFIG: Record<CourseStatus, { label: string; bg: string; color: string; border: string }> = {

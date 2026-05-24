@@ -47,8 +47,8 @@ function Row({
 export default function OutboundRouteCard({
   origin, destination, routeStop, pickupPoint, route,
   hasPickupPoint,
-  onAddPickupPoint, onRemovePickupPoint,
-  onSetRoute, onSetPickupPoint, onRemoveRouteStop,
+  onRemovePickupPoint,
+  onSetRoute, onRemoveRouteStop,
 }: Props) {
   const routeReady = !!origin && !!destination;
 

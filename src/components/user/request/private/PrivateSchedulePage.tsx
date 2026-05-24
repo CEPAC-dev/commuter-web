@@ -232,8 +232,6 @@ export default function PrivateSchedulePage() {
     return errors;
   }
 
-  const showReviewModal = showReview && !submitting;
-
   // ── Price estimate ──────────────────────────────────────────────────────
   const distanceKm = wizard.private_outbound_route?.distance_km ?? 20;
   const { min: priceMin, max: priceMax } = calculatePriceRange({
