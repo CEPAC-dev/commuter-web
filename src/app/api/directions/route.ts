@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+// Prefer a server-only (referrer-unrestricted) key; fall back to the public one.
+const API_KEY = process.env.GOOGLE_MAPS_SERVER_KEY ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+/** Accepts a single "lat,lng" pair with in-range numeric values. */
+function isLatLng(s: string): boolean {
+  const parts = s.split(',');
+  if (parts.length !== 2) return false;
+  const lat = Number(parts[0]);
+  const lng = Number(parts[1]);
+  return (
+    Number.isFinite(lat) && Number.isFinite(lng) &&
+    lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
+  );
+}
 
 export async function GET(req: NextRequest) {
   const origin = req.nextUrl.searchParams.get('origin');       // "lat,lng"
@@ -10,6 +23,8 @@ export async function GET(req: NextRequest) {
 
   if (!origin || !destination)
     return NextResponse.json({ error: 'Missing origin/dest' }, { status: 400 });
+  if (!isLatLng(origin) || !isLatLng(destination))
+    return NextResponse.json({ error: 'Invalid origin/dest' }, { status: 400 });
   if (!API_KEY)
     return NextResponse.json({ error: 'Maps API key not configured' }, { status: 500 });
 
@@ -18,7 +33,10 @@ export async function GET(req: NextRequest) {
   url.searchParams.set('destination', destination);
   if (waypointsParam) {
     // Google expects "via:lat,lng|via:lat,lng" for intermediate stops
-    const encoded = waypointsParam.split('|').map((w) => `via:${w}`).join('|');
+    const parts = waypointsParam.split('|');
+    if (parts.length > 25 || !parts.every(isLatLng))
+      return NextResponse.json({ error: 'Invalid waypoints' }, { status: 400 });
+    const encoded = parts.map((w) => `via:${w}`).join('|');
     url.searchParams.set('waypoints', encoded);
   }
   url.searchParams.set('mode', 'driving');

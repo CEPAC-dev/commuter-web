@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+// Prefer a server-only (referrer-unrestricted) key; fall back to the public one.
+const API_KEY = process.env.GOOGLE_MAPS_SERVER_KEY ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 export async function GET(req: NextRequest) {
   const id = req.nextUrl.searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'Missing place id' }, { status: 400 });
+  // Google place_ids are short URL-safe tokens; reject anything else to avoid abuse.
+  if (id.length > 512 || !/^[A-Za-z0-9_-]+$/.test(id))
+    return NextResponse.json({ error: 'Invalid place id' }, { status: 400 });
   if (!API_KEY) return NextResponse.json({ error: 'Maps API key not configured' }, { status: 500 });
 
   const url = new URL('https://maps.googleapis.com/maps/api/place/details/json');

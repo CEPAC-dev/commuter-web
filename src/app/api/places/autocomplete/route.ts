@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+// Prefer a server-only (referrer-unrestricted) key; fall back to the public one.
+const API_KEY = process.env.GOOGLE_MAPS_SERVER_KEY ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 export async function GET(req: NextRequest) {
-  const q = req.nextUrl.searchParams.get('q');
-  if (!q || q.length < 2) return NextResponse.json([]);
+  const raw = req.nextUrl.searchParams.get('q');
+  if (!raw || raw.length < 2) return NextResponse.json([]);
+  // Cap input length to bound upstream cost and reject oversized abuse.
+  const q = raw.slice(0, 200);
   if (!API_KEY) return NextResponse.json({ error: 'Maps API key not configured' }, { status: 500 });
 
   const url = new URL('https://maps.googleapis.com/maps/api/place/autocomplete/json');

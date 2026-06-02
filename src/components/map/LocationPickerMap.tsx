@@ -100,7 +100,11 @@ export default function LocationPickerMap({ lat, lng, name, onChange, error }: L
     if (!isInCairo(newLat, newLng)) { setOutOfBounds(true); return; }
     setOutOfBounds(false);
     const addr   = await reverseGeocode(newLat, newLng);
-    const label  = formatDisplayName(addr) || `${newLat.toFixed(5)}, ${newLng.toFixed(5)}`;
+    const formatted = formatDisplayName(addr);
+    const COORD_RE = /^-?\d+\.\d{5,}/;
+    const label  = (formatted && !COORD_RE.test(formatted))
+      ? formatted
+      : `${newLat.toFixed(5)}, ${newLng.toFixed(5)}`;
     setQuery(label);
     onChange(newLat.toFixed(6), newLng.toFixed(6), label);
   }

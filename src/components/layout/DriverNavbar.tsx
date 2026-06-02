@@ -24,7 +24,7 @@ export default function DriverNavbar() {
   const [dropdownOpen,  setDropdownOpen]  = useState(false);
   const [driverName,    setDriverName]    = useState('Driver');
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { name: authName, logout } = useAuth();
+  const { name: authName, logout, profilePhoto } = useAuth();
 
   useEffect(() => {
     if (authName) setDriverName(authName);
@@ -139,8 +139,12 @@ export default function DriverNavbar() {
               background: '#00C2A8',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 13, fontWeight: 700, color: '#0B1E3D', flexShrink: 0,
+              overflow: 'hidden',
             }}>
-              {initials}
+              {profilePhoto
+                // eslint-disable-next-line @next/next/no-img-element
+                ? <img src={profilePhoto} alt={driverName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : initials}
             </div>
             <span style={{ fontSize: 14, fontWeight: 500, maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {driverName}

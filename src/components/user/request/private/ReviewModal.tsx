@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import type { TimeSlot, GeoLocation, WeekDay } from '@/types/shared';
 import { PRIVATE_SEAT_LABELS } from '@/types/shared';
 import type { ApiPassenger } from '@/lib/api/passengers';
@@ -21,7 +23,7 @@ interface Props {
   notes:           string;
   submitting:      boolean;
   error:           string | null;
-  onConfirm:       () => void;
+  onConfirm:       (min: number, max: number) => void;
   onCancel:        () => void;
 }
 
@@ -69,6 +71,24 @@ export default function ReviewModal({
   notes, submitting, error,
   onConfirm, onCancel,
 }: Props) {
+  const [adjMin, setAdjMin] = useState(priceMin);
+  const [adjMax, setAdjMax] = useState(priceMax);
+  const [rawMin, setRawMin] = useState(String(priceMin));
+  const [rawMax, setRawMax] = useState(String(priceMax));
+
+  function commitMin(raw: string) {
+    const n = parseInt(raw, 10);
+    const clamped = isNaN(n) ? priceMin : Math.max(priceMin, Math.min(n, adjMax - 1));
+    setAdjMin(clamped);
+    setRawMin(String(clamped));
+  }
+
+  function commitMax(raw: string) {
+    const n = parseInt(raw, 10);
+    const clamped = isNaN(n) ? adjMin + 1 : Math.max(adjMin + 1, n);
+    setAdjMax(clamped);
+    setRawMax(String(clamped));
+  }
   const passengerMap = new Map(passengers.map(p => [p.id, p.name]));
 
   return (
@@ -219,13 +239,81 @@ export default function ReviewModal({
         })}
 
         {/* Price */}
-        <div className="bg-[#EFF7F6] border border-[#C8E8E4] rounded-xl px-4 py-3 flex items-center gap-3">
-          <span className="text-2xl">💰</span>
-          <div>
-            <p className="text-xs font-semibold text-[#5A6A7A]">Estimated weekly cost</p>
-            <p className="text-lg font-extrabold text-[#0B1E3D]">
-              EGP {priceMin.toLocaleString()} – {priceMax.toLocaleString()}
+        <div style={{ borderRadius: 16, overflow: 'hidden', border: '1.5px solid #E2E8F0' }}>
+          {/* Live price display */}
+          <div style={{
+            background: '#0B1E3D', padding: '18px 20px 14px',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{ position: 'absolute', top: -28, right: -18, width: 90, height: 90, borderRadius: '50%', background: '#00C2A8', opacity: 0.08, pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: -20, right: 60, width: 60, height: 60, borderRadius: '50%', background: '#00C2A8', opacity: 0.05, pointerEvents: 'none' }} />
+            <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>💰 Weekly price range</p>
+            <p style={{ fontSize: 24, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px', lineHeight: 1 }}>
+              EGP {adjMin} <span style={{ color: '#00C2A8', fontWeight: 400 }}>—</span> {adjMax}
             </p>
+            <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 6 }}>
+              Base estimate: EGP {priceMin} – {priceMax} · Final confirmed after match
+            </p>
+          </div>
+
+          {/* Stepper controls */}
+          <div style={{ background: '#fff', padding: '16px 20px 20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 20px 1fr', gap: 8, alignItems: 'start', minWidth: 0 }}>
+              {/* Min */}
+              <div style={{ minWidth: 0 }}>
+                <p style={{ fontSize: 10, fontWeight: 700, color: '#9AA0A6', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 5 }}>Minimum</p>
+                <div style={{ display: 'flex', borderRadius: 10, border: '1.5px solid #E2E8F0', overflow: 'hidden', background: '#FAFAFA' }}>
+                  <button
+                    type="button"
+                    onClick={() => { const v = Math.max(priceMin, adjMin - 1); setAdjMin(v); setRawMin(String(v)); }}
+                    style={{ width: 38, height: 44, background: 'none', border: 'none', borderRight: '1px solid #E2E8F0', cursor: 'pointer', fontSize: 20, color: '#94A3B8', fontWeight: 500, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >−</button>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={rawMin}
+                    onChange={e => setRawMin(e.target.value.replace(/[^0-9]/g, ''))}
+                    onBlur={() => commitMin(rawMin)}
+                    style={{ flex: 1, border: 'none', outline: 'none', textAlign: 'center', fontSize: 15, fontWeight: 800, color: '#0B1E3D', fontFamily: 'inherit', background: 'transparent', minWidth: 0 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { const v = Math.min(adjMin + 1, adjMax - 1); setAdjMin(v); setRawMin(String(v)); }}
+                    style={{ width: 38, height: 44, background: '#00C2A8', border: 'none', borderLeft: '1px solid #00C2A8', cursor: 'pointer', fontSize: 20, color: '#fff', fontWeight: 700, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >+</button>
+                </div>
+                <p style={{ fontSize: 10, color: '#94A3B8', marginTop: 4 }}>Floor: EGP {priceMin}</p>
+              </div>
+
+              {/* Divider */}
+              <div style={{ paddingTop: 24, textAlign: 'center', color: '#CBD4E1', fontSize: 16, fontWeight: 300 }}>—</div>
+
+              {/* Max */}
+              <div style={{ minWidth: 0 }}>
+                <p style={{ fontSize: 10, fontWeight: 700, color: '#9AA0A6', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 5 }}>Maximum</p>
+                <div style={{ display: 'flex', borderRadius: 10, border: '1.5px solid #E2E8F0', overflow: 'hidden', background: '#FAFAFA' }}>
+                  <button
+                    type="button"
+                    onClick={() => { const v = Math.max(adjMin + 1, adjMax - 1); setAdjMax(v); setRawMax(String(v)); }}
+                    style={{ width: 38, height: 44, background: 'none', border: 'none', borderRight: '1px solid #E2E8F0', cursor: 'pointer', fontSize: 20, color: '#94A3B8', fontWeight: 500, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >−</button>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={rawMax}
+                    onChange={e => setRawMax(e.target.value.replace(/[^0-9]/g, ''))}
+                    onBlur={() => commitMax(rawMax)}
+                    style={{ flex: 1, border: 'none', outline: 'none', textAlign: 'center', fontSize: 15, fontWeight: 800, color: '#0B1E3D', fontFamily: 'inherit', background: 'transparent', minWidth: 0 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { const v = adjMax + 1; setAdjMax(v); setRawMax(String(v)); }}
+                    style={{ width: 38, height: 44, background: '#00C2A8', border: 'none', borderLeft: '1px solid #00C2A8', cursor: 'pointer', fontSize: 20, color: '#fff', fontWeight: 700, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >+</button>
+                </div>
+                <p style={{ fontSize: 10, color: '#94A3B8', marginTop: 4 }}>Must be &gt; min</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -256,7 +344,7 @@ export default function ReviewModal({
       <div className="px-4 py-3 border-t border-[#E2E8F0] bg-white flex-shrink-0">
         <button
           type="button"
-          onClick={onConfirm}
+          onClick={() => onConfirm(adjMin, adjMax)}
           disabled={submitting}
           className="w-full py-4 rounded-xl text-white font-bold text-sm transition-colors"
           style={{

@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Wallet, Bookmark, Users, Sliders, Shield, LogOut, ChevronRight,
-  Phone, MessageSquare, MapPin, Pencil,
+  Phone, MessageSquare, MapPin, Pencil, Camera,
 } from 'lucide-react';
 import userApi from '@/lib/api/user';
 import type { UserProfile } from '@/types/user';
@@ -38,13 +38,25 @@ const PROFILE_DEFAULTS: UserProfile = {
 
 export default function ProfileMobile() {
   const router    = useRouter();
-  const { logout, updateName } = useAuth();
+  const { logout, updateName, profilePhoto, updateProfilePhoto } = useAuth();
   const [profile,  setProfile]  = useState<UserProfile | null>(null);
   const [loading,  setLoading]  = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [prefOpen, setPrefOpen] = useState(false);
   const [placesOpen, setPlacesOpen] = useState(false);
   const [passOpen,   setPassOpen]   = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const MAX_SIZE = 2 * 1024 * 1024;
+    if (file.size > MAX_SIZE) { alert('Image must be under 2 MB'); return; }
+    const reader = new FileReader();
+    reader.onload = () => updateProfilePhoto(reader.result as string);
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  }
 
   useEffect(() => {
     userApi.getProfile()
@@ -95,9 +107,20 @@ export default function ProfileMobile() {
 
         {/* Avatar + name + email + edit button */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-          <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#00C2A8', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EFF7F6', fontWeight: 800, fontSize: 20, flexShrink: 0 }}>
-            {initials}
+          <div
+            onClick={() => photoInputRef.current?.click()}
+            title="Change profile photo"
+            style={{ width: 56, height: 56, borderRadius: '50%', background: '#00C2A8', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EFF7F6', fontWeight: 800, fontSize: 20, flexShrink: 0, cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
+          >
+            {profilePhoto
+              ? <img src={profilePhoto} alt="profile" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+              : initials
+            }
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 22, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Camera size={11} color="#fff" />
+            </div>
           </div>
+          <input ref={photoInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 17, fontWeight: 800, color: '#0B1E3D', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {profile?.name || '—'}

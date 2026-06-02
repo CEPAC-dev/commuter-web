@@ -7,6 +7,7 @@ const KEYS = {
   name:     'commuter_name',
   id:       'commuter_user_id',
   userData: 'commuter_user_data',
+  photo:    'commuter_profile_photo',
 } as const;
 
 export interface StoredSession {
@@ -25,10 +26,12 @@ export function saveSession(session: StoredSession): void {
   localStorage.setItem(KEYS.id,    session.id);
 
   const maxAge = 60 * 60 * 24 * 7; // 7 days
+  // Only mark Secure on HTTPS so local http://localhost dev still works.
+  const secure = typeof location !== 'undefined' && location.protocol === 'https:' ? '; Secure' : '';
   document.cookie =
-    `${KEYS.token}=${encodeURIComponent(session.token)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    `${KEYS.token}=${encodeURIComponent(session.token)}; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
   document.cookie =
-    `${KEYS.role}=${encodeURIComponent(session.role)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    `${KEYS.role}=${encodeURIComponent(session.role)}; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
 }
 
 export function saveUserData(data: Record<string, unknown>): void {
@@ -61,6 +64,17 @@ export function getName(): string | null {
 export function getUserId(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem(KEYS.id);
+}
+
+export function saveProfilePhoto(url: string | null): void {
+  if (typeof window === 'undefined') return;
+  if (url) localStorage.setItem(KEYS.photo, url);
+  else localStorage.removeItem(KEYS.photo);
+}
+
+export function getProfilePhoto(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(KEYS.photo);
 }
 
 export function clearSession(): void {

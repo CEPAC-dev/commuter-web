@@ -14,9 +14,11 @@ export function saveSession(response: AuthResponse): void {
   localStorage.setItem('commuter_name', response.name ?? '');
   localStorage.setItem('commuter_user_id', String(response.userId ?? ''));
   const maxAge = 7 * 24 * 60 * 60;
-  // Persist token + role as cookies so the middleware (server-side) can read them
-  document.cookie = `commuter_token=${response.token}; path=/; max-age=${maxAge}; SameSite=Lax`;
-  document.cookie = `commuter_role=${response.role}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  // Persist token + role as cookies so the middleware (server-side) can read them.
+  // Mark Secure on HTTPS only, so local http dev still works.
+  const secure = typeof location !== 'undefined' && location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `commuter_token=${response.token}; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
+  document.cookie = `commuter_role=${response.role}; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
 }
 
 export function getToken(): string | null {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, User, Car, Loader2 } from 'lucide-react';
+import { X, User, Car, Settings, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import driverApi from '@/lib/api/driver';
 
@@ -17,6 +17,10 @@ interface DriverProfileMeData {
   location_name: string | null;
   default_lat: string | null;
   default_lng: string | null;
+  price_per_km: number | null;
+  waiting_time: number | null;
+  seats: number | null;
+  passenger_gender: string | null;
 }
 
 export interface DriverEditValues {
@@ -35,6 +39,10 @@ export interface DriverEditValues {
   location_name: string;
   default_lat: string;
   default_lng: string;
+  price_per_km: string;
+  waiting_time: string;
+  seats: string;
+  passenger_gender: string;
 }
 
 interface Props {
@@ -46,7 +54,7 @@ interface Props {
   onSaved: (next: { name: string; phone: string; driver: Partial<DriverProfileMeData> }) => void;
 }
 
-type Tab = 'personal' | 'vehicle';
+type Tab = 'personal' | 'vehicle' | 'prefs';
 
 // ─── Style helpers ─────────────────────────────────────────────────────────
 const labelStyle: React.CSSProperties = {
@@ -82,12 +90,14 @@ export default function DriverEditProfileModal({
 }: Props) {
   const [tab, setTab] = useState<Tab>('personal');
   const [saving, setSaving] = useState(false);
+  const [waitingCustom, setWaitingCustom] = useState(false);
 
   const [values, setValues] = useState<DriverEditValues>({
     name: '', phone: '',
     national_id: '', license_expiry: '', car_type: '',
     car_brand: '', car_model: '', car_year: '', car_color: '',
     license_plate: '', location_name: '', default_lat: '', default_lng: '',
+    price_per_km: '', waiting_time: '', seats: '', passenger_gender: '',
   });
 
   useEffect(() => {
@@ -107,7 +117,13 @@ export default function DriverEditProfileModal({
       location_name:  driverProfile?.location_name  ?? '',
       default_lat:    driverProfile?.default_lat    ?? '',
       default_lng:    driverProfile?.default_lng    ?? '',
+      price_per_km:      driverProfile?.price_per_km != null ? String(driverProfile.price_per_km) : '',
+      waiting_time:      driverProfile?.waiting_time  != null ? String(driverProfile.waiting_time)  : '',
+      seats:             driverProfile?.seats          != null ? String(driverProfile.seats)          : '',
+      passenger_gender:  driverProfile?.passenger_gender ?? '',
     });
+    const initWaiting = driverProfile?.waiting_time != null ? String(driverProfile.waiting_time) : '';
+    setWaitingCustom(initWaiting !== '' && !['5', '10', '15', '20', '30'].includes(initWaiting));
   }, [isOpen, initialName, initialPhone, driverProfile]);
 
   const setVal = (k: keyof DriverEditValues) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -126,11 +142,15 @@ export default function DriverEditProfileModal({
 
       // 2) Driver profile — PUT /driver/profile
       const driverPayload: Record<string, unknown> = {
-        car_type:       values.car_type  || null,
-        car_brand:      values.car_brand || null,
-        car_model:      values.car_model || null,
-        car_year:       values.car_year ? Number(values.car_year) : null,
-        car_color:      values.car_color || null,
+        car_type:     values.car_type  || null,
+        car_brand:    values.car_brand || null,
+        car_model:    values.car_model || null,
+        car_year:     values.car_year ? Number(values.car_year) : null,
+        car_color:    values.car_color || null,
+        price_per_km:      values.price_per_km      ? Number(values.price_per_km) : null,
+        waiting_time:      values.waiting_time      ? Number(values.waiting_time) : null,
+        seats:             values.seats             ? Number(values.seats)         : null,
+        passenger_gender:  values.passenger_gender  || null,
       };
       await driverApi.updateDriverProfile(driverPayload);
 
@@ -139,11 +159,15 @@ export default function DriverEditProfileModal({
         name:  values.name.trim() || initialName,
         phone: values.phone.trim() || initialPhone,
         driver: {
-          car_type:  values.car_type  || null,
-          car_brand: values.car_brand || null,
-          car_model: values.car_model || null,
-          car_year:  values.car_year ? Number(values.car_year) : null,
-          car_color: values.car_color || null,
+          car_type:     values.car_type  || null,
+          car_brand:    values.car_brand || null,
+          car_model:    values.car_model || null,
+          car_year:     values.car_year ? Number(values.car_year) : null,
+          car_color:    values.car_color || null,
+          price_per_km:      values.price_per_km      ? Number(values.price_per_km) : null,
+          waiting_time:      values.waiting_time      ? Number(values.waiting_time) : null,
+          seats:             values.seats             ? Number(values.seats)         : null,
+          passenger_gender:  values.passenger_gender  || null,
         },
       });
       onClose();
@@ -216,8 +240,9 @@ export default function DriverEditProfileModal({
 
           {/* Tabs */}
           <div style={{ display: 'flex', gap: 4, padding: 4, background: '#F1F5F9', borderRadius: 12 }}>
-            <TabBtn id="personal" icon={User} label="Personal info" />
-            <TabBtn id="vehicle"  icon={Car}  label="Vehicle & ID" />
+            <TabBtn id="personal" icon={User}     label="Personal info" />
+            <TabBtn id="vehicle"  icon={Car}      label="Vehicle & ID" />
+            <TabBtn id="prefs"    icon={Settings} label="Preferences"  />
           </div>
         </div>
 
@@ -292,6 +317,80 @@ export default function DriverEditProfileModal({
                     onFocus={focusIn} onBlur={focusOut}
                   />
                 </Field>
+              </div>
+            </div>
+          )}
+
+          {tab === 'prefs' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <Field label="Price per km (EGP)">
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="number" min={0} step={0.5} value={values.price_per_km} onChange={setVal('price_per_km')}
+                    placeholder="e.g. 5" style={{ ...inputStyle, paddingRight: 56 }}
+                    onFocus={focusIn} onBlur={focusOut}
+                  />
+                  <span style={{
+                    position: 'absolute', right: 13, top: '50%', transform: 'translateY(-50%)',
+                    fontSize: 12, fontWeight: 700, color: '#94A3B8', pointerEvents: 'none',
+                  }}>EGP</span>
+                </div>
+              </Field>
+              <Field label="Waiting time for passenger">
+                <select
+                  value={waitingCustom ? 'other' : (values.waiting_time || '')}
+                  onChange={(e) => {
+                    if (e.target.value === 'other') {
+                      setWaitingCustom(true);
+                      setValues(v => ({ ...v, waiting_time: '' }));
+                    } else {
+                      setWaitingCustom(false);
+                      setValues(v => ({ ...v, waiting_time: e.target.value }));
+                    }
+                  }}
+                  style={inputStyle} onFocus={focusIn} onBlur={focusOut}
+                >
+                  <option value="">Select waiting time</option>
+                  <option value="5">5 minutes</option>
+                  <option value="10">10 minutes</option>
+                  <option value="15">15 minutes</option>
+                  <option value="20">20 minutes</option>
+                  <option value="30">30 minutes</option>
+                  <option value="other">Custom…</option>
+                </select>
+                {waitingCustom && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                    <input
+                      type="number" min={1} max={120} value={values.waiting_time} onChange={setVal('waiting_time')}
+                      placeholder="Enter minutes" style={{ ...inputStyle, flex: 1 }}
+                      onFocus={focusIn} onBlur={focusOut}
+                    />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#6B7280', flexShrink: 0 }}>min</span>
+                  </div>
+                )}
+              </Field>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <Field label="Available seats">
+                  <input
+                    type="number" min={1} max={20} value={values.seats} onChange={setVal('seats')}
+                    placeholder="e.g. 4" style={inputStyle}
+                    onFocus={focusIn} onBlur={focusOut}
+                  />
+                </Field>
+                <Field label="Accepted passengers">
+                  <select
+                    value={values.passenger_gender} onChange={setVal('passenger_gender')}
+                    style={inputStyle} onFocus={focusIn} onBlur={focusOut}
+                  >
+                    <option value="">Select type</option>
+                    <option value="any">Any</option>
+                    <option value="male">Male only</option>
+                    <option value="female">Female only</option>
+                  </select>
+                </Field>
+              </div>
+              <div style={{ padding: '10px 12px', background: '#EFF7F6', border: '1px solid #C0E6E1', borderRadius: 10, fontSize: 12, color: '#0B5A52' }}>
+                These preferences help passengers know your rates and availability.
               </div>
             </div>
           )}

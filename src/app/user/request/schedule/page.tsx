@@ -333,7 +333,7 @@ export default function SchedulePage() {
     setShowReview(true);
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(submittedMin: number, submittedMax: number) {
     setSubmitting(true);
     setValidationError(null);
 
@@ -430,8 +430,8 @@ export default function SchedulePage() {
         direction_type: directionType,
         start_date,
         end_date,
-        initial_price:  priceMin,
-        final_price:    priceMax,
+        initial_price:  submittedMin,
+        final_price:    submittedMax,
         notes:          wizard.notes ?? '',
         weekly_trip_schedules: schedules,
       });
@@ -608,14 +608,6 @@ export default function SchedulePage() {
               <p className="text-xs text-[#5A6A7A] mt-0.5">Requests are grouped every Wednesday</p>
             </div>
           </Section>
-
-          {/* Price estimate */}
-          <div className="bg-[#EFF7F6] border border-[#C8E8E4] rounded-xl p-4 flex items-center justify-between mb-2">
-            <div>
-              <p className="text-xs font-semibold text-[#5A6A7A] mb-0.5">💰 Estimated weekly cost</p>
-              <p className="text-sm font-bold text-[#0B1E3D]">EGP {priceMin} – {priceMax} / week</p>
-            </div>
-          </div>
 
           {/* Notes */}
           <Section title="Notes">

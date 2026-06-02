@@ -285,7 +285,7 @@ function AddLocationModal({ onClose, onSaved }: FormModalProps) {
           {/* Location pick */}
           <div>
             <label className="block text-sm font-medium text-[#0B1E3D] mb-1">
-              Location on map <span className="text-[#E74C3C]">*</span>
+              Location address 
             </label>
             <button
               type="button"

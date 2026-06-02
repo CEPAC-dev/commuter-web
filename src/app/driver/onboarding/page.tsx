@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import {
   Car, Layers, Palette, Hash, MapPin, CreditCard, Shield,
-  Loader2, Info, CheckCircle, Upload, X, FileText, LogOut,
+  Loader2, Info, CheckCircle, Upload, X, FileText, LogOut, Sliders,
 } from 'lucide-react';
 import driverApi from '@/lib/api/driver';
 import authApi from '@/lib/api/auth';
@@ -158,6 +158,10 @@ interface FormState {
   default_location_name: string;
   default_lat:    string;
   default_lng:    string;
+  price_per_km:   string;
+  waiting_time:   string;
+  seats:          string;
+  passenger_gender: string;
   national_id_image_front: File | null;
   national_id_image_back:  File | null;
   license_image:           File | null;
@@ -188,6 +192,10 @@ export default function DriverOnboardingPage() {
     default_location_name: '',
     default_lat: '',
     default_lng: '',
+    price_per_km: '',
+    waiting_time: '',
+    seats: '',
+    passenger_gender: '',
     national_id_image_front: null,
     national_id_image_back:  null,
     license_image:           null,
@@ -248,6 +256,10 @@ export default function DriverOnboardingPage() {
       fd.append('default_lat',    form.default_lat);
       fd.append('default_lng',    form.default_lng);
       fd.append('default_location_name', form.default_location_name.trim());
+      if (form.price_per_km)    fd.append('price_per_km',    form.price_per_km);
+      if (form.waiting_time)    fd.append('waiting_time',    form.waiting_time);
+      if (form.seats)           fd.append('seats',           form.seats);
+      if (form.passenger_gender) fd.append('passenger_gender', form.passenger_gender);
       if (form.license_image)           fd.append('license_image',           form.license_image);
       if (form.national_id_image_front) fd.append('national_id_image_front', form.national_id_image_front);
       if (form.national_id_image_back)  fd.append('national_id_image_back',  form.national_id_image_back);
@@ -511,6 +523,72 @@ export default function DriverOnboardingPage() {
               }}
               error={errors.default_location}
             />
+          </SectionCard>
+
+          {/* Ride preferences */}
+          <SectionCard icon={<Sliders size={14} />} title="Ride preferences (optional)">
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <label className="block text-xs font-medium text-[#0B1E3D] mb-1.5">Price per km</label>
+                <div className="relative">
+                  <input
+                    type="number" min={0} step={0.5}
+                    value={form.price_per_km}
+                    onChange={(e) => set('price_per_km', e.target.value)}
+                    placeholder="e.g. 5"
+                    className={inputCls()}
+                    style={{ paddingRight: 48 }}
+                  />
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#9CA3AF]">EGP</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[#0B1E3D] mb-1.5">Waiting time for passenger</label>
+                <div className="relative">
+                  <select
+                    value={form.waiting_time}
+                    onChange={(e) => set('waiting_time', e.target.value)}
+                    className={selectCls()}
+                  >
+                    <option value="">Select</option>
+                    <option value="5">5 minutes</option>
+                    <option value="10">10 minutes</option>
+                    <option value="15">15 minutes</option>
+                    <option value="20">20 minutes</option>
+                    <option value="30">30 minutes</option>
+                  </select>
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]">▾</span>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-[#0B1E3D] mb-1.5">Available seats</label>
+                <input
+                  type="number" min={1} max={20}
+                  value={form.seats}
+                  onChange={(e) => set('seats', e.target.value)}
+                  placeholder="e.g. 4"
+                  className={inputCls()}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[#0B1E3D] mb-1.5">Accepted passengers</label>
+                <div className="relative">
+                  <select
+                    value={form.passenger_gender}
+                    onChange={(e) => set('passenger_gender', e.target.value)}
+                    className={selectCls()}
+                  >
+                    <option value="">Select</option>
+                    <option value="any">Any</option>
+                    <option value="male">Male only</option>
+                    <option value="female">Female only</option>
+                  </select>
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]">▾</span>
+                </div>
+              </div>
+            </div>
           </SectionCard>
 
           {/* Upload documents */}

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import driverApi from '@/lib/api/driver';
 import LocationPickerMap from '@/components/map/LocationPickerMap';
+import { reverseGeocode, formatDisplayName } from '@/lib/nominatim';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -291,8 +292,26 @@ function AddModal({ onClose, onAdded }: AddModalProps) {
 
 // ─── Availability Card ────────────────────────────────────────────────────────
 
+const COORD_PATTERN = /^-?\d+\.\d+[,\s]+-?\d+\.\d+/;
+
 function AvailabilityCard({ item, onDelete }: { item: AvailabilityItem; onDelete: () => void }) {
   const [deleting, setDeleting] = useState(false);
+  const [displayName, setDisplayName] = useState<string>(
+    item.location_name && !COORD_PATTERN.test(item.location_name)
+      ? item.location_name
+      : '',
+  );
+
+  useEffect(() => {
+    if (!displayName) {
+      reverseGeocode(Number(item.lat), Number(item.lng)).then((addr) => {
+        const name = formatDisplayName(addr);
+        if (name && !COORD_PATTERN.test(name)) setDisplayName(name);
+        else setDisplayName(`${Number(item.lat).toFixed(5)}, ${Number(item.lng).toFixed(5)}`);
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleDelete() {
     setDeleting(true);
@@ -336,10 +355,7 @@ function AvailabilityCard({ item, onDelete }: { item: AvailabilityItem; onDelete
           </div>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: '#0B1E3D', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {item.location_name || `${Number(item.lat).toFixed(4)}, ${Number(item.lng).toFixed(4)}`}
-            </div>
-            <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 3 }}>
-              {Number(item.lat).toFixed(5)}, {Number(item.lng).toFixed(5)}
+              {displayName || <Loader2 size={14} style={{ animation: 'spin 0.8s linear infinite', color: '#94A3B8' }} />}
             </div>
           </div>
         </div>

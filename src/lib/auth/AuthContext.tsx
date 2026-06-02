@@ -17,56 +17,63 @@ import {
   getUserId,
   hasValidSession,
   StoredSession,
+  saveProfilePhoto,
+  getProfilePhoto,
 } from './tokenStorage';
 
 interface AuthState {
-  token:   string | null;
-  role:    string | null;
-  name:    string | null;
-  userId:  string | null;
-  isAuth:  boolean;
-  loading: boolean;
+  token:        string | null;
+  role:         string | null;
+  name:         string | null;
+  userId:       string | null;
+  profilePhoto: string | null;
+  isAuth:       boolean;
+  loading:      boolean;
 }
 
 interface AuthContextValue extends AuthState {
-  login:       (session: StoredSession) => void;
-  logout:      () => void;
-  updateName:  (name: string) => void;
+  login:              (session: StoredSession) => void;
+  logout:             () => void;
+  updateName:         (name: string) => void;
+  updateProfilePhoto: (url: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
-    token:   null,
-    role:    null,
-    name:    null,
-    userId:  null,
-    isAuth:  false,
-    loading: true,
+    token:        null,
+    role:         null,
+    name:         null,
+    userId:       null,
+    profilePhoto: null,
+    isAuth:       false,
+    loading:      true,
   });
 
   useEffect(() => {
     // Hydrate from localStorage on mount
     setState({
-      token:   getToken(),
-      role:    getRole(),
-      name:    getName(),
-      userId:  getUserId(),
-      isAuth:  hasValidSession(),
-      loading: false,
+      token:        getToken(),
+      role:         getRole(),
+      name:         getName(),
+      userId:       getUserId(),
+      profilePhoto: getProfilePhoto(),
+      isAuth:       hasValidSession(),
+      loading:      false,
     });
 
     // Re-hydrate on bfcache restore (back button)
     const onShow = (e: PageTransitionEvent) => {
       if (!e.persisted) return;
       setState({
-        token:   getToken(),
-        role:    getRole(),
-        name:    getName(),
-        userId:  getUserId(),
-        isAuth:  hasValidSession(),
-        loading: false,
+        token:        getToken(),
+        role:         getRole(),
+        name:         getName(),
+        userId:       getUserId(),
+        profilePhoto: getProfilePhoto(),
+        isAuth:       hasValidSession(),
+        loading:      false,
       });
     };
     window.addEventListener('pageshow', onShow);
@@ -89,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearSession();
     setState({
       token: null, role: null, name: null,
-      userId: null, isAuth: false, loading: false,
+      userId: null, profilePhoto: null, isAuth: false, loading: false,
     });
   }, []);
 
@@ -98,8 +105,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, name }));
   }, []);
 
+  const updateProfilePhoto = useCallback((url: string | null) => {
+    saveProfilePhoto(url);
+    setState((prev) => ({ ...prev, profilePhoto: url }));
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ ...state, login, logout, updateName }}>
+    <AuthContext.Provider value={{ ...state, login, logout, updateName, updateProfilePhoto }}>
       {children}
     </AuthContext.Provider>
   );

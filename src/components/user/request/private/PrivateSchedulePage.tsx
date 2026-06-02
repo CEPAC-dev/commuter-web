@@ -244,7 +244,7 @@ export default function PrivateSchedulePage() {
   });
 
   // ── Submit ──────────────────────────────────────────────────────────────
-  async function buildAndSubmit() {
+  async function buildAndSubmit(submittedMin: number, submittedMax: number) {
     const errs = validate();
     if (errs.length > 0) { setError(errs.join('\n')); return; }
     setError(null);
@@ -344,8 +344,8 @@ export default function PrivateSchedulePage() {
         direction_type: tripType,
         start_date,
         end_date,
-        initial_price:  priceMin,
-        final_price:    priceMax,
+        initial_price:  submittedMin,
+        final_price:    submittedMax,
         notes:          wizard.notes ?? '',
         weekly_trip_schedules: schedules,
       });
@@ -526,17 +526,6 @@ export default function PrivateSchedulePage() {
               </button>
             </div>
           </Section>
-
-          {/* Estimated cost */}
-          <div className="bg-[#EFF7F6] border border-[#C8E8E4] rounded-xl p-4 flex items-center gap-3">
-            <span className="text-2xl">💰</span>
-            <div>
-              <p className="text-xs font-semibold text-[#5A6A7A]">Estimated weekly cost</p>
-              <p className="text-lg font-extrabold text-[#0B1E3D] leading-tight">
-                EGP {priceMin} – {priceMax} / week
-              </p>
-            </div>
-          </div>
 
           {/* Notes */}
           <Section title="Notes">

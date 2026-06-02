@@ -49,12 +49,13 @@ export interface DriverProfile {
 }
 
 export interface DriverDocuments {
-  nationalIdFront: string | null;
-  nationalIdBack:  string | null;
-  drivingLicense:  string | null;
-  carLicense:      string | null;
-  criminalRecord:  string | null;
-  profilePhoto:    string | null;
+  nationalIdFront:  string | null;
+  nationalIdBack:   string | null;
+  drivingLicense:   string | null;
+  carLicenseFront:  string | null;
+  carLicenseBack:   string | null;
+  criminalRecord:   string | null;
+  profilePhoto:     string | null;
 }
 
 export type RequestAction = 'accept' | 'raise' | 'reject';

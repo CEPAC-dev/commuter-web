@@ -21,7 +21,7 @@ export default function UserNavbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [userName, setUserName] = useState('User');
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { name: authName, logout } = useAuth();
+  const { name: authName, logout, profilePhoto } = useAuth();
 
   const unreadCount = 0; // TODO: fetch from API when notifications endpoint available
 
@@ -181,9 +181,13 @@ export default function UserNavbar() {
                   color: '#00C2A8',
                   fontWeight: 700,
                   fontSize: 13,
+                  overflow: 'hidden',
                 }}
               >
-                {initials}
+                {profilePhoto
+                  ? <img src={profilePhoto} alt="profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : initials
+                }
               </div>
               {unreadCount > 0 && (
                 <div

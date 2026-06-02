@@ -1,10 +1,10 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Wallet, Bookmark, Users, Sliders, Shield, LogOut, ChevronRight,
-  Phone, MessageSquare, MapPin, Pencil,
+  Phone, MessageSquare, MapPin, Pencil, Camera,
 } from 'lucide-react';
 import userApi from '@/lib/api/user';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -82,7 +82,7 @@ function Tile({
 
 export default function ProfileDesktop() {
   const router = useRouter();
-  const { logout, updateName } = useAuth();
+  const { logout, updateName, profilePhoto, updateProfilePhoto } = useAuth();
   const [profile,      setProfile]      = useState<UserProfile | null>(null);
   const [loading,      setLoading]      = useState(true);
   const [editOpen,     setEditOpen]     = useState(false);
@@ -90,6 +90,18 @@ export default function ProfileDesktop() {
   const [changePwOpen, setChangePwOpen] = useState(false);
   const [placesOpen,   setPlacesOpen]   = useState(false);
   const [passOpen,     setPassOpen]     = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const MAX_SIZE = 2 * 1024 * 1024; // 2 MB
+    if (file.size > MAX_SIZE) { alert('Image must be under 2 MB'); return; }
+    const reader = new FileReader();
+    reader.onload = () => updateProfilePhoto(reader.result as string);
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  }
 
   useEffect(() => {
     userApi.getProfile()
@@ -143,16 +155,39 @@ export default function ProfileDesktop() {
         {/* Top row â€” avatar + identity + edit */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 22, position: 'relative', marginBottom: 28 }}>
           {/* Avatar */}
-          <div style={{
-            width: 84, height: 84, borderRadius: '50%', flexShrink: 0,
-            background: 'linear-gradient(135deg, #00C2A8 0%, #007A6A 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 28, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px',
-            border: '3px solid rgba(255,255,255,0.12)',
-            boxShadow: '0 8px 24px rgba(0,194,168,0.35)',
-          }}>
-            {initials}
+          <div
+            onClick={() => photoInputRef.current?.click()}
+            title="Change profile photo"
+            style={{
+              width: 84, height: 84, borderRadius: '50%', flexShrink: 0,
+              background: 'linear-gradient(135deg, #00C2A8 0%, #007A6A 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 28, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px',
+              border: '3px solid rgba(255,255,255,0.12)',
+              boxShadow: '0 8px 24px rgba(0,194,168,0.35)',
+              cursor: 'pointer', position: 'relative', overflow: 'hidden',
+            }}
+          >
+            {profilePhoto
+              ? <img src={profilePhoto} alt="profile" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+              : initials
+            }
+            {/* Camera overlay */}
+            <div style={{
+              position: 'absolute', bottom: 0, left: 0, right: 0,
+              height: 30, background: 'rgba(0,0,0,0.45)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Camera size={14} color="#fff" />
+            </div>
           </div>
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handlePhotoChange}
+          />
 
           {/* Name / email / badge */}
           <div style={{ flex: 1, minWidth: 0 }}>
