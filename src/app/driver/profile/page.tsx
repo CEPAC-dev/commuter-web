@@ -617,7 +617,7 @@ export default function ProfilePage() {
         }));
       }
     }).finally(() => setLoading(false));
-  }, []);
+  }, [updateProfilePhoto]);
 
   const handleUpload = useCallback(async (fieldName: keyof DriverDocuments, file: File) => {
     try {
@@ -629,7 +629,7 @@ export default function ProfilePage() {
     } catch {
       throw new Error('Upload failed. Please try again.');
     }
-  }, []);
+  }, [updateProfilePhoto]);
 
   async function handleLogout() {
     try { await authApi.logout(); } catch { /* ignore */ }

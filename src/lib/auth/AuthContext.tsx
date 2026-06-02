@@ -83,12 +83,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback((session: StoredSession) => {
     saveSession(session);
     setState({
-      token:   session.token,
-      role:    session.role,
-      name:    session.name,
-      userId:  session.id,
-      isAuth:  true,
-      loading: false,
+      token:        session.token,
+      role:         session.role,
+      name:         session.name,
+      userId:       session.id,
+      profilePhoto: getProfilePhoto(),
+      isAuth:       true,
+      loading:      false,
     });
   }, []);
 
