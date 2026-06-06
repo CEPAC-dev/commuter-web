@@ -199,7 +199,7 @@ function InstanceCard({ instance, onViewDetails }: { instance: CourseInstance; o
 
 // ── Instance detail sheet ─────────────────────────────────────────────────────
 
-function InstanceDetailSheet({ instance, onClose }: { instance: CourseInstance | null; onClose: () => void }) {
+function InstanceDetailSheet({ instance }: { instance: CourseInstance | null }) {
   if (!instance) return null;
   const iCfg    = INSTANCE_STATUS_CONFIG[instance.status]          ?? INSTANCE_STATUS_CONFIG.pending;
   const mCfg    = MATCHING_CONFIG[instance.matching_status]        ?? MATCHING_CONFIG.PENDING;
@@ -650,7 +650,6 @@ export default function CourseDetailPage() {
       ) : (
         <InstanceDetailSheet
           instance={selectedInstance}
-          onClose={() => { setSheetOpen(false); setSelectedInstance(null); }}
         />
       )}
     </BottomSheet>

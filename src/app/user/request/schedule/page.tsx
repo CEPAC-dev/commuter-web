@@ -303,7 +303,7 @@ export default function SchedulePage() {
   const hasRoundTrip = slots.some(s => s.trip_type === 'round_trip');
   const firstRouteKm = slots.find(s => s.route)?.route?.distance_km ?? 20;
 
-  const { min: priceMin, max: priceMax } = calculatePriceRange({
+  const { max: priceMax } = calculatePriceRange({
     distanceKm:  firstRouteKm,
     ride_type:   ride_type ?? 'shared',
     seatCostEGP,

@@ -234,7 +234,7 @@ export default function PrivateSchedulePage() {
 
   // ── Price estimate ──────────────────────────────────────────────────────
   const distanceKm = wizard.private_outbound_route?.distance_km ?? 20;
-  const { min: priceMin, max: priceMax } = calculatePriceRange({
+  const { max: priceMax } = calculatePriceRange({
     distanceKm,
     ride_type:   'private',
     seatCostEGP: 0,
