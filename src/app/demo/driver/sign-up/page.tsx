@@ -178,7 +178,7 @@ function Step1SignUp({ onNext, loading }: { onNext: (d: Step1State) => void; loa
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
       <div>
         <h2 className="text-2xl font-bold text-[#0B1E3D]">Create your account</h2>
         <p className="text-sm text-[#5A6A7A] mt-1">Join as a driver — takes 4 quick steps</p>
@@ -205,7 +205,7 @@ function Step1SignUp({ onNext, loading }: { onNext: (d: Step1State) => void; loa
       </div>
 
       {/* Phone + WhatsApp */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2">
         <div>
           <Label>Phone number</Label>
           <div className="relative">
@@ -242,7 +242,7 @@ function Step1SignUp({ onNext, loading }: { onNext: (d: Step1State) => void; loa
       </div>
 
       {/* Gender + Birthdate */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2">
         <div>
           <Label>Gender</Label>
           <select value={form.gender} onChange={set('gender')} className={selectCls()}>
@@ -260,11 +260,11 @@ function Step1SignUp({ onNext, loading }: { onNext: (d: Step1State) => void; loa
       </div>
 
       {/* Address */}
-      <div className="pt-1">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[#5A6A7A] mb-3 flex items-center gap-1.5">
+      <div className="pt-0">
+        <p className="text-xs font-semibold uppercase tracking-wider text-[#5A6A7A] mb-2 flex items-center gap-1.5">
           <MapPin size={13} /> Address
         </p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           <div>
             <Label>Province</Label>
             <input value={form.province} onChange={set('province')} placeholder="Cairo" className={fieldCls(errors.province)} />
@@ -298,9 +298,9 @@ function Step1SignUp({ onNext, loading }: { onNext: (d: Step1State) => void; loa
       </div>
 
       {/* Password */}
-      <div className="pt-1">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[#5A6A7A] mb-3">Password</p>
-        <div className="grid grid-cols-1 gap-3">
+      <div className="pt-0">
+        <p className="text-xs font-semibold uppercase tracking-wider text-[#5A6A7A] mb-2">Password</p>
+        <div className="grid grid-cols-1 gap-2">
           <div>
             <Label>Password</Label>
             <div className="relative">
@@ -380,7 +380,7 @@ function Step2CarProfile({ onNext, onBack, loading }: {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
       <div>
         <h2 className="text-2xl font-bold text-[#0B1E3D]">Your car details</h2>
         <p className="text-sm text-[#5A6A7A] mt-1">Tell us about the car you&apos;ll be driving</p>
@@ -392,7 +392,7 @@ function Step2CarProfile({ onNext, onBack, loading }: {
       {/* Car Type */}
       <div>
         <Label>Car type</Label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           {(['private', 'taxi'] as const).map((t) => (
             <button
               key={t}
@@ -412,7 +412,7 @@ function Step2CarProfile({ onNext, onBack, loading }: {
       </div>
 
       {/* Brand + Model */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2">
         <div>
           <Label>Car brand</Label>
           <input value={form.car_brand} onChange={set('car_brand')} placeholder="Toyota" className={fieldCls(errors.car_brand)} />
@@ -426,7 +426,7 @@ function Step2CarProfile({ onNext, onBack, loading }: {
       </div>
 
       {/* Year + Capacity */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2">
         <div>
           <Label>Car year</Label>
           <select value={form.car_year} onChange={set('car_year')} className={selectCls(errors.car_year)}>
@@ -514,7 +514,7 @@ function Step3Availability({ onNext, onBack, loading }: {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
       <div>
         <h2 className="text-2xl font-bold text-[#0B1E3D]">Your availability</h2>
         <p className="text-sm text-[#5A6A7A] mt-1">When and where do you commute? You can add more days later.</p>
@@ -565,7 +565,7 @@ function Step3Availability({ onNext, onBack, loading }: {
       </div>
 
       {/* Times */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2">
         <div>
           <Label>Start time</Label>
           <input value={form.start_time} onChange={set('start_time')} type="time"
@@ -628,7 +628,7 @@ function Step4Preferences({ onNext, onBack, loading }: {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
       <div>
         <h2 className="text-2xl font-bold text-[#0B1E3D]">Your preferences</h2>
         <p className="text-sm text-[#5A6A7A] mt-1">Set your pricing and passenger preferences</p>
@@ -638,7 +638,7 @@ function Step4Preferences({ onNext, onBack, loading }: {
       <BackBtn onClick={onBack} />
 
       {/* Pricing */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2">
         <div>
           <Label>Price per km (EGP)</Label>
           <div className="relative">
@@ -664,7 +664,7 @@ function Step4Preferences({ onNext, onBack, loading }: {
       {/* Passenger type */}
       <div>
         <Label>Accepted passengers</Label>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2">
           {(['male', 'female', 'mixed'] as const).map((t) => (
             <button
               key={t}
@@ -904,11 +904,12 @@ export default function DemoDriverSignUpPage() {
           display: 'flex',
           alignItems: 'flex-start',
           justifyContent: 'center',
-          padding: '48px 32px',
+          padding: '24px 32px 48px 32px',
+          overflowY: 'auto',
         }}
         className="auth-right-panel"
       >
-        <div style={{ width: '100%', maxWidth: 520 }}>
+        <div style={{ width: '100%', maxWidth: 540 }}>
           {step === 1 && <Step1SignUp  onNext={handleStep1} loading={loading} />}
           {step === 2 && <Step2CarProfile onNext={handleStep2} onBack={() => setStep(1)} loading={loading} />}
           {step === 3 && <Step3Availability onNext={handleStep3} onBack={() => setStep(2)} loading={loading} />}
