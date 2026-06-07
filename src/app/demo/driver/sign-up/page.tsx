@@ -811,25 +811,20 @@ export default function DemoDriverSignUpPage() {
   async function handleStep2(data: Step2State) {
     setLoading(true);
     try {
-      await call('driver/profile', {
-        method: 'POST',
-        body: {
-          // Car details
-          car_type:     data.car_type,
-          car_brand:    data.car_brand,
-          car_model:    data.car_model,
-          car_year:     Number(data.car_year),
-          car_capacity: Number(data.car_capacity),
-          // Required fields with demo values (user can update from profile later)
-          national_id:     '12345678901234', // placeholder for demo
-          license_number:  'DL123456789',     // placeholder for demo
-          license_expiry:  new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 year from now
-          car_color:       'Black',           // default
-          license_plate:   'XXX-0000',        // placeholder
-          default_lat:     30.0626,           // default Cairo area
-          default_lng:     31.3219,
-        },
-      });
+      const fd = new FormData();
+      fd.append('national_id',    '12345678901234'); // demo value
+      fd.append('license_number', 'DL123456789');    // demo value
+      fd.append('license_expiry', new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+      fd.append('car_type',       data.car_type);
+      fd.append('car_model',      `${data.car_brand} ${data.car_model} ${data.car_year}`);
+      fd.append('car_number',     'XXX-0000'); // demo plate
+      fd.append('car_color',      'Black');    // demo color
+      fd.append('default_lat',    '30.0626');
+      fd.append('default_lng',    '31.3219');
+      fd.append('default_location_name', 'Cairo');
+      fd.append('seats',          String(data.car_capacity));
+      
+      await call('driver/profile', { method: 'POST', body: fd });
       setStep(3);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to save car details. Please try again.');
