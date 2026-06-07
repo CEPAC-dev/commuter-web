@@ -814,11 +814,20 @@ export default function DemoDriverSignUpPage() {
       await call('driver/profile', {
         method: 'POST',
         body: {
+          // Car details
           car_type:     data.car_type,
           car_brand:    data.car_brand,
           car_model:    data.car_model,
           car_year:     Number(data.car_year),
           car_capacity: Number(data.car_capacity),
+          // Required fields with demo values (user can update from profile later)
+          national_id:     '12345678901234', // placeholder for demo
+          license_number:  'DL123456789',     // placeholder for demo
+          license_expiry:  new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 year from now
+          car_color:       'Black',           // default
+          license_plate:   'XXX-0000',        // placeholder
+          default_lat:     30.0626,           // default Cairo area
+          default_lng:     31.3219,
         },
       });
       setStep(3);
