@@ -887,7 +887,7 @@ export default function DemoDriverSignUpPage() {
     setLoading(true);
     try {
       await call('driver/profile', {
-        method: 'PATCH',
+        method: 'PUT',
         body: {
           price_per_km:           Number(data.price_per_km),
           waiting_price_per_hour: Number(data.waiting_price_per_hour),
