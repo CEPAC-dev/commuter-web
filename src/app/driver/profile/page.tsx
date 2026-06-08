@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { DriverDocuments } from '@/types/driver';
+import { DriverDocuments, DriverProfileMeData } from '@/types/driver';
 import DocumentUploadField from '@/components/driver/DocumentUploadField';
 import toast from 'react-hot-toast';
 import { uploadDocument } from '@/lib/api/driver';
@@ -21,46 +21,6 @@ import {
 import { format } from 'date-fns';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-interface DriverProfileMeData {
-  id: number;
-  user_id: number;
-  national_id: string | null;
-  license_expiry: string | null;
-  car_type: string | null;
-  car_brand: string | null;
-  car_model: string | null;
-  car_year: string | number | null;
-  car_color: string | null;
-  license_plate: string | null;
-  car_capacity: number | null;
-  location_name: string | null;
-  default_lng: number | null;
-  default_lat: number | null;
-  price_per_km: string | number | null;
-  waiting_price_per_hour: string | number | null;
-  passenger_type: string | null;
-  is_verified: boolean;
-  created_at: string;
-  updated_at: string;
-  // image URL fields returned by API
-  profile_photo_url: string | null;
-  national_id_image_front_url: string | null;
-  national_id_image_back_url: string | null;
-  driving_license_url: string | null;
-  vehicle_license_front_url: string | null;
-  vehicle_license_back_url: string | null;
-  criminal_record_certificate_url: string | null;
-}
-
-const STORAGE_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api')
-  .replace(/\/api\/?$/, '/storage/');
-
-function storageUrl(path: string | null | undefined): string | null {
-  if (!path) return null;
-  if (path.startsWith('http')) return path;
-  return `${STORAGE_BASE}${path}`;
-}
 
 function fmtDateTime(iso: string | null | undefined) {
   if (!iso) return '—';

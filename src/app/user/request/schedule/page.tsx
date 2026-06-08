@@ -105,7 +105,6 @@ function validateSchedule(slots: WizardTimeSlot[], t: ReturnType<typeof useTrans
 
 export default function SchedulePage() {
   const t = useTranslations('request_schedule');
-  const tForm = useTranslations('request_form');
   const tCo = useTranslations('co_passenger');
   const locale = useLocale();
   const router = useRouter();

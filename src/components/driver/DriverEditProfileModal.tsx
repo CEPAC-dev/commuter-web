@@ -4,24 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, User, Car, Settings, MapPin, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import driverApi from '@/lib/api/driver';
-
-interface DriverProfileMeData {
-  national_id: string | null;
-  license_expiry: string | null;
-  car_type: string | null;
-  car_brand: string | null;
-  car_model: string | null;
-  car_year: number | null;
-  car_color: string | null;
-  license_plate: string | null;
-  location_name: string | null;
-  default_lat: string | null;
-  default_lng: string | null;
-  price_per_km: number | null;
-  waiting_time: number | null;
-  seats: number | null;
-  passenger_gender: string | null;
-}
+import { DriverProfileMeData } from '@/types/driver';
 
 export interface PersonalData {
   name: string;
@@ -154,8 +137,8 @@ export default function DriverEditProfileModal({
       car_color:      driverProfile?.car_color      ?? '',
       license_plate:  driverProfile?.license_plate  ?? '',
       location_name:  driverProfile?.location_name  ?? '',
-      default_lat:    driverProfile?.default_lat    ?? '',
-      default_lng:    driverProfile?.default_lng    ?? '',
+      default_lat:    driverProfile?.default_lat    != null ? String(driverProfile.default_lat)    : '',
+      default_lng:    driverProfile?.default_lng    != null ? String(driverProfile.default_lng)    : '',
       price_per_km:      driverProfile?.price_per_km != null ? String(driverProfile.price_per_km) : '',
       waiting_time:      driverProfile?.waiting_time  != null ? String(driverProfile.waiting_time)  : '',
       seats:             driverProfile?.seats          != null ? String(driverProfile.seats)          : '',
@@ -200,8 +183,8 @@ export default function DriverEditProfileModal({
         car_color:      values.car_color      || null,
         license_plate:  values.license_plate  || null,
         location_name:  values.location_name  || null,
-        default_lat:    values.default_lat    || null,
-        default_lng:    values.default_lng    || null,
+        default_lat:    values.default_lat ? Number(values.default_lat) : null,
+        default_lng:    values.default_lng ? Number(values.default_lng) : null,
         price_per_km:      values.price_per_km      ? Number(values.price_per_km) : null,
         waiting_time:      values.waiting_time      ? Number(values.waiting_time) : null,
         seats:             values.seats             ? Number(values.seats)         : null,
@@ -235,8 +218,8 @@ export default function DriverEditProfileModal({
           car_color:      values.car_color      || null,
           license_plate:  values.license_plate  || null,
           location_name:  values.location_name  || null,
-          default_lat:    values.default_lat    || null,
-          default_lng:    values.default_lng    || null,
+          default_lat:    values.default_lat ? Number(values.default_lat) : null,
+          default_lng:    values.default_lng ? Number(values.default_lng) : null,
           price_per_km:      values.price_per_km      ? Number(values.price_per_km) : null,
           waiting_time:      values.waiting_time      ? Number(values.waiting_time) : null,
           seats:             values.seats             ? Number(values.seats)         : null,

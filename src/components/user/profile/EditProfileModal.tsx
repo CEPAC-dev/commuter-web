@@ -131,10 +131,10 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSave }: E
         street,
         landmark,
       });
-      toast.success(t('save_success'));
+      toast.success(te('save_success'));
       onClose();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('save_failed'));
+      toast.error(err instanceof Error ? err.message : te('save_failed'));
     } finally {
       setSaving(false);
     }

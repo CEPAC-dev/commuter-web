@@ -76,7 +76,6 @@ export default function ReviewModal({
   const trf = useTranslations('ride_form');
   const to = useTranslations('outbound_route');
   const tsl = useTranslations('time_slot');
-  const td = useTranslations('days');
   const [adjMax, setAdjMax] = useState(priceMax);
   const [rawMax, setRawMax] = useState(String(priceMax));
 

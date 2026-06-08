@@ -574,7 +574,7 @@ export default function DriverOnboardingPage() {
             <LocationPickerMap
               lat={form.default_lat}
               lng={form.default_lng}
-              name={form.default_location_name}
+              name={form.location_name}
               onChange={(newLat, newLng, newName) => {
                 setForm((f) => ({ ...f, default_lat: newLat, default_lng: newLng, location_name: newName }));
                 if (newLat && newLng) setErrors((e) => { const { default_location: _, ...rest } = e; return rest; });

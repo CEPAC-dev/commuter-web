@@ -101,7 +101,7 @@ function IcRoute() {
 
 // ── Matching status helpers ───────────────────────────────────────────────────
 
-function useMatchingConfig() {
+function useMatchingConfig(): Record<string, { label: string; bg: string; color: string; border: string }> {
   const t = useTranslations('course_card');
   return {
     PENDING:   { label: t('status_pending'),   bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
@@ -111,7 +111,7 @@ function useMatchingConfig() {
   };
 }
 
-function useInstanceStatusConfig() {
+function useInstanceStatusConfig(): Record<string, { label: string; bg: string; color: string; border: string }> {
   const t = useTranslations('course_card');
   return {
     pending:   { label: t('status_pending'),   bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
@@ -355,7 +355,7 @@ function InstanceDetailSheet({ instance }: { instance: CourseInstance | null }) 
                     {p.type === 'passenger' ? '👤' : '🙋'}
                   </span>
                   <span style={{ color: '#0B1E3D', fontWeight: 600 }}>
-                    {p.type === 'passenger' ? t('passenger_n', { n: p.passenger_id }) : t('user_n', { id: p.user_id })}
+                    {p.type === 'passenger' ? t('passenger_n', { n: p.passenger_id ?? 0 }) : t('user_n', { id: p.user_id ?? 0 })}
                   </span>
                 </div>
                 <span style={{

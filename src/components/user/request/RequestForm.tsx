@@ -46,7 +46,6 @@ export default function RequestForm({
   const locale     = useLocale();
   const t          = useTranslations('request_form');
   const te         = useTranslations('request_form_errors');
-  const tCommon    = useTranslations('common');
   const cycleStart = getNextAvailableCycleStart();
 
   function update(partial: Partial<RequestFormData>) {
