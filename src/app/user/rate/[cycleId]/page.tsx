@@ -2,17 +2,17 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import type { UserRequest } from '@/types/user';
-// Mock data removed
-
-const STAR_LABELS = ['', 'Terrible', 'Poor', 'OK', 'Good', 'Excellent'];
 
 interface StarRatingInputProps {
   value: number;
   onChange: (v: number) => void;
+  labels: string[];
+  tapToRate: string;
 }
 
-function StarRatingInput({ value, onChange }: StarRatingInputProps) {
+function StarRatingInput({ value, onChange, labels, tapToRate }: StarRatingInputProps) {
   const [hovered, setHovered] = useState(0);
   const display = hovered || value;
 
@@ -56,7 +56,7 @@ function StarRatingInput({ value, onChange }: StarRatingInputProps) {
           minHeight: 20,
         }}
       >
-        {display ? STAR_LABELS[display] : 'Tap to rate'}
+        {display ? labels[display] : tapToRate}
       </div>
     </div>
   );
@@ -64,14 +64,16 @@ function StarRatingInput({ value, onChange }: StarRatingInputProps) {
 
 export default function RatePage() {
   const router = useRouter();
+  const t = useTranslations('rating');
+  const locale = useLocale();
   const [stars, setStars] = useState<number>(0);
   const [comment, setComment] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Find matching completed request
-  // TODO: fetch from API endpoint when available
-  const requestData: UserRequest | null = null; // mockRequests.find((r) => r.id === params.cycleId && r.status === 'completed');
+  const starLabels = ['', t('stars_1'), t('stars_2'), t('stars_3'), t('stars_4'), t('stars_5')];
+
+  const requestData: UserRequest | null = null;
   const request = requestData || ({
     id: '', status: 'completed' as const, origin: { address: '', lat: 0, lng: 0 },
     destination: { address: '', lat: 0, lng: 0 }, distance_km: 0, duration_minutes: 0,
@@ -87,12 +89,12 @@ export default function RatePage() {
     return (
       <div style={{ maxWidth: 480, margin: '40px auto', textAlign: 'center', color: '#5A6A7A' }}>
         <div style={{ fontSize: 40 }}>🔍</div>
-        <p>Cycle not found or already rated.</p>
+        <p>{t('not_found')}</p>
         <button
           onClick={() => router.push('/user/my-requests')}
           style={{ padding: '10px 20px', border: 'none', borderRadius: 10, background: '#00C2A8', color: '#0B1E3D', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', minHeight: 44 }}
         >
-          Back to My Requests
+          {t('back_btn')}
         </button>
       </div>
     );
@@ -127,10 +129,10 @@ export default function RatePage() {
       >
         <div style={{ fontSize: 56 }}>✅</div>
         <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#0B1E3D' }}>
-          Thanks for your feedback!
+          {t('success_title')}
         </h2>
         <p style={{ margin: 0, fontSize: 14, color: '#5A6A7A' }}>
-          Your rating helps the community.
+          {t('success_body')}
         </p>
         <button
           onClick={() => router.push('/user/my-requests')}
@@ -148,13 +150,14 @@ export default function RatePage() {
             minHeight: 48,
           }}
         >
-          Back to My Requests
+          {t('back_btn')}
         </button>
       </div>
     );
   }
 
   const driverInitial = (request.driver_name ?? 'D')[0];
+  const dateOpts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
 
   return (
     <div
@@ -167,21 +170,19 @@ export default function RatePage() {
         gap: 24,
       }}
     >
-      {/* Header */}
       <div>
         <h1 style={{ margin: '0 0 4px', fontSize: 24, fontWeight: 700, color: '#0B1E3D' }}>
-          How was your ride?
+          {t('page_title')}
         </h1>
         <p style={{ margin: 0, fontSize: 14, color: '#5A6A7A' }}>
           {request.origin.address} → {request.destination.address}
           <span style={{ margin: '0 6px' }}>·</span>
-          {new Date(request.cycle_start_date).toLocaleDateString('en-EG', { month: 'short', day: 'numeric' })}
+          {new Date(request.cycle_start_date).toLocaleDateString(locale, dateOpts)}
           {' – '}
-          {new Date(request.cycle_end_date).toLocaleDateString('en-EG', { month: 'short', day: 'numeric' })}
+          {new Date(request.cycle_end_date).toLocaleDateString(locale, dateOpts)}
         </p>
       </div>
 
-      {/* Driver card */}
       <div
         style={{
           display: 'flex',
@@ -213,14 +214,13 @@ export default function RatePage() {
         <div style={{ fontSize: 18, fontWeight: 700, color: '#0B1E3D' }}>
           {request.driver_name}
         </div>
-        <div style={{ fontSize: 13, color: '#5A6A7A' }}>Your driver this week</div>
+        <div style={{ fontSize: 13, color: '#5A6A7A' }}>{t('your_driver')}</div>
 
         <div style={{ marginTop: 8 }}>
-          <StarRatingInput value={stars} onChange={setStars} />
+          <StarRatingInput value={stars} onChange={setStars} labels={starLabels} tapToRate={t('tap_to_rate')} />
         </div>
       </div>
 
-      {/* Comment */}
       <div>
         <label
           style={{
@@ -231,13 +231,12 @@ export default function RatePage() {
             marginBottom: 8,
           }}
         >
-          Add a comment{' '}
-          <span style={{ fontWeight: 400, color: '#5A6A7A' }}>(optional)</span>
+          {t('comment_label')}
         </label>
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="Great driver, always on time…"
+          placeholder={t('comment_placeholder')}
           rows={4}
           style={{
             width: '100%',
@@ -256,7 +255,6 @@ export default function RatePage() {
         />
       </div>
 
-      {/* Actions */}
       <div style={{ display: 'flex', gap: 10 }}>
         <button
           onClick={handleSkip}
@@ -274,7 +272,7 @@ export default function RatePage() {
             minHeight: 48,
           }}
         >
-          Skip
+          {t('skip_btn')}
         </button>
         <button
           onClick={handleSubmit}
@@ -294,7 +292,7 @@ export default function RatePage() {
             transition: 'background 0.15s',
           }}
         >
-          {loading ? 'Submitting…' : 'Submit rating'}
+          {loading ? t('submitting') : t('submit_btn')}
         </button>
       </div>
     </div>

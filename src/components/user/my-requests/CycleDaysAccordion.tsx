@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { CycleDayRecord } from '@/types/shared';
+import { useTranslations } from 'next-intl';
 
 interface Props {
   days: CycleDayRecord[];
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function CycleDaysAccordion({ days, driverName }: Props) {
+  const t = useTranslations('cycle_days');
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   if (!days || days.length === 0) {
@@ -39,9 +41,9 @@ export default function CycleDaysAccordion({ days, driverName }: Props) {
           day.status === 'cancelled' ? '#E74C3C' :
           '#9AA0A6';
         const statusLabel =
-          day.status === 'completed' ? 'Completed' :
-          day.status === 'cancelled' ? 'Cancelled' :
-          'No-show';
+          day.status === 'completed' ? t('completed') :
+          day.status === 'cancelled' ? t('cancelled') :
+          t('no_show');
         const statusBg =
           day.status === 'completed' ? '#EFF7F6' :
           day.status === 'cancelled' ? '#FFEBEE' :
@@ -125,9 +127,9 @@ export default function CycleDaysAccordion({ days, driverName }: Props) {
               >
                 {(
                   [
-                    ['Pickup time',  day.pickup_time  ?? '—'],
-                    ['Drop-off time', day.dropoff_time ?? '—'],
-                    ['Driver',       day.driver_name ?? driverName ?? '—'],
+                    [t('pickup_time'),  day.pickup_time  ?? '—'],
+                    [t('dropoff_time'), day.dropoff_time ?? '—'],
+                    [t('driver'),       day.driver_name ?? driverName ?? '—'],
                   ] as [string, string][]
                 ).map(([label, value]) => (
                   <div

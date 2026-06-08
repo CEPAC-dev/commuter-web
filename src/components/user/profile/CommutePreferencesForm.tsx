@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import userApi from '@/lib/api/user';
 import type { CommutePreferences } from '@/types/user';
+import { useTranslations } from 'next-intl';
 
 const DEFAULTS: CommutePreferences = {
   gender_preference:            'any',
@@ -66,6 +67,8 @@ interface Props {
 }
 
 export default function CommutePreferencesForm({ compact = false }: Props) {
+  const tc = useTranslations('commute_prefs');
+  const tp = useTranslations('preferences_modal');
   const [prefs,   setPrefs]   = useState<CommutePreferences>(DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
@@ -86,9 +89,9 @@ export default function CommutePreferencesForm({ compact = false }: Props) {
     setSaving(true);
     try {
       await userApi.updatePreferences(prefs);
-      toast.success('Preferences saved!');
+      toast.success(tc('save_success'));
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save preferences.');
+      toast.error(err instanceof Error ? err.message : tc('save_failed'));
     } finally {
       setSaving(false);
     }
@@ -99,19 +102,19 @@ export default function CommutePreferencesForm({ compact = false }: Props) {
   }
 
   if (loading) {
-    return <p className="py-4 text-center text-sm text-[#5A6A7A]">Loading…</p>;
+    return <p className="py-4 text-center text-sm text-[#5A6A7A]">{tc('loading')}</p>;
   }
 
   return (
     <div className="flex flex-col gap-5">
 
       {/* Gender preference */}
-      <PrefRow label="Gender preference">
+      <PrefRow label={tc('gender_pref')}>
         <Pills
           options={[
-            { value: 'any',    label: 'Any' },
-            { value: 'male',   label: 'Male only' },
-            { value: 'female', label: 'Female only' },
+            { value: 'any',    label: tc('any') },
+            { value: 'male',   label: tc('male_only') },
+            { value: 'female', label: tc('female_only') },
           ]}
           value={prefs.gender_preference}
           onChange={(v) => set('gender_preference', v as CommutePreferences['gender_preference'])}
@@ -119,11 +122,11 @@ export default function CommutePreferencesForm({ compact = false }: Props) {
       </PrefRow>
 
       {/* Smoking */}
-      <PrefRow label="Smoking allowed">
+      <PrefRow label={tc('smoking')}>
         <Pills
           options={[
-            { value: 'false', label: 'Not allowed' },
-            { value: 'true',  label: 'Allowed' },
+            { value: 'false', label: tc('not_allowed') },
+            { value: 'true',  label: tc('allowed') },
           ]}
           value={String(prefs.smoking_allowed)}
           onChange={(v) => set('smoking_allowed', v === 'true')}
@@ -131,12 +134,12 @@ export default function CommutePreferencesForm({ compact = false }: Props) {
       </PrefRow>
 
       {/* Interaction level */}
-      <PrefRow label="Interaction level">
+      <PrefRow label={tc('interaction')}>
         <Pills
           options={[
-            { value: 'quiet',     label: 'Quiet' },
-            { value: 'normal',    label: 'Normal' },
-            { value: 'talkative', label: 'Talkative' },
+            { value: 'quiet',     label: tc('quiet') },
+            { value: 'normal',    label: tc('normal') },
+            { value: 'talkative', label: tc('talkative') },
           ]}
           value={prefs.interaction_level}
           onChange={(v) => set('interaction_level', v as CommutePreferences['interaction_level'])}
@@ -144,11 +147,11 @@ export default function CommutePreferencesForm({ compact = false }: Props) {
       </PrefRow>
 
       {/* Children allowed */}
-      <PrefRow label="Children allowed">
+      <PrefRow label={tp('children')}>
         <Pills
           options={[
-            { value: 'true',  label: 'Allowed' },
-            { value: 'false', label: 'Not allowed' },
+            { value: 'true',  label: tp('children_yes') },
+            { value: 'false', label: tp('children_no') },
           ]}
           value={String(prefs.children_allowed)}
           onChange={(v) => set('children_allowed', v === 'true')}
@@ -156,12 +159,12 @@ export default function CommutePreferencesForm({ compact = false }: Props) {
       </PrefRow>
 
       {/* Music preference */}
-      <PrefRow label="Music preference">
+      <PrefRow label={tp('music')}>
         <Pills
           options={[
-            { value: 'no_music', label: 'No music' },
-            { value: 'low',      label: 'Low' },
-            { value: 'normal',   label: 'Normal' },
+            { value: 'no_music', label: tp('music_none') },
+            { value: 'low',      label: tp('music_low') },
+            { value: 'normal',   label: tp('music_normal') },
           ]}
           value={prefs.music_preference}
           onChange={(v) => set('music_preference', v as CommutePreferences['music_preference'])}
@@ -169,12 +172,12 @@ export default function CommutePreferencesForm({ compact = false }: Props) {
       </PrefRow>
 
       {/* Seat preference */}
-      <PrefRow label="Seat preference">
+      <PrefRow label={tp('seat')}>
         <Pills
           options={[
-            { value: 'front', label: 'Front' },
-            { value: 'back',  label: 'Back' },
-            { value: 'any',   label: 'Any' },
+            { value: 'front', label: tp('seat_front') },
+            { value: 'back',  label: tp('seat_back') },
+            { value: 'any',   label: tp('seat_any') },
           ]}
           value={prefs.seat_preference}
           onChange={(v) => set('seat_preference', v as CommutePreferences['seat_preference'])}
@@ -182,13 +185,13 @@ export default function CommutePreferencesForm({ compact = false }: Props) {
       </PrefRow>
 
       {/* Walking distance */}
-      <PrefRow label="Walking distance to pickup">
+      <PrefRow label={tp('walking')}>
         <Pills
           options={[
-            { value: 'no_walk',          label: 'No walk' },
-            { value: 'less_than_5_min',  label: '< 5 min' },
-            { value: '5_to_10_min',      label: '5–10 min' },
-            { value: 'more_than_10_min', label: '> 10 min' },
+            { value: 'no_walk',          label: tp('walking_none') },
+            { value: 'less_than_5_min',  label: tp('walking_5') },
+            { value: '5_to_10_min',      label: tp('walking_10') },
+            { value: 'more_than_10_min', label: tp('walking_more') },
           ]}
           value={prefs.walking_distance_preference}
           onChange={(v) => set('walking_distance_preference', v as CommutePreferences['walking_distance_preference'])}
@@ -196,12 +199,12 @@ export default function CommutePreferencesForm({ compact = false }: Props) {
       </PrefRow>
 
       {/* Air conditioning */}
-      <PrefRow label="Air conditioning">
+      <PrefRow label={tp('ac')}>
         <Pills
           options={[
-            { value: 'not_important',         label: 'Not important' },
-            { value: 'preferred_if_available', label: 'Preferred' },
-            { value: 'mandatory',             label: 'Mandatory' },
+            { value: 'not_important',         label: tp('ac_not_important') },
+            { value: 'preferred_if_available', label: tp('ac_preferred') },
+            { value: 'mandatory',             label: tp('ac_mandatory') },
           ]}
           value={prefs.air_conditioning_preference}
           onChange={(v) => set('air_conditioning_preference', v as CommutePreferences['air_conditioning_preference'])}
@@ -220,7 +223,7 @@ export default function CommutePreferencesForm({ compact = false }: Props) {
         ].join(' ')}
         style={{ fontFamily: 'inherit' }}
       >
-        {saving ? 'Saving…' : 'Save preferences'}
+        {saving ? tc('loading') : tc('save')}
       </button>
     </div>
   );

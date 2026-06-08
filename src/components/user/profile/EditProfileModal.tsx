@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import type { UserProfile } from '@/types/user';
 import BottomSheet from '@/components/shared/BottomSheet';
 import userApi from '@/lib/api/user';
+import { useTranslations } from 'next-intl';
 
 type Tab = 'info' | 'address';
 
@@ -60,6 +61,7 @@ interface EditProfileModalProps {
 }
 
 export default function EditProfileModal({ isOpen, onClose, profile, onSave }: EditProfileModalProps) {
+  const te = useTranslations('edit_profile');
   const [tab, setTab] = useState<Tab>('info');
 
   // Info tab fields
@@ -129,10 +131,10 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSave }: E
         street,
         landmark,
       });
-      toast.success('Profile updated');
+      toast.success(t('save_success'));
       onClose();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Update failed');
+      toast.error(err instanceof Error ? err.message : t('save_failed'));
     } finally {
       setSaving(false);
     }
@@ -160,7 +162,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSave }: E
             boxShadow: tab === t ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
           }}
         >
-          {t === 'info' ? 'Personal info' : 'Address'}
+          {t === 'info' ? te('tab_info') : te('tab_address')}
         </button>
       ))}
     </div>
@@ -168,19 +170,19 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSave }: E
 
   const infoTab = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <Field label="Full name">
-        <StyledInput value={name} onChange={setName} placeholder="Your full name" />
+      <Field label={te('name_label')}>
+        <StyledInput value={name} onChange={setName} placeholder={te('name_placeholder')} />
       </Field>
-      <Field label="Email">
-        <StyledInput value={email} onChange={setEmail} type="email" placeholder="your@email.com" />
+      <Field label={te('email_label')}>
+        <StyledInput value={email} onChange={setEmail} type="email" placeholder={te('email_placeholder')} />
       </Field>
-      <Field label="Phone number">
-        <StyledInput value={phone} onChange={setPhone} type="tel" placeholder="+20 …" />
+      <Field label={te('phone_label')}>
+        <StyledInput value={phone} onChange={setPhone} type="tel" placeholder={te('phone_placeholder')} />
       </Field>
-      <Field label="WhatsApp number">
-        <StyledInput value={whatsapp} onChange={setWhatsapp} type="tel" placeholder="+20 …" />
+      <Field label={te('whatsapp_label')}>
+        <StyledInput value={whatsapp} onChange={setWhatsapp} type="tel" placeholder={te('phone_placeholder')} />
       </Field>
-      <Field label="Gender">
+      <Field label={te('gender_label')}>
         <select
           value={gender}
           onChange={(e) => setGender(e.target.value)}
@@ -188,12 +190,12 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSave }: E
           onFocus={(e) => { e.currentTarget.style.borderColor = '#00C2A8'; e.currentTarget.style.background = '#EFF7F6'; }}
           onBlur={(e)  => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.background = '#fff'; }}
         >
-          <option value="">Select gender</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
+          <option value="">{te('gender_placeholder')}</option>
+          <option value="male">{te('gender_male')}</option>
+          <option value="female">{te('gender_female')}</option>
         </select>
       </Field>
-      <Field label="Date of birth">
+      <Field label={te('dob_label')}>
         <StyledInput value={birthdate} onChange={setBirthdate} type="date" />
       </Field>
     </div>
@@ -201,23 +203,23 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSave }: E
 
   const addressTab = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <Field label="Province">
-        <StyledInput value={province} onChange={setProvince} placeholder="e.g. Cairo" />
+      <Field label={te('province_label')}>
+        <StyledInput value={province} onChange={setProvince} placeholder={te('province_placeholder')} />
       </Field>
-      <Field label="District">
-        <StyledInput value={district} onChange={setDistrict} placeholder="e.g. Nasr City" />
+      <Field label={te('district_label')}>
+        <StyledInput value={district} onChange={setDistrict} placeholder={te('district_placeholder')} />
       </Field>
-      <Field label="Sub-district">
-        <StyledInput value={subDistrict} onChange={setSubDistrict} placeholder="Sub-district" />
+      <Field label={te('subdistrict_label')}>
+        <StyledInput value={subDistrict} onChange={setSubDistrict} placeholder={te('subdistrict_placeholder')} />
       </Field>
-      <Field label="Building">
-        <StyledInput value={building} onChange={setBuilding} placeholder="Building no. / name" />
+      <Field label={te('building_label')}>
+        <StyledInput value={building} onChange={setBuilding} placeholder={te('building_placeholder')} />
       </Field>
-      <Field label="Street">
-        <StyledInput value={street} onChange={setStreet} placeholder="Street name" />
+      <Field label={te('street_label')}>
+        <StyledInput value={street} onChange={setStreet} placeholder={te('street_placeholder')} />
       </Field>
-      <Field label="Landmark">
-        <StyledInput value={landmark} onChange={setLandmark} placeholder="Near …" />
+      <Field label={te('landmark_label')}>
+        <StyledInput value={landmark} onChange={setLandmark} placeholder={te('landmark_placeholder')} />
       </Field>
     </div>
   );
@@ -244,7 +246,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSave }: E
           minHeight: 48,
         }}
       >
-        {saving ? 'Saving…' : 'Save changes'}
+        {saving ? te('saving_btn') : te('save_btn')}
       </button>
     </div>
   );
@@ -264,7 +266,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSave }: E
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0B1E3D' }}>Edit profile</h3>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0B1E3D' }}>{te('title')}</h3>
                 <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 8, color: '#5A6A7A', minWidth: 44, minHeight: 44, fontSize: 18 }}>✕</button>
               </div>
               {content}
@@ -273,7 +275,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, onSave }: E
         )}
       </div>
       <div className="md:hidden">
-        <BottomSheet isOpen={isOpen} onClose={onClose} title="Edit profile">
+        <BottomSheet isOpen={isOpen} onClose={onClose} title={te('title')}>
           {content}
         </BottomSheet>
       </div>

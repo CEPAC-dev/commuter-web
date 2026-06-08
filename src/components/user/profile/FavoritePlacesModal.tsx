@@ -2,6 +2,7 @@
 
 import { X } from 'lucide-react';
 import SavedLocationsSection from './SavedLocationsSection';
+import { useTranslations } from 'next-intl';
 
 interface Props {
   isOpen:  boolean;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function FavoritePlacesModal({ isOpen, onClose }: Props) {
+  const tp = useTranslations('profile_mobile');
   if (!isOpen) return null;
 
   return (
@@ -33,7 +35,7 @@ export default function FavoritePlacesModal({ isOpen, onClose }: Props) {
       >
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-          <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0B1E3D', margin: 0 }}>Favorite Places</h2>
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0B1E3D', margin: 0 }}>{tp('favorite_places')}</h2>
           <button
             onClick={onClose}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', color: '#5A6A7A' }}

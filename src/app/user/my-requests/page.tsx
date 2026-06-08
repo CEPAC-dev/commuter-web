@@ -18,7 +18,7 @@ function filterByType(courses: ApiCourse[], f: Filter): ApiCourse[] {
 }
 
 // Wallet banner — gradient card matching the screenshot
-function WalletBanner({ balance, onClick }: { balance: number; onClick: () => void }) {
+function WalletBanner({ balance, label, onClick }: { balance: number; label: string; onClick: () => void }) {
   return (
     <div
       onClick={onClick}
@@ -53,7 +53,7 @@ function WalletBanner({ balance, onClick }: { balance: number; onClick: () => vo
           💳
         </div>
         <div>
-          <p style={{ margin: 0, fontSize: 12, opacity: 0.8 }}>Available balance</p>
+          <p style={{ margin: 0, fontSize: 12, opacity: 0.8 }}>{label}</p>
           <p style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>
             EGP {balance.toFixed(2)}
           </p>
@@ -66,6 +66,7 @@ function WalletBanner({ balance, onClick }: { balance: number; onClick: () => vo
 
 export default function MyRequestsPage() {
   const t = useTranslations('my_requests');
+  const t2 = useTranslations('my_requests_page');
   const router = useRouter();
   const [courses,  setCourses]  = useState<ApiCourse[]>([]);
   const [loading,  setLoading]  = useState(true);
@@ -81,7 +82,7 @@ export default function MyRequestsPage() {
     ]).then(([coursesRes, balanceRes]) => {
       setCourses(coursesRes.data);
       if (balanceRes) setBalance(balanceRes.data.last_balance);
-    }).catch(() => setFetchErr('Failed to load requests.'))
+    }).catch(() => setFetchErr(t2('load_error')))
       .finally(() => setLoading(false));
   }
 
@@ -90,9 +91,9 @@ export default function MyRequestsPage() {
   const displayed = filterByType(courses, activeFilter);
 
   const FILTERS: { key: Filter; label: string }[] = [
-    { key: 'all',        label: 'All' },
-    { key: 'group',      label: 'Group' },
-    { key: 'individual', label: 'Individual' },
+    { key: 'all',        label: t2('filter_all') },
+    { key: 'group',      label: t2('filter_group') },
+    { key: 'individual', label: t2('filter_individual') },
   ];
 
   return (
@@ -109,7 +110,7 @@ export default function MyRequestsPage() {
       </div>
 
       {/* Wallet banner */}
-      <WalletBanner balance={balance} onClick={() => router.push('/user/wallet')} />
+      <WalletBanner balance={balance} label={t2('available_balance')} onClick={() => router.push('/user/wallet')} />
 
       {/* Type filter chips */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20, overflowX: 'auto' }}>
@@ -144,7 +145,7 @@ export default function MyRequestsPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '48px 0', color: '#9AA0A6', fontSize: 14 }}>
-            Loading…
+            {t2('loading')}
           </div>
         ) : fetchErr ? (
           <div style={{ textAlign: 'center', padding: '48px 0', color: '#E74C3C', fontSize: 14 }}>

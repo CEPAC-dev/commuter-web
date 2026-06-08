@@ -1,12 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useIntent } from '@/lib/IntentContext';
 import OnboardingCard from '@/components/user/onboarding/OnboardingCard';
 import WizardProgress from '@/components/user/onboarding/WizardProgress';
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const t = useTranslations('onboarding');
   const { setIntent, resetIntent } = useIntent();
 
   function choosePrivate() {
@@ -32,26 +34,23 @@ export default function OnboardingPage() {
       padding: '24px 16px',
       fontFamily: 'Inter, system-ui, sans-serif',
     }}>
-      {/* Brand */}
       <div style={{ marginBottom: 48, textAlign: 'center' }}>
         <span style={{ fontSize: 28, fontWeight: 800, color: '#00C2A8', letterSpacing: '-0.5px' }}>
-          [c] commuter
+          {t('brand')}
         </span>
       </div>
 
       <WizardProgress current={1} total={2} />
 
-      {/* Heading */}
       <div style={{ textAlign: 'center', marginBottom: 40 }}>
         <h1 style={{ color: '#fff', fontSize: 28, fontWeight: 700, margin: 0, marginBottom: 8 }}>
-          How would you like to travel?
+          {t('how_travel')}
         </h1>
         <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 16, margin: 0 }}>
-          Choose the type of ride that fits your needs
+          {t('choose_type')}
         </p>
       </div>
 
-      {/* Cards */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -61,27 +60,27 @@ export default function OnboardingPage() {
       }}>
         <OnboardingCard
           icon="🚗"
-          title="Private ride"
-          description="The whole car is yours. Bring up to 3 friends or travel alone."
+          title={t('private_title')}
+          description={t('private_desc')}
           bullets={[
-            'Up to 4 people total',
-            'Add stop points',
-            'Higher price',
+            t('private_bullet_1'),
+            t('private_bullet_2'),
+            t('private_bullet_3'),
           ]}
-          ctaLabel="Choose Private"
+          ctaLabel={t('private_cta')}
           onClick={choosePrivate}
         />
 
         <OnboardingCard
           icon="🧑‍🤝‍🧑"
-          title="Shared ride"
-          description="Share the ride and split the cost with others."
+          title={t('shared_title')}
+          description={t('shared_desc')}
           bullets={[
-            'Up to 3 passengers',
-            'Fixed route only',
-            'Lower price',
+            t('shared_bullet_1'),
+            t('shared_bullet_2'),
+            t('shared_bullet_3'),
           ]}
-          ctaLabel="Choose Shared"
+          ctaLabel={t('shared_cta')}
           onClick={chooseShared}
         />
       </div>

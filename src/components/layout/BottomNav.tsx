@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 const NAV_ICONS = {
   create: (active: boolean) => (
@@ -34,14 +35,15 @@ const NAV_ICONS = {
 } as const;
 
 export default function BottomNav() {
+  const t = useTranslations('nav');
   const pathname = usePathname();
   const unreadCount = 0; // TODO: fetch from API when notifications endpoint available
 
   const NAV_ITEMS = [
-    { key: 'create' as const,        label: 'Create',       href: '/user/request/new' },
-    { key: 'requests' as const,      label: 'My Requests',  href: '/user/my-requests' },
-    { key: 'notifications' as const, label: 'Alerts',       href: '/user/notifications' },
-    { key: 'profile' as const,       label: 'Profile',      href: '/user/profile' },
+    { key: 'create' as const,        label: t('create'),       href: '/user/request/new' },
+    { key: 'requests' as const,      label: t('my_requests'),  href: '/user/my-requests' },
+    { key: 'notifications' as const, label: t('alerts'),       href: '/user/notifications' },
+    { key: 'profile' as const,       label: t('profile'),      href: '/user/profile' },
   ];
 
   return (

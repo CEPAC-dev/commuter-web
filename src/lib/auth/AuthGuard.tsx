@@ -21,7 +21,7 @@ export default function AuthGuard({
       return;
     }
     if (userRole !== role) {
-      router.replace(userRole === 'driver' ? '/driver/requests' : '/user/my-requests');
+      router.replace(userRole === 'driver' ? '/driver/my-requests' : '/user/my-requests');
     }
   }, [isAuth, userRole, loading, role, router]);
 

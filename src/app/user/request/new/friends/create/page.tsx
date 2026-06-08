@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useWizard } from '@/lib/RequestWizardContext';
 import { generateGroupCode } from '@/lib/groupCode';
 
 export default function FriendsCreatePage() {
   const router = useRouter();
+  const t = useTranslations('request_shared');
   const { setGroupCode } = useWizard();
   const [code] = useState(() => generateGroupCode());
   const [copied, setCopied] = useState(false);
@@ -53,18 +55,17 @@ export default function FriendsCreatePage() {
           fontFamily: 'inherit',
         }}
       >
-        ← Back
+        {t('back')}
       </button>
 
       <div style={{ textAlign: 'center', marginBottom: 40, width: '100%', maxWidth: 400 }}>
         <h1 style={{ fontSize: 28, fontWeight: 700, color: '#0B1E3D', marginBottom: 8 }}>
-          Your group code
+          {t('your_code')}
         </h1>
         <p style={{ fontSize: 15, color: '#5A6A7A', marginBottom: 32 }}>
-          Share this code with your friends so they can join your commute.
+          {t('share_friends')}
         </p>
 
-        {/* Code display */}
         <div
           style={{
             background: '#EFF7F6',
@@ -86,7 +87,7 @@ export default function FriendsCreatePage() {
             {code}
           </p>
           <p style={{ fontSize: 12, color: '#5A6A7A', marginTop: 8 }}>
-            Code expires after 48 hours
+            {t('expires_48h')}
           </p>
         </div>
 
@@ -107,7 +108,7 @@ export default function FriendsCreatePage() {
             transition: 'color 0.2s',
           }}
         >
-          {copied ? '✓ Copied!' : '📋 Copy code'}
+          {copied ? t('copied') : t('copy_code')}
         </button>
 
         <button
@@ -125,7 +126,7 @@ export default function FriendsCreatePage() {
             fontFamily: 'inherit',
           }}
         >
-          Continue to route →
+          {t('continue_route')}
         </button>
       </div>
     </div>

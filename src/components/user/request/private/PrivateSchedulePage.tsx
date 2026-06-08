@@ -24,6 +24,7 @@ import PointPicker from './PointPicker';
 import StopMapPicker from './StopMapPicker';
 import ReviewModal from './ReviewModal';
 import RoutePicker, { type RoutePickerResult } from '@/components/user/request/RoutePicker';
+import { useTranslations } from 'next-intl';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -54,6 +55,12 @@ function makeSlot(): TimeSlot {
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default function PrivateSchedulePage() {
+  const tps = useTranslations('private_schedule');
+  const trs = useTranslations('request_schedule');
+  const tf = useTranslations('request_form');
+  const tsb = useTranslations('schedule_builder');
+  const tsl = useTranslations('time_slot');
+  const trf = useTranslations('ride_form');
   const router = useRouter();
   const wizard = useWizard();
 
@@ -219,7 +226,7 @@ export default function PrivateSchedulePage() {
 
   function validate(): string[] {
     const errors: string[] = [];
-    if (!routeReady) errors.push('Set the outbound route first');
+    if (!routeReady) errors.push(trf('set_route_first'));
     for (let i = 0; i < slots.length; i++) {
       const s = slots[i];
       if (s.days.length === 0) errors.push(`Select days for Time slot ${i + 1}`);
@@ -351,7 +358,7 @@ export default function PrivateSchedulePage() {
       wizard.reset();
       router.push('/user/my-requests');
     } catch (e) {
-      const msg = e instanceof ApiError ? e.message : 'Failed to submit request. Try again.';
+      const msg = e instanceof ApiError ? e.message : trs('submit_failed');
       setError(msg);
       setSubmitting(false);
     }
@@ -362,11 +369,11 @@ export default function PrivateSchedulePage() {
     <>
       <div style={{ maxWidth: 640, margin: '0 auto' }}>
         <PageHeader
-          title="Schedule your ride"
+          title={tps('title')}
           onBack={() => router.back()}
           rightElement={
             <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#EFF7F6] text-[#00C2A8] border border-[#C8E8E4]">
-              Private
+              {trs('private')}
             </span>
           }
         />
@@ -375,7 +382,7 @@ export default function PrivateSchedulePage() {
 
           {/* Who is riding */}
           <Section
-            title="Who is riding?"
+            title={trs('who_riding')}
             rightLabel={`${(wizard.include_self ? 1 : 0) + wizard.selected_passenger_ids.length}/4 selected`}
           >
             <PassengerPicker
@@ -401,7 +408,7 @@ export default function PrivateSchedulePage() {
 
           {/* Schedule */}
           <Section
-            title="Schedule"
+            title={trs('schedule')}
             rightLabel={`${allDays.length}/7 days`}
           >
             <div className="space-y-3">
@@ -436,7 +443,7 @@ export default function PrivateSchedulePage() {
                   )}
 
                 <div>
-                  <label className="block text-xs font-medium text-[#5A6A7A] mb-2">Trip type</label>
+                  <label className="block text-xs font-medium text-[#5A6A7A] mb-2">{tf('trip_type_label')}</label>
                   <div className="grid grid-cols-2 gap-2">
                     {(['one_way', 'round_trip'] as const).map(tt => (
                       <button
@@ -449,7 +456,7 @@ export default function PrivateSchedulePage() {
                             : 'bg-white border-[#E2E8F0] text-[#5A6A7A]'
                         }`}
                       >
-                        {tt === 'one_way' ? 'One way' : 'Round trip'}
+                        {tt === 'one_way' ? tsl('one_way') : tsl('round_trip')}
                       </button>
                     ))}
                   </div>
@@ -518,16 +525,16 @@ export default function PrivateSchedulePage() {
                 }`}
               >
                 {allDays.length >= 7
-                  ? 'All 7 days scheduled'
+                  ? tsb('all_days')
                   : lastSlotNoDay
-                    ? 'Select days for current slot first'
-                    : '+ Add time slot'}
+                    ? tsb('select_days_first')
+                    : `+ ${trs('add_slot')}`}
               </button>
             </div>
           </Section>
 
           {/* Notes */}
-          <Section title="Notes">
+          <Section title={tps('notes')}>
             <p className="text-xs text-[#5A6A7A] mb-2">
               Optional details for the driver (e.g. luggage, pickup instructions).
             </p>
@@ -537,7 +544,7 @@ export default function PrivateSchedulePage() {
                 maxLength={500}
                 value={wizard.notes ?? ''}
                 onChange={(e) => wizard.setNotes(e.target.value)}
-                placeholder="Add notes…"
+                placeholder={tps('notes_placeholder')}
                 className="w-full p-3 rounded-xl border border-[#E2E8F0] text-sm text-[#0B1E3D] resize-none focus:outline-none focus:border-[#00C2A8]"
               />
               <span className="absolute bottom-2 right-3 text-[10px] text-[#9AA0A6]">
@@ -547,10 +554,10 @@ export default function PrivateSchedulePage() {
           </Section>
 
           {/* Cycle start */}
-          <Section title="Cycle start">
+          <Section title={trs('cycle_start')}>
             <div className="bg-[#F8F9FA] border border-[#E2E8F0] rounded-xl p-3">
               <p className="text-sm font-semibold text-[#0B1E3D]">{cycleStartLabel}</p>
-              <p className="text-xs text-[#5A6A7A] mt-0.5">Requests are grouped every Wednesday</p>
+              <p className="text-xs text-[#5A6A7A] mt-0.5">{trs('cycle_note')}</p>
             </div>
           </Section>
 
@@ -577,7 +584,7 @@ export default function PrivateSchedulePage() {
             className="w-full py-4 rounded-xl text-white font-bold text-sm transition-colors bg-[#0B1E3D] hover:bg-[#132D52] disabled:opacity-60"
             style={{ border: 'none', fontFamily: 'inherit' }}
           >
-            Review &amp; submit request
+            {trs('review_submit')}
           </button>
 
           <div className="h-8" />

@@ -1,19 +1,9 @@
 'use client';
 
 import type { RequestStatus } from '@/types/user';
+import { useTranslations } from 'next-intl';
 
-type Step = {
-  key: string;
-  label: string;
-};
-
-const STEPS: Step[] = [
-  { key: 'submitted',  label: 'Submitted' },
-  { key: 'matching',   label: 'Matching' },
-  { key: 'confirmed',  label: 'Confirmed' },
-  { key: 'active',     label: 'Active' },
-  { key: 'completed',  label: 'Completed' },
-];
+const STEP_KEYS = ['submitted', 'matching', 'confirmed', 'active', 'completed'] as const;
 
 const STATUS_STEP_INDEX: Record<RequestStatus, number> = {
   available:      0,
@@ -33,6 +23,7 @@ interface StatusTimelineProps {
 }
 
 export default function StatusTimeline({ status }: StatusTimelineProps) {
+  const t = useTranslations('status_timeline');
   const currentIndex = STATUS_STEP_INDEX[status] ?? 0;
 
   if (status === 'cancelled') {
@@ -47,7 +38,7 @@ export default function StatusTimeline({ status }: StatusTimelineProps) {
           fontWeight: 600,
         }}
       >
-        ✕ Request cancelled
+        ✕ {t('cancelled')}
       </div>
     );
   }
@@ -62,13 +53,13 @@ export default function StatusTimeline({ status }: StatusTimelineProps) {
         gap: 0,
       }}
     >
-      {STEPS.map((step, i) => {
+      {STEP_KEYS.map((key, i) => {
         const done = i < currentIndex;
         const current = i === currentIndex;
 
         return (
           <div
-            key={step.key}
+            key={key}
             style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}
           >
             {/* Circle */}
@@ -125,12 +116,12 @@ export default function StatusTimeline({ status }: StatusTimelineProps) {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {step.label}
+                {t(key)}
               </span>
             </div>
 
             {/* Connector line */}
-            {i < STEPS.length - 1 && (
+            {i < STEP_KEYS.length - 1 && (
               <div
                 style={{
                   height: 2,

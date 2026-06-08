@@ -8,6 +8,7 @@ import {
   type FavouritePlace,
 } from '@/lib/api/savedLocations';
 import { reverseGeocode } from '@/lib/nominatim';
+import { useTranslations } from 'next-intl';
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
 const CAIRO   = { lat: 30.0444, lng: 31.2357 };
@@ -35,6 +36,8 @@ interface MapPickerProps {
 }
 
 function LocationPickerMap({ initial, onConfirm, onClose }: MapPickerProps) {
+  const tc = useTranslations('common');
+  const ts = useTranslations('saved_locations');
   const { isLoaded } = useJsApiLoader({ id: 'google-map-script', googleMapsApiKey: API_KEY });
   const mapRef    = useRef<google.maps.Map | null>(null);
   const [marker,  setMarker]  = useState<{ lat: number; lng: number } | null>(initial ?? null);
@@ -85,15 +88,15 @@ function LocationPickerMap({ initial, onConfirm, onClose }: MapPickerProps) {
           className="text-sm text-[#5A6A7A] hover:text-[#0B1E3D]"
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
         >
-          ← Back
+          ← {tc('back')}
         </button>
-        <h2 className="text-sm font-semibold text-[#0B1E3D] flex-1">Tap to pick a location</h2>
+        <h2 className="text-sm font-semibold text-[#0B1E3D] flex-1">{ts('open_map')}</h2>
       </div>
 
       {/* Map */}
       <div className="flex-1 relative">
         {!isLoaded ? (
-          <div className="absolute inset-0 flex items-center justify-center text-sm text-[#5A6A7A]">Loading map…</div>
+          <div className="absolute inset-0 flex items-center justify-center text-sm text-[#5A6A7A]">{tc('loading')}</div>
         ) : (
           <GoogleMap
             mapContainerStyle={{ width: '100%', height: '100%' }}
@@ -144,7 +147,7 @@ function LocationPickerMap({ initial, onConfirm, onClose }: MapPickerProps) {
         {marker ? (
           <>
             <p className="text-xs text-[#5A6A7A] mb-3 line-clamp-2">
-              {resolving ? 'Resolving address…' : (address || `${marker.lat.toFixed(6)}, ${marker.lng.toFixed(6)}`)}
+              {resolving ? ts('resolving') : (address || `${marker.lat.toFixed(6)}, ${marker.lng.toFixed(6)}`)}
             </p>
             <button
               onClick={() => onConfirm(marker.lat, marker.lng, address)}
@@ -152,11 +155,11 @@ function LocationPickerMap({ initial, onConfirm, onClose }: MapPickerProps) {
               className="w-full h-12 bg-[#00C2A8] text-[#0B1E3D] font-semibold rounded-xl text-sm disabled:opacity-50"
               style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
             >
-              Confirm location
+              {tc('confirm')}
             </button>
           </>
         ) : (
-          <p className="text-sm text-[#8A9AB0] text-center">No location selected yet</p>
+          <p className="text-sm text-[#8A9AB0] text-center">{ts('open_map')}</p>
         )}
       </div>
     </div>
@@ -165,7 +168,7 @@ function LocationPickerMap({ initial, onConfirm, onClose }: MapPickerProps) {
 
 // ─── Add / Edit Form Modal ────────────────────────────────────────────────────
 
-const QUICK_NICKS = ['Home', 'Work'];
+const QUICK_NICK_KEYS = ['home', 'work'] as const;
 
 interface FormModalProps {
   onClose: () => void;
@@ -173,6 +176,9 @@ interface FormModalProps {
 }
 
 function AddLocationModal({ onClose, onSaved }: FormModalProps) {
+  const tc = useTranslations('common');
+  const ts = useTranslations('saved_locations');
+  const tu = useTranslations('profile_user');
   const [nickname,      setNickname]      = useState('');
   const [locationName,  setLocationName]  = useState('');
   const [lat,           setLat]           = useState<number | null>(null);
@@ -183,9 +189,9 @@ function AddLocationModal({ onClose, onSaved }: FormModalProps) {
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!nickname.trim()) e.nickname = 'Nickname is required';
-    if (!locationName.trim()) e.locationName = 'Location name is required';
-    if (lat === null || lng === null) e.location = 'Pick a location on the map';
+    if (!nickname.trim()) e.nickname = ts('name_required');
+    if (!locationName.trim()) e.locationName = ts('address_required');
+    if (lat === null || lng === null) e.location = ts('open_map');
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -201,7 +207,7 @@ function AddLocationModal({ onClose, onSaved }: FormModalProps) {
         longitude:     lng,
       });
       onSaved(place);
-      toast.success('Location saved');
+      toast.success(ts('save_place'));
       onClose();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to save');
@@ -233,7 +239,7 @@ function AddLocationModal({ onClose, onSaved }: FormModalProps) {
         style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0]">
-          <h2 className="text-base font-semibold text-[#0B1E3D]">Add favourite place</h2>
+          <h2 className="text-base font-semibold text-[#0B1E3D]">{ts('save_place')}</h2>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F1F3F4] text-[#5A6A7A]">✕</button>
         </div>
 
@@ -244,20 +250,22 @@ function AddLocationModal({ onClose, onSaved }: FormModalProps) {
               Nickname <span className="text-[#E74C3C]">*</span>
             </label>
             <div className="flex gap-2 mb-2">
-              {QUICK_NICKS.map((n) => (
+              {QUICK_NICK_KEYS.map((key) => {
+                const label = tu(`location_${key}`);
+                return (
                 <button
-                  key={n}
+                  key={key}
                   type="button"
-                  onClick={() => { setNickname(n); setErrors((p) => ({ ...p, nickname: '' })); }}
+                  onClick={() => { setNickname(label); setErrors((p) => ({ ...p, nickname: '' })); }}
                   className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
-                    nickname === n
+                    nickname === label
                       ? 'border-[#00C2A8] bg-[#EFF7F6] text-[#0B1E3D]'
                       : 'border-[#E2E8F0] bg-white text-[#5A6A7A]'
                   }`}
                 >
-                  {nickIcon(n)} {n}
+                  {nickIcon(key)} {label}
                 </button>
-              ))}
+              );})}
             </div>
             <input
               value={nickname}
@@ -303,7 +311,7 @@ function AddLocationModal({ onClose, onSaved }: FormModalProps) {
               </svg>
               {lat !== null
                 ? `${lat.toFixed(5)}, ${lng?.toFixed(5)}`
-                : 'Open map to pick location'}
+                : ts('open_map')}
             </button>
             {errors.location && <p className="text-xs text-[#E74C3C] mt-1">{errors.location}</p>}
           </div>
@@ -314,14 +322,14 @@ function AddLocationModal({ onClose, onSaved }: FormModalProps) {
             onClick={onClose}
             className="flex-1 h-11 border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#5A6A7A] hover:bg-[#F8F9FA]"
           >
-            Cancel
+            {tc('cancel')}
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
             className="flex-1 h-11 bg-[#0B1E3D] text-white rounded-xl text-sm font-semibold disabled:opacity-50"
           >
-            {saving ? 'Saving…' : 'Save place'}
+            {saving ? tc('loading') : ts('save_place')}
           </button>
         </div>
       </div>
@@ -332,6 +340,9 @@ function AddLocationModal({ onClose, onSaved }: FormModalProps) {
 // ─── Main Section ─────────────────────────────────────────────────────────────
 
 export default function SavedLocationsSection() {
+  const tp = useTranslations('profile_mobile');
+  const tu = useTranslations('profile_user');
+  const tc = useTranslations('common');
   const [places,           setPlaces]           = useState<FavouritePlace[]>([]);
   const [loading,          setLoading]          = useState(true);
   const [addOpen,          setAddOpen]          = useState(false);
@@ -359,19 +370,19 @@ export default function SavedLocationsSection() {
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-bold text-[#0B1E3D]">Favourite Places</h3>
+        <h3 className="text-base font-bold text-[#0B1E3D]">{tp('favorite_places')}</h3>
         <button
           onClick={() => setAddOpen(true)}
           className="flex items-center gap-1.5 text-sm font-semibold text-[#00C2A8] hover:text-[#009e88]"
         >
-          <span className="text-lg leading-none">+</span> Add place
+          <span className="text-lg leading-none">+</span> {tu('add_location_btn')}
         </button>
       </div>
 
       {loading ? (
-        <div className="py-6 text-center text-sm text-[#8A9AB0]">Loading…</div>
+        <div className="py-6 text-center text-sm text-[#8A9AB0]">{tc('loading')}</div>
       ) : places.length === 0 ? (
-        <div className="py-6 text-center text-sm text-[#5A6A7A]">No favourite places saved yet</div>
+        <div className="py-6 text-center text-sm text-[#5A6A7A]">{tp('locations_empty')}</div>
       ) : (
         <div className="flex flex-col gap-2">
           {places.map((place) => (

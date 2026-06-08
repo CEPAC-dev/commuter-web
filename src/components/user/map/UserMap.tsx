@@ -5,6 +5,7 @@ import { GoogleMap, useJsApiLoader, Marker, Circle, OverlayView } from '@react-g
 import { MAP_STYLE } from '@/lib/googleMapsStyle';
 import { useMap } from '@/lib/MapContext';
 import toast from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
 
@@ -68,7 +69,8 @@ export default function UserMap({
   pickingField = null,
   onMapPick,
   walk_minutes = 0,
-}: UserMapProps) {  
+}: UserMapProps) {
+  const t = useTranslations('map');
   const { origin: from, destination: to, routes, stops } = useMap();
   const viaStops = stops.filter((s): s is NonNullable<typeof s> => s !== null);
   const { isLoaded } = useJsApiLoader({ id: 'google-map-script', googleMapsApiKey: API_KEY });
@@ -165,7 +167,7 @@ export default function UserMap({
       const lat = e.latLng.lat();
       const lng = e.latLng.lng();
       if (!isInCairo(lat, lng)) {
-        toast.error('Only locations within Greater Cairo are allowed');
+        toast.error(t('cairo_only'));
         return;
       }
       onMapPick(lat, lng);

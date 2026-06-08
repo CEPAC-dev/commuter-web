@@ -14,10 +14,11 @@ import FavoritePlacesModal from './FavoritePlacesModal';
 import RelatedPassengersModal from './RelatedPassengersModal';
 import { useAuth } from '@/lib/auth/AuthContext';
 import authApi from '@/lib/api/auth';
+import { useTranslations } from 'next-intl';
 
 const menuItems = [
-  { label: 'My Wallet', icon: Wallet, href: '/user/wallet' },
-  { label: 'Security',  icon: Shield, href: '/user/profile/security' },
+  { labelKey: 'menu_wallet', icon: Wallet, href: '/user/wallet' },
+  { labelKey: 'menu_security',  icon: Shield, href: '/user/profile/security' },
 ] as const;
 
 function formatAddress(p: UserProfile) {
@@ -37,6 +38,7 @@ const PROFILE_DEFAULTS: UserProfile = {
 };
 
 export default function ProfileMobile() {
+  const tp = useTranslations('profile_mobile');
   const router    = useRouter();
   const { logout, updateName, profilePhoto, updateProfilePhoto } = useAuth();
   const [profile,  setProfile]  = useState<UserProfile | null>(null);
@@ -51,7 +53,7 @@ export default function ProfileMobile() {
     const file = e.target.files?.[0];
     if (!file) return;
     const MAX_SIZE = 2 * 1024 * 1024;
-    if (file.size > MAX_SIZE) { alert('Image must be under 2 MB'); return; }
+    if (file.size > MAX_SIZE) { alert(tp('photo_size_error')); return; }
     const reader = new FileReader();
     reader.onload = () => updateProfilePhoto(reader.result as string);
     reader.readAsDataURL(file);
@@ -89,9 +91,9 @@ export default function ProfileMobile() {
   }
 
   const infoRows = [
-    { icon: <Phone      size={20} color="#00C2A8" />, label: 'Mobile',        value: profile?.phone           || '—' },
-    { icon: <MessageSquare size={20} color="#00C2A8" />, label: 'WhatsApp',  value: profile?.whatsapp_number  || '—' },
-    { icon: <MapPin     size={20} color="#00C2A8" />, label: 'Address',       value: profile ? formatAddress(profile) : '—' },
+    { icon: <Phone      size={20} color="#00C2A8" />, label: tp('label_mobile'),   value: profile?.phone           || '—' },
+    { icon: <MessageSquare size={20} color="#00C2A8" />, label: tp('label_whatsapp'), value: profile?.whatsapp_number  || '—' },
+    { icon: <MapPin     size={20} color="#00C2A8" />, label: tp('label_address'),  value: profile ? formatAddress(profile) : '—' },
   ];
 
   return (
@@ -99,7 +101,7 @@ export default function ProfileMobile() {
 
       {/* Title */}
       <h1 style={{ fontSize: 26, fontWeight: 800, color: '#0B1E3D', margin: '0 0 18px 0', padding: '0 20px' }}>
-        Profile
+        {tp('title')}
       </h1>
 
       {/* Profile card */}
@@ -109,7 +111,7 @@ export default function ProfileMobile() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
           <div
             onClick={() => photoInputRef.current?.click()}
-            title="Change profile photo"
+            title={tp('photo_title')}
             style={{ width: 56, height: 56, borderRadius: '50%', background: '#00C2A8', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EFF7F6', fontWeight: 800, fontSize: 20, flexShrink: 0, cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
           >
             {profilePhoto
@@ -166,8 +168,8 @@ export default function ProfileMobile() {
             <Sliders size={18} color="#00C2A8" strokeWidth={1.8} />
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#0B1E3D', lineHeight: 1.2 }}>My preferences</div>
-            <div style={{ fontSize: 12, color: '#5A6A7A', marginTop: 2 }}>Set your ride preferences to help drivers match your style.</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#0B1E3D', lineHeight: 1.2 }}>{tp('prefs_title')}</div>
+            <div style={{ fontSize: 12, color: '#5A6A7A', marginTop: 2 }}>{tp('prefs_subtitle')}</div>
           </div>
           <ChevronRight size={18} color="#94A3B8" />
         </button>
@@ -175,7 +177,7 @@ export default function ProfileMobile() {
 
       {/* Menu items */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '0 16px', marginBottom: 24 }}>
-        {menuItems.map(({ label, icon: Icon, href }) => (
+        {menuItems.map(({ labelKey, icon: Icon, href }) => (
           <a
             key={href}
             href={href}
@@ -184,7 +186,7 @@ export default function ProfileMobile() {
             <div style={{ width: 46, height: 46, borderRadius: 12, background: '#EFF7F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Icon size={22} color="#00C2A8" strokeWidth={1.8} />
             </div>
-            <span style={{ flex: 1, fontSize: 16, fontWeight: 600, color: '#0B1E3D' }}>{label}</span>
+            <span style={{ flex: 1, fontSize: 16, fontWeight: 600, color: '#0B1E3D' }}>{tp(labelKey)}</span>
             <ChevronRight size={20} color="#94A3B8" />
           </a>
         ))}
@@ -197,7 +199,7 @@ export default function ProfileMobile() {
           <div style={{ width: 46, height: 46, borderRadius: 12, background: '#EFF7F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Bookmark size={22} color="#00C2A8" strokeWidth={1.8} />
           </div>
-          <span style={{ flex: 1, fontSize: 16, fontWeight: 600, color: '#0B1E3D' }}>Favorite Places</span>
+          <span style={{ flex: 1, fontSize: 16, fontWeight: 600, color: '#0B1E3D' }}>{tp('favorite_places')}</span>
           <ChevronRight size={20} color="#94A3B8" />
         </button>
 
@@ -209,7 +211,7 @@ export default function ProfileMobile() {
           <div style={{ width: 46, height: 46, borderRadius: 12, background: '#EFF7F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Users size={22} color="#00C2A8" strokeWidth={1.8} />
           </div>
-          <span style={{ flex: 1, fontSize: 16, fontWeight: 600, color: '#0B1E3D' }}>Related Passengers</span>
+          <span style={{ flex: 1, fontSize: 16, fontWeight: 600, color: '#0B1E3D' }}>{tp('related_passengers')}</span>
           <ChevronRight size={20} color="#94A3B8" />
         </button>
       </div>
@@ -221,7 +223,7 @@ export default function ProfileMobile() {
           style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '14px', borderRadius: 18, border: '1.5px solid #EF4444', background: '#fff', color: '#EF4444', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
         >
           <LogOut size={20} color="#EF4444" />
-          Log out
+          {tp('log_out')}
         </button>
       </div>
 

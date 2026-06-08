@@ -8,14 +8,20 @@ import { MapProvider, useMap } from '@/lib/MapContext';
 import { searchAddress, formatDisplayName, getPlaceDetails } from '@/lib/nominatim';
 import type { GeoLocation } from '@/types/shared';
 import type { NominatimResult } from '@/lib/nominatim';
+import { useTranslations } from 'next-intl';
+
+function ReturnMapLoading() {
+  const t = useTranslations('return_map');
+  return (
+    <div style={{ width: '100%', height: '100%', background: '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5A6A7A', fontSize: 14 }}>
+      {t('loading')}
+    </div>
+  );
+}
 
 const UserMap = dynamic(() => import('@/components/user/map/UserMap'), {
   ssr: false,
-  loading: () => (
-    <div style={{ width: '100%', height: '100%', background: '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5A6A7A', fontSize: 14 }}>
-      Loading map…
-    </div>
-  ),
+  loading: () => <ReturnMapLoading />,
 });
 
 // ── Minimal location field ────────────────────────────────────────────────────
@@ -77,6 +83,9 @@ function LocField({ label, icon, value, onChange, onSelect, onClear, results, lo
 // ── Inner page ────────────────────────────────────────────────────────────────
 
 function ReturnMapInner() {
+  const t = useTranslations('return_map');
+  const tLive = useTranslations('trip_live');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const searchParams = useSearchParams();
   const slotId = searchParams.get('slotId') ?? '';
@@ -150,7 +159,7 @@ function ReturnMapInner() {
 
   // Slot number from wizard
   const slotIndex = wizard.time_slots.findIndex(s => s.id === slotId);
-  const slotLabel = slotIndex >= 0 ? `Time slot ${slotIndex + 1}` : 'this time slot';
+  const slotLabel = slotIndex >= 0 ? tLive('time_slot', { n: slotIndex + 1 }) : tLive('this_time_slot');
 
   return (
     <div dir="ltr" style={{ width: '100vw', height: 'calc(100dvh - 64px)', overflow: 'hidden', position: 'relative' }}>
@@ -166,16 +175,16 @@ function ReturnMapInner() {
         {/* Info bar */}
         <div style={{ background: '#EFF7F6', borderLeft: '3px solid #00C2A8', borderRadius: 8, padding: '8px 12px', marginBottom: 10 }}>
           <p style={{ fontSize: 13, fontWeight: 600, color: '#0B1E3D', marginBottom: 2 }}>
-            ↩ Return route for {slotLabel}
+            ↩ {t('title', { slot: slotLabel })}
           </p>
           <p style={{ fontSize: 11, color: '#5A6A7A' }}>
-            Swapped from your outbound route. Edit if needed.
+            {t('swapped_note')}
           </p>
         </div>
 
         {/* FROM */}
         <LocField
-          label="FROM"
+          label={t('from')}
           icon={<div style={{ width: 10, height: 10, borderRadius: '50%', background: '#0B1E3D', border: '2.5px solid #00C2A8' }} />}
           value={fromText}
           onChange={handleFromInput}
@@ -183,14 +192,14 @@ function ReturnMapInner() {
           onClear={clearFrom}
           results={fromResults}
           loading={fromLoading}
-          placeholder="Return origin…"
+          placeholder={t('origin_placeholder')}
         />
 
         <div style={{ height: 1, background: '#E2E8F0', margin: '8px 0' }} />
 
         {/* TO */}
         <LocField
-          label="TO"
+          label={t('to')}
           icon={<div style={{ width: 10, height: 10, borderRadius: '50%', background: '#00C2A8' }} />}
           value={toText}
           onChange={handleToInput}
@@ -198,7 +207,7 @@ function ReturnMapInner() {
           onClear={clearTo}
           results={toResults}
           loading={toLoading}
-          placeholder="Return destination…"
+          placeholder={t('dest_placeholder')}
         />
       </div>
 
@@ -209,15 +218,15 @@ function ReturnMapInner() {
           className="sm:bottom-0 bottom-16"
         >
           <div>
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#0B1E3D' }}>{route.distance_km.toFixed(1)} km</span>
-            <span style={{ fontSize: 14, color: '#5A6A7A', marginLeft: 8 }}>· ~{Math.round(route.duration_minutes)} min</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: '#0B1E3D' }}>{route.distance_km.toFixed(1)} {tCommon('km')}</span>
+            <span style={{ fontSize: 14, color: '#5A6A7A', marginLeft: 8 }}>· ~{Math.round(route.duration_minutes)} {tCommon('min')}</span>
           </div>
           <button
             onClick={handleSave}
             disabled={!canSave}
             style={{ padding: '10px 24px', background: '#00C2A8', color: '#0B1E3D', fontWeight: 700, borderRadius: 12, fontSize: 14, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            Use this route →
+            {t('use_route')}
           </button>
         </div>
       )}

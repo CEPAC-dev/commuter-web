@@ -5,6 +5,7 @@ import { X, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import userApi from '@/lib/api/user';
 import type { CommutePreferences } from '@/types/user';
+import { useTranslations } from 'next-intl';
 
 const DEFAULTS: CommutePreferences = {
   gender_preference:           'any',
@@ -77,6 +78,7 @@ interface Props {
 }
 
 export default function PreferencesModal({ isOpen, onClose }: Props) {
+  const t = useTranslations('preferences_modal');
   const [prefs,   setPrefs]   = useState<CommutePreferences>(DEFAULTS);
   const [loading, setLoading] = useState(false);
   const [saving,  setSaving]  = useState(false);
@@ -99,10 +101,10 @@ export default function PreferencesModal({ isOpen, onClose }: Props) {
     setSaving(true);
     try {
       await userApi.updatePreferences(prefs);
-      toast.success('Preferences saved!');
+      toast.success(t('save_success'));
       onClose();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save preferences.');
+      toast.error(err instanceof Error ? err.message : t('save_failed'));
     } finally {
       setSaving(false);
     }
@@ -148,8 +150,8 @@ export default function PreferencesModal({ isOpen, onClose }: Props) {
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 20px 16px' }}>
           <div>
-            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0B1E3D', margin: 0 }}>Ride preferences</h2>
-            <p style={{ fontSize: 13, color: '#5A6A7A', margin: '4px 0 0' }}>Tell drivers how you prefer to ride.</p>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0B1E3D', margin: 0 }}>{t('title')}</h2>
+            <p style={{ fontSize: 13, color: '#5A6A7A', margin: '4px 0 0' }}>{t('subtitle')}</p>
           </div>
           <button
             onClick={onClose}
@@ -168,89 +170,89 @@ export default function PreferencesModal({ isOpen, onClose }: Props) {
           ) : (
             <>
               <SelectField
-                label="Gender preference"
+                label={t('gender_pref')}
                 value={prefs.gender_preference}
                 onChange={(v) => set('gender_preference', v as CommutePreferences['gender_preference'])}
                 options={[
-                  { value: 'any',    label: 'Any' },
-                  { value: 'male',   label: 'Male only' },
-                  { value: 'female', label: 'Female only' },
+                  { value: 'any',    label: t('gender_any') },
+                  { value: 'male',   label: t('gender_male_only') },
+                  { value: 'female', label: t('gender_female_only') },
                 ]}
               />
 
               <SelectField
-                label="Smoking allowed"
+                label={t('smoking')}
                 value={String(prefs.smoking_allowed)}
                 onChange={(v) => set('smoking_allowed', v === 'true')}
                 options={[
-                  { value: 'false', label: 'Not allowed' },
-                  { value: 'true',  label: 'Allowed' },
+                  { value: 'false', label: t('smoking_no') },
+                  { value: 'true',  label: t('smoking_yes') },
                 ]}
               />
 
               <SelectField
-                label="Interaction level"
+                label={t('interaction')}
                 value={prefs.interaction_level}
                 onChange={(v) => set('interaction_level', v as CommutePreferences['interaction_level'])}
                 options={[
-                  { value: 'quiet',     label: 'Quiet' },
-                  { value: 'normal',    label: 'Normal' },
-                  { value: 'talkative', label: 'Talkative' },
+                  { value: 'quiet',     label: t('interaction_quiet') },
+                  { value: 'normal',    label: t('interaction_normal') },
+                  { value: 'talkative', label: t('interaction_talkative') },
                 ]}
               />
 
               <SelectField
-                label="Children allowed"
+                label={t('children')}
                 value={String(prefs.children_allowed)}
                 onChange={(v) => set('children_allowed', v === 'true')}
                 options={[
-                  { value: 'true',  label: 'Allowed' },
-                  { value: 'false', label: 'Not allowed' },
+                  { value: 'true',  label: t('children_yes') },
+                  { value: 'false', label: t('children_no') },
                 ]}
               />
 
               <SelectField
-                label="Music preference"
+                label={t('music')}
                 value={prefs.music_preference}
                 onChange={(v) => set('music_preference', v as CommutePreferences['music_preference'])}
                 options={[
-                  { value: 'no_music', label: 'No music' },
-                  { value: 'low',      label: 'Low volume' },
-                  { value: 'normal',   label: 'Normal' },
+                  { value: 'no_music', label: t('music_none') },
+                  { value: 'low',      label: t('music_low') },
+                  { value: 'normal',   label: t('music_normal') },
                 ]}
               />
 
               <SelectField
-                label="Seat preference"
+                label={t('seat')}
                 value={prefs.seat_preference}
                 onChange={(v) => set('seat_preference', v as CommutePreferences['seat_preference'])}
                 options={[
-                  { value: 'any',   label: 'Any seat' },
-                  { value: 'front', label: 'Front' },
-                  { value: 'back',  label: 'Back' },
+                  { value: 'any',   label: t('seat_any') },
+                  { value: 'front', label: t('seat_front') },
+                  { value: 'back',  label: t('seat_back') },
                 ]}
               />
 
               <SelectField
-                label="Walking distance"
+                label={t('walking')}
                 value={prefs.walking_distance_preference}
                 onChange={(v) => set('walking_distance_preference', v as CommutePreferences['walking_distance_preference'])}
                 options={[
-                  { value: 'no_walk',          label: 'No walking' },
-                  { value: 'less_than_5_min',  label: 'Less than 5 min' },
-                  { value: '5_to_10_min',      label: '5 to 10 min' },
-                  { value: 'more_than_10_min', label: 'More than 10 min' },
+                  { value: 'no_walk',          label: t('walking_none') },
+                  { value: 'less_than_5_min',  label: t('walking_5') },
+                  { value: '5_to_10_min',      label: t('walking_10') },
+                  { value: 'more_than_10_min', label: t('walking_more') },
                 ]}
               />
 
               <SelectField
-                label="Air conditioning"
+                label={t('ac')}
                 value={prefs.air_conditioning_preference}
                 onChange={(v) => set('air_conditioning_preference', v as CommutePreferences['air_conditioning_preference'])}
                 options={[
-                  { value: 'not_important',          label: 'Not important' },
-                  { value: 'preferred_if_available', label: 'Preferred if available' },
-                  { value: 'mandatory',              label: 'Mandatory' },
+                  { value: 'not_important',          label: t('ac_not_important') },
+                  { value: 'preferred_if_available', label: t('ac_preferred') },
+                  { value: 'mandatory',              label: t('ac_mandatory') },
                 ]}
               />
             </>
@@ -272,7 +274,7 @@ export default function PreferencesModal({ isOpen, onClose }: Props) {
             }}
           >
             {saving && <Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} />}
-            Save preferences
+            {t('save_btn')}
           </button>
         </div>
       </div>

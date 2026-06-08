@@ -79,25 +79,15 @@ available → submitted → matching → driver_offered → confirmed → active
 |---|---|
 | `/driver/sign-up` | Multi-step registration wizard (personal info, car details, document uploads) |
 | `/driver/sign-in` | Driver login |
-| `/driver/dashboard` | Overview: earnings summary, active cycle status, quick stats |
-| `/driver/requests` | Browse open passenger requests — filter, sort, accept, reject, or raise price |
-| `/driver/requests/[requestId]` | Full request detail view |
+| `/driver/onboarding` | Complete driver profile setup (vehicle details, documents, ride preferences) |
 | `/driver/my-requests` | Requests the driver has responded to (driver_offered / price_raised) |
 | `/driver/my-cycles` | All confirmed and completed cycles — Pending, Currently Active, Completed tabs |
 | `/driver/profile` | Personal info, car details, document management, stats |
 
 ### Key Features
 
-**Request browsing (`/driver/requests`)**
-- Filter by trip type (Shared / Private), gender preference (Same / Mixed), and walk tolerance (0 / 5 / 10 min)
-- Each `RequestCard` shows: origin → destination, distance, days, arrival window, base price, estimated range, gender badge, trip type badge
-- Gender eligibility is enforced: if a request requires "same gender", it's only actionable if the driver's gender matches
-- Actions per card: **Accept**, **Reject**, **Raise price**, **See details**
-
-**Request detail drawer (`RequestDetailDrawer`)**
-- Five sections: Trip Summary · Passenger Preferences · Schedule · Pickup Stops table · Pickup Map
-- Pickup map shows a route polyline + a walk-radius circle around each pickup point (400 m for 5 min, 800 m for 10 min)
-- Sticky action bar at the bottom: Accept / Reject / Raise price — disabled if gender mismatch
+**Request browsing (`/driver/my-requests`)**
+- Requests the driver has responded to with statuses: driver_offered or price_raised
 - Schedule section shows arrival window (`arrival_from` – `arrival_to`) and the computed departure window
 
 **Raise price modal (`RaisePriceModal`)**
@@ -241,7 +231,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 - `/` — role picker (User / Driver)
 - `/user/map` — start as a passenger
-- `/driver/requests` — start as a driver
+- `/driver/sign-in` — start as a driver
 
 ## Deploy on Vercel
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 import {
   topUp,
   getTransactions,
@@ -17,6 +18,7 @@ function ConfirmDialog({
   title,
   message,
   confirmLabel,
+  cancelLabel,
   confirmColor,
   onConfirm,
   onCancel,
@@ -24,6 +26,7 @@ function ConfirmDialog({
   title: string;
   message: string;
   confirmLabel: string;
+  cancelLabel: string;
   confirmColor: string;
   onConfirm: () => void;
   onCancel: () => void;
@@ -64,7 +67,7 @@ function ConfirmDialog({
             onClick={onCancel}
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: 700, color: '#00C2A8', fontFamily: 'inherit', padding: '4px 0' }}
           >
-            Cancel
+            {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
@@ -83,7 +86,7 @@ function formatDate(iso: string): string {
   return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()} · ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, label }: { status: string; label: string }) {
   const upper = status.toUpperCase();
   const colorMap: Record<string, { bg: string; color: string }> = {
     PENDING:   { bg: '#FFF3E0', color: '#F57C00' },
@@ -103,7 +106,7 @@ function StatusBadge({ status }: { status: string }) {
         color: style.color,
       }}
     >
-      {upper}
+      {label}
     </span>
   );
 }
@@ -119,6 +122,8 @@ function TransactionCard({
   onConfirm: (id: number, updated: WalletTransaction) => void;
   onUpdate: (id: number, updated: WalletTransaction) => void;
 }) {
+  const t = useTranslations('wallet');
+  const tCommon = useTranslations('common');
   const [deleting, setDeleting]     = useState(false);
   const [confirming, setConfirming]  = useState(false);
   const [editing, setEditing]        = useState(false);
@@ -126,14 +131,21 @@ function TransactionCard({
   const [saving, setSaving]          = useState(false);
   const [showDeleteDlg, setShowDeleteDlg] = useState(false);
 
+  const statusLabels: Record<string, string> = {
+    pending: t('status_pending'),
+    completed: t('status_completed'),
+    failed: t('status_failed'),
+  };
+  const statusLabel = statusLabels[tx.status] ?? tx.status.toUpperCase();
+
   async function handleDelete() {
     setDeleting(true);
     try {
       await deleteTransaction(tx.id);
       onDelete(tx.id);
-      toast.success('Transaction deleted');
+      toast.success(t('transaction_deleted'));
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Delete failed');
+      toast.error(err instanceof Error ? err.message : t('delete_failed'));
     } finally {
       setDeleting(false);
     }
@@ -146,16 +158,15 @@ function TransactionCard({
       const paymentUrl = `${base}/kashier/payment/${tx.id}`;
       onConfirm(tx.id, tx);
       window.location.href = paymentUrl;
-      // keep confirming=true so button shows "Redirecting…" while browser navigates
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Redirect failed');
+      toast.error(err instanceof Error ? err.message : t('redirect_failed'));
       setConfirming(false);
     }
   }
 
   async function handleSaveEdit() {
     const amount = Number(editAmount);
-    if (!amount || amount < 1) { toast.error('Enter a valid amount'); return; }
+    if (!amount || amount < 1) { toast.error(t('enter_valid_amount_short')); return; }
     setSaving(true);
     try {
       const res = await updateTransaction(tx.id, {
@@ -165,9 +176,9 @@ function TransactionCard({
       });
       onUpdate(tx.id, res.data);
       setEditing(false);
-      toast.success('Transaction updated');
+      toast.success(t('transaction_updated'));
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Update failed');
+      toast.error(err instanceof Error ? err.message : t('update_failed'));
     } finally {
       setSaving(false);
     }
@@ -177,9 +188,10 @@ function TransactionCard({
     <>
       {showDeleteDlg && (
         <ConfirmDialog
-          title="Delete transaction?"
-          message={`Are you sure you want to delete this EGP ${Number(tx.transaction_amount).toFixed(2)} ${tx.operation_type}? This cannot be undone.`}
-          confirmLabel={deleting ? 'Deleting…' : 'Delete'}
+          title={t('delete_title')}
+          message={t('delete_message', { amount: Number(tx.transaction_amount).toFixed(2), type: tx.operation_type })}
+          confirmLabel={deleting ? t('deleting') : tCommon('delete')}
+          cancelLabel={tCommon('cancel')}
           confirmColor="#E74C3C"
           onConfirm={() => { setShowDeleteDlg(false); handleDelete(); }}
           onCancel={() => setShowDeleteDlg(false)}
@@ -200,7 +212,7 @@ function TransactionCard({
         <span style={{ fontSize: 15, fontWeight: 700, color: '#0B1E3D', textTransform: 'capitalize' }}>
           {tx.operation_type}
         </span>
-        <StatusBadge status={tx.status} />
+        <StatusBadge status={tx.status} label={statusLabel} />
       </div>
 
       {editing ? (
@@ -229,13 +241,13 @@ function TransactionCard({
             disabled={saving}
             style={{ height: 40, padding: '0 14px', border: 'none', borderRadius: 8, background: '#00C2A8', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.6 : 1 }}
           >
-            {saving ? '…' : 'Save'}
+            {saving ? '…' : tCommon('save')}
           </button>
           <button
             onClick={() => { setEditing(false); setEditAmount(String(tx.transaction_amount)); }}
             style={{ height: 40, padding: '0 12px', border: '1.5px solid #D4DCE8', borderRadius: 8, background: '#fff', color: '#5A6A7A', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            Cancel
+            {tCommon('cancel')}
           </button>
         </div>
       ) : (
@@ -250,7 +262,6 @@ function TransactionCard({
 
       {tx.status === 'pending' && !editing && (
         <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-          {/* Confirm payment */}
           <button
             onClick={handleConfirm}
             disabled={confirming}
@@ -276,9 +287,8 @@ function TransactionCard({
               <rect x="0.5" y="0.5" width="16" height="13" rx="2.5" stroke="#00C2A8"/>
               <rect x="0.5" y="3.5" width="16" height="3" fill="#00C2A8" stroke="#00C2A8"/>
             </svg>
-            {confirming ? 'Redirecting…' : 'Confirm payment'}
+            {confirming ? t('redirecting') : t('confirm_payment')}
           </button>
-          {/* Edit */}
           <button
             onClick={() => setEditing(true)}
             style={{
@@ -293,13 +303,12 @@ function TransactionCard({
               justifyContent: 'center',
               flexShrink: 0,
             }}
-            aria-label="Edit amount"
+            aria-label={t('edit_amount')}
           >
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M10.586 1.586a2 2 0 0 1 2.828 2.828l-9 9A2 2 0 0 1 3 14H1v-2a2 2 0 0 1 .586-1.414l9-9z" stroke="#00C2A8" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
-          {/* Delete */}
           <button
             onClick={() => setShowDeleteDlg(true)}
             disabled={deleting}
@@ -317,7 +326,7 @@ function TransactionCard({
               flexShrink: 0,
               opacity: deleting ? 0.5 : 1,
             }}
-            aria-label="Delete transaction"
+            aria-label={t('delete_transaction')}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M2 4h12M5.333 4V2.667A1.333 1.333 0 0 1 6.667 1.333h2.666A1.333 1.333 0 0 1 10.667 2.667V4M6.667 7.333v4M9.333 7.333v4M3.333 4l.667 9.333A1.333 1.333 0 0 0 5.333 14.667h5.334a1.333 1.333 0 0 0 1.333-1.334L12.667 4" stroke="#E74C3C" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
@@ -331,6 +340,8 @@ function TransactionCard({
 }
 
 export default function WalletPage() {
+  const t = useTranslations('wallet');
+  const tCommon = useTranslations('common');
   const [balance, setBalance] = useState<number>(0);
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -354,17 +365,18 @@ export default function WalletPage() {
         setBalance(balRes.data.last_balance);
         setTransactions(txRes.data);
       } catch {
-        toast.error('Failed to load wallet data');
+        toast.error(t('load_error'));
       } finally {
         setLoading(false);
       }
     }
     load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleTopUp() {
     if (!finalAmount || finalAmount < 1) {
-      toast.error('Please enter a valid amount');
+      toast.error(t('enter_valid_amount'));
       return;
     }
     setShowTopUpDlg(true);
@@ -382,9 +394,9 @@ export default function WalletPage() {
       setTransactions((prev) => [res.data, ...prev]);
       setSelectedAmount(null);
       setCustomAmount('');
-      toast.success('Top-up initiated — confirm payment to complete');
+      toast.success(t('topup_initiated'));
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Top up failed');
+      toast.error(err instanceof Error ? err.message : t('topup_failed'));
     } finally {
       setSubmitting(false);
     }
@@ -396,7 +408,6 @@ export default function WalletPage() {
 
   async function handleConfirm(id: number, updated: WalletTransaction) {
     setTransactions((prev) => prev.map((t) => (t.id === id ? updated : t)));
-    // Refresh balance
     try {
       const balRes = await getLastBalance();
       setBalance(balRes.data.last_balance);
@@ -411,9 +422,10 @@ export default function WalletPage() {
     <div style={{ maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20, padding: '0 4px' }}>
       {showTopUpDlg && (
         <ConfirmDialog
-          title="Confirm top up?"
-          message={`You are about to top up EGP ${Number(finalAmount).toFixed(2)}. You will need to confirm payment after this.`}
-          confirmLabel="Top up"
+          title={t('confirm_topup_title')}
+          message={t('confirm_topup_message', { amount: Number(finalAmount).toFixed(2) })}
+          confirmLabel={t('topup_btn')}
+          cancelLabel={tCommon('cancel')}
           confirmColor="#00C2A8"
           onConfirm={doTopUp}
           onCancel={() => setShowTopUpDlg(false)}
@@ -421,9 +433,10 @@ export default function WalletPage() {
       )}
       {showPendingDlg && (
         <ConfirmDialog
-          title="Pending transactions"
-          message={`You already have ${pendingCount} pending transaction${pendingCount > 1 ? 's' : ''}. Confirm, update, or delete them before topping up again.`}
-          confirmLabel="OK"
+          title={t('pending_title')}
+          message={t('pending_message', { count: pendingCount })}
+          confirmLabel={t('ok')}
+          cancelLabel={tCommon('cancel')}
           confirmColor="#00C2A8"
           onConfirm={() => setShowPendingDlg(false)}
           onCancel={() => setShowPendingDlg(false)}
@@ -459,7 +472,7 @@ export default function WalletPage() {
           </svg>
         </div>
         <div style={{ fontSize: 13, color: '#5A7A75', fontWeight: 500, marginTop: 4 }}>
-          Available balance
+          {t('available_balance')}
         </div>
         <div style={{ fontSize: 36, fontWeight: 900, color: '#0B1E3D', letterSpacing: '-0.02em' }}>
           {loading ? '—' : `EGP ${Number(balance).toFixed(2)}`}
@@ -468,9 +481,8 @@ export default function WalletPage() {
 
       {/* Top up section */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: '#0B1E3D' }}>Top up amount</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: '#0B1E3D' }}>{t('topup_amount')}</div>
 
-        {/* Quick amounts */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
           {QUICK_AMOUNTS.map((a) => (
             <button
@@ -503,7 +515,6 @@ export default function WalletPage() {
           ))}
         </div>
 
-        {/* Custom amount input */}
         <div
           style={{
             display: 'flex',
@@ -524,7 +535,7 @@ export default function WalletPage() {
           <input
             type="number"
             min={1}
-            placeholder="Amount (EGP)"
+            placeholder={t('amount_placeholder')}
             value={customAmount}
             onChange={(e) => {
               const val = e.target.value;
@@ -549,7 +560,6 @@ export default function WalletPage() {
           />
         </div>
 
-        {/* Top up button */}
         <button
           onClick={handleTopUp}
           disabled={submitting || !finalAmount}
@@ -576,21 +586,21 @@ export default function WalletPage() {
             <path d="M0.75 5.5h18.5" stroke="white" strokeWidth="1.5"/>
             <rect x="13" y="8.5" width="4.5" height="3" rx="0.75" fill="white"/>
           </svg>
-          {submitting ? 'Processing…' : 'Top up'}
+          {submitting ? t('processing') : t('topup_btn')}
         </button>
       </div>
 
       {/* Transactions */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 40 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: '#0B1E3D' }}>Your transactions</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: '#0B1E3D' }}>{t('your_transactions')}</div>
 
         {loading ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#8A9AB0', fontSize: 14 }}>
-            Loading…
+            {tCommon('loading')}
           </div>
         ) : transactions.length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#8A9AB0', fontSize: 14 }}>
-            No transactions yet
+            {t('no_transactions')}
           </div>
         ) : (
           transactions.map((tx) => (

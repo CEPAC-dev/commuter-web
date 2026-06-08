@@ -12,21 +12,19 @@ import { sendOtp, verifyOtp } from '@/lib/api/auth';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useRedirectIfAuth } from '@/lib/auth/useRedirectIfAuth';
 import { saveUserData } from '@/lib/auth/tokenStorage';
-import driverApi from '@/lib/api/driver';
 import Step1Info,    { type Step1Data }    from '@/components/auth/user/steps/Step1Info';
 import Step2Address, { type Step2Data }    from '@/components/auth/user/steps/Step2Address';
-import Step3CarDetails, { type Step3CarData } from '@/components/auth/driver/steps/Step3CarDetails';
 import Step3Otp from '@/components/auth/user/steps/Step3Otp';
 
 // ── Step indicator ────────────────────────────────────────────────────────────
 
-const STEPS = ['Personal info', 'Address', 'Car details', 'Verify email'] as const;
+const STEPS = ['Personal info', 'Address', 'Verify email'] as const;
 
-function StepBar({ current }: { current: 1 | 2 | 3 | 4 }) {
+function StepBar({ current }: { current: 1 | 2 | 3 }) {
   return (
     <div className="flex items-center mb-8" role="list" aria-label="Sign-up progress">
       {STEPS.map((label, idx) => {
-        const n      = (idx + 1) as 1 | 2 | 3 | 4;
+        const n      = (idx + 1) as 1 | 2 | 3;
         const done   = n < current;
         const active = n === current;
 
@@ -74,10 +72,9 @@ export default function DriverSignUpWizard() {
   const router = useRouter();
   const { login } = useAuth();
 
-  const [step,          setStep]          = useState<1 | 2 | 3 | 4>(1);
+  const [step,          setStep]          = useState<1 | 2 | 3>(1);
   const [step1Data,     setStep1Data]     = useState<Partial<Step1Data>>({});
   const [step2Data,     setStep2Data]     = useState<Partial<Step2Data>>({});
-  const [step3Data,     setStep3Data]     = useState<Partial<Step3CarData>>({});
   const [loading,       setLoading]       = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [otpError,      setOtpError]      = useState<string | null>(null);
@@ -90,17 +87,11 @@ export default function DriverSignUpWizard() {
     setStep(2);
   }
 
-  function handleStep2(addrData: Step2Data) {
-    setStep2Data(addrData);
-    setStep(3);
-  }
-
-  async function handleStep3(carData: Step3CarData) {
+  async function handleStep2(addrData: Step2Data) {
     if (!step1Data.name) return;
-    setStep3Data(carData);
+    setStep2Data(addrData);
     setLoading(true);
     try {
-      const addrData = step2Data as Step2Data;
       const result = await authApi.register({
         role:                  'driver',
         name:                  step1Data.name!.trim(),
@@ -122,7 +113,7 @@ export default function DriverSignUpWizard() {
       });
       setPendingAuth(result);
       await sendOtp(step1Data.email!.trim());
-      setStep(4);
+      setStep(3);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Sign up failed. Please try again.');
     } finally {
@@ -156,24 +147,6 @@ export default function DriverSignUpWizard() {
           date_of_birth:   step1Data.birthdate ?? '',
           role:            'driver',
         });
-
-        // Save car details immediately after login
-        const carData = step3Data as Step3CarData;
-        try {
-          await driverApi.updateDriverProfile({
-            national_id:    carData.national_id    || null,
-            license_expiry: carData.license_expiry || null,
-            car_type:       carData.car_type       || null,
-            car_brand:      carData.car_brand      || null,
-            car_model:      carData.car_model      || null,
-            car_year:       carData.car_year ? Number(carData.car_year) : null,
-            car_color:      carData.car_color      || null,
-            license_plate:  carData.license_plate  || null,
-            location_name:  carData.location_name  || null,
-          });
-        } catch {
-          // Non-fatal — driver can update later from profile
-        }
 
         toast.success(`Welcome to Commuter, ${step1Data.name!.trim()}! 🎉`);
         router.replace('/driver/onboarding');
@@ -214,20 +187,12 @@ export default function DriverSignUpWizard() {
       {step === 2 && (
         <Step2Address
           initial={step2Data}
-          loading={false}
+          loading={loading}
           onBack={() => setStep(1)}
           onSubmit={handleStep2}
         />
       )}
       {step === 3 && (
-        <Step3CarDetails
-          initial={step3Data}
-          loading={loading}
-          onBack={() => setStep(2)}
-          onNext={handleStep3}
-        />
-      )}
-      {step === 4 && (
         <Step3Otp
           email={step1Data.email ?? ''}
           loading={loading}

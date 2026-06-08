@@ -10,6 +10,7 @@ import {
   ALL_DAYS_SUN_FIRST,
 } from '@/lib/timeUtils';
 import SeatLayoutPicker, { type SeatPassenger } from './SeatLayoutPicker';
+import { useTranslations } from 'next-intl';
 
 const ALL_OPTIONS = getQuarterHourOptions();
 
@@ -53,6 +54,11 @@ export default function PrivateTimeSlotCard({
   onReturnPickupTimeChange, onReturnArrivalChange,
   onRemove,
 }: Props) {
+  const tsl = useTranslations('time_slot');
+  const tf = useTranslations('request_form');
+  const tc = useTranslations('common');
+  const td = useTranslations('days');
+  const dayLabel = (day: WeekDay) => td(day.toLowerCase() as 'sun');
 
   // ── Pickup-time helpers (window 30..120 min) ────────────────────────────────
   const pickupGap = timeDiffMinutes(slot.pickup_from, slot.pickup_to);
@@ -98,7 +104,7 @@ export default function PrivateTimeSlotCard({
             className="text-xs text-[#5A6A7A] hover:underline"
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            ✕ Remove
+            ✕ {tc('delete')}
           </button>
         )}
       </div>
@@ -108,13 +114,13 @@ export default function PrivateTimeSlotCard({
         <label className="block text-sm font-semibold text-[#0B1E3D] mb-2">Pickup time</label>
         <div className="grid grid-cols-2 gap-3">
           <SelectBox
-            label="From"
+            label={tf('arrival_from')}
             value={slot.pickup_from}
             options={ALL_OPTIONS}
             onChange={(v) => onPickupTimeChange(v, addMinutes(v, 15))}
           />
           <SelectBox
-            label="To"
+            label={tf('arrival_to')}
             value={slot.pickup_to}
             options={validPickupToOptions}
             onChange={(v) => onPickupTimeChange(slot.pickup_from, v)}
@@ -132,13 +138,13 @@ export default function PrivateTimeSlotCard({
         <label className="block text-sm font-semibold text-[#0B1E3D] mb-2">Arrival time</label>
         <div className="grid grid-cols-2 gap-3">
           <SelectBox
-            label="From"
+            label={tf('arrival_from')}
             value={slot.arrival_from}
             options={validArrivalFromOptions}
           onChange={(v) => onArrivalChange(v, slot.arrival_to || addMinutes(v, 15))}
           />
           <SelectBox
-            label="To"
+            label={tf('arrival_to')}
             value={slot.arrival_to}
             options={validArrivalToOptions}
             onChange={(v) => onArrivalChange(slot.arrival_from, v)}
@@ -147,7 +153,7 @@ export default function PrivateTimeSlotCard({
         <p className="text-xs text-[#9AA0A6] mt-1">
           {routeDuration > 0
             ? `~${routeDuration} min route + ${BUFFER_MIN} min buffer = ${minTotalGap} min minimum`
-            : 'At least 30 min after pickup ends'}
+            : tsl('min_after_pickup')}
         </p>
       </div>
 
@@ -163,7 +169,7 @@ export default function PrivateTimeSlotCard({
 
       {/* ── Days ─────────────────────────────────────────────────────────────── */}
       <div>
-        <label className="block text-sm font-semibold text-[#0B1E3D] mb-2">Days for this slot</label>
+        <label className="block text-sm font-semibold text-[#0B1E3D] mb-2">{tf('days_label')}</label>
         <div className="flex gap-1.5 flex-wrap">
           {ALL_DAYS_SUN_FIRST.map((day) => {
             const isSelected = slot.days.includes(day);
@@ -182,13 +188,13 @@ export default function PrivateTimeSlotCard({
                       : 'bg-white border-[#E2E8F0] text-[#5A6A7A] hover:border-[#C8E8E4]'
                 }`}
               >
-                {day}
+                {dayLabel(day)}
               </button>
             );
           })}
         </div>
         {slot.days.length === 0 && (
-          <p className="text-xs text-[#E74C3C] mt-1.5">Select at least one day for this slot</p>
+          <p className="text-xs text-[#E74C3C] mt-1.5">{tf('days_label')}</p>
         )}
       </div>
 

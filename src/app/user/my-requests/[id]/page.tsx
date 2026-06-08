@@ -11,15 +11,19 @@ import {
 import { getLastBalance } from '@/lib/api/wallet';
 import PageHeader from '@/components/shared/PageHeader';
 import BottomSheet from '@/components/shared/BottomSheet';
+import { useLocale, useTranslations } from 'next-intl';
 
 // ── Status config ─────────────────────────────────────────────────────────────
 
-const STATUS_CONFIG: Record<CourseStatus, { label: string; bg: string; color: string; border: string }> = {
-  draft:     { label: 'draft',     bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
-  active:    { label: 'active',    bg: '#E8F5E9', color: '#27AE60', border: '#A8D5B5' },
-  completed: { label: 'completed', bg: '#F1F3F4', color: '#5A6A7A', border: '#E2E8F0' },
-  cancelled: { label: 'cancelled', bg: '#FFEBEE', color: '#E74C3C', border: '#FFCDD2' },
-};
+function useStatusConfig() {
+  const t = useTranslations('course_card');
+  return {
+    draft:     { label: t('status_draft'),     bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
+    active:    { label: t('status_active'),    bg: '#E8F5E9', color: '#27AE60', border: '#A8D5B5' },
+    completed: { label: t('status_completed'), bg: '#F1F3F4', color: '#5A6A7A', border: '#E2E8F0' },
+    cancelled: { label: t('status_cancelled'), bg: '#FFEBEE', color: '#E74C3C', border: '#FFCDD2' },
+  } satisfies Record<CourseStatus, { label: string; bg: string; color: string; border: string }>;
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -30,12 +34,11 @@ function fmtTime(hms: string) {
   return `${h}:${String(mm).padStart(2, '0')} ${ampm}`;
 }
 
-function fmtCreatedAt(raw: string) {
-  // "2026-05-24 09:08:54"
+function fmtCreatedAt(raw: string, locale: string) {
   const d = new Date(raw.replace(' ', 'T'));
-  return d.toLocaleDateString('en-EG', {
+  return d.toLocaleDateString(locale, {
     day: 'numeric', month: 'long', year: 'numeric',
-  }) + ' · ' + d.toLocaleTimeString('en-EG', { hour: '2-digit', minute: '2-digit' });
+  }) + ' · ' + d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
 }
 
 // ── SVG Icons ─────────────────────────────────────────────────────────────────
@@ -98,29 +101,40 @@ function IcRoute() {
 
 // ── Matching status helpers ───────────────────────────────────────────────────
 
-const MATCHING_CONFIG: Record<string, { label: string; bg: string; color: string; border: string }> = {
-  PENDING:   { label: 'Pending',   bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
-  MATCHED:   { label: 'Matched',   bg: '#E3F2FD', color: '#1565C0', border: '#90CAF9' },
-  CONFIRMED: { label: 'Confirmed', bg: '#E8F5E9', color: '#27AE60', border: '#A8D5B5' },
-  CANCELLED: { label: 'Cancelled', bg: '#FFEBEE', color: '#E74C3C', border: '#FFCDD2' },
-};
+function useMatchingConfig() {
+  const t = useTranslations('course_card');
+  return {
+    PENDING:   { label: t('status_pending'),   bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
+    MATCHED:   { label: t('status_matched'),   bg: '#E3F2FD', color: '#1565C0', border: '#90CAF9' },
+    CONFIRMED: { label: t('status_confirmed'), bg: '#E8F5E9', color: '#27AE60', border: '#A8D5B5' },
+    CANCELLED: { label: t('status_cancelled'), bg: '#FFEBEE', color: '#E74C3C', border: '#FFCDD2' },
+  };
+}
 
-const INSTANCE_STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; border: string }> = {
-  pending:   { label: 'Pending',   bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
-  matched:   { label: 'Matched',   bg: '#E3F2FD', color: '#1565C0', border: '#90CAF9' },
-  ongoing:   { label: 'Ongoing',   bg: '#E8F0FE', color: '#1A73E8', border: '#93B4F5' },
-  completed: { label: 'Completed', bg: '#F1F3F4', color: '#5A6A7A', border: '#E2E8F0' },
-  cancelled: { label: 'Cancelled', bg: '#FFEBEE', color: '#E74C3C', border: '#FFCDD2' },
-};
+function useInstanceStatusConfig() {
+  const t = useTranslations('course_card');
+  return {
+    pending:   { label: t('status_pending'),   bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
+    matched:   { label: t('status_matched'),   bg: '#E3F2FD', color: '#1565C0', border: '#90CAF9' },
+    ongoing:   { label: t('status_ongoing'),   bg: '#E8F0FE', color: '#1A73E8', border: '#93B4F5' },
+    completed: { label: t('status_completed'), bg: '#F1F3F4', color: '#5A6A7A', border: '#E2E8F0' },
+    cancelled: { label: t('status_cancelled'), bg: '#FFEBEE', color: '#E74C3C', border: '#FFCDD2' },
+  };
+}
 
 // ── Instance card ─────────────────────────────────────────────────────────────
 
 function InstanceCard({ instance, onViewDetails }: { instance: CourseInstance; onViewDetails: () => void }) {
-  const iCfg = INSTANCE_STATUS_CONFIG[instance.status] ?? INSTANCE_STATUS_CONFIG.pending;
-  const mCfg = MATCHING_CONFIG[instance.matching_status] ?? MATCHING_CONFIG.PENDING;
+  const t = useTranslations('trip_detail');
+  const tCommon = useTranslations('common');
+  const locale = useLocale();
+  const instanceStatus = useInstanceStatusConfig();
+  const matchingStatus = useMatchingConfig();
+  const iCfg = instanceStatus[instance.status] ?? instanceStatus.pending;
+  const mCfg = matchingStatus[instance.matching_status] ?? matchingStatus.PENDING;
   const isGo = instance.trip_direction === 'go';
 
-  const dateLabel = new Date(instance.trip_date).toLocaleDateString('en-EG', {
+  const dateLabel = new Date(instance.trip_date).toLocaleDateString(locale, {
     weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
   });
 
@@ -135,7 +149,7 @@ function InstanceCard({ instance, onViewDetails }: { instance: CourseInstance; o
             background: isGo ? '#E0FAF6' : '#F3F0FF', color: isGo ? '#00A896' : '#7C3AED',
             border: `1px solid ${isGo ? '#B2DDD8' : '#C4B5FD'}`,
           }}>
-            {isGo ? '↑ Go' : '↓ Return'}
+            {isGo ? t('go') : t('return')}
           </span>
         </div>
         <span style={{
@@ -162,13 +176,13 @@ function InstanceCard({ instance, onViewDetails }: { instance: CourseInstance; o
       {/* Time + distance */}
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#9AA0A6', marginBottom: 12 }}>
         <span>🕐 {fmtTime(instance.start_time_from)} – {fmtTime(instance.start_time_to)}</span>
-        <span>{instance.route.expected_distance.toFixed(0)} km · ~{instance.route.estimated_duration_minutes} min</span>
+        <span>{instance.route.expected_distance.toFixed(0)} {tCommon('km')} · ~{instance.route.estimated_duration_minutes} {tCommon('min')}</span>
       </div>
 
       {/* Matching row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 11, color: '#9AA0A6', fontWeight: 600 }}>Matching</span>
+          <span style={{ fontSize: 11, color: '#9AA0A6', fontWeight: 600 }}>{t('matching')}</span>
           <span style={{
             fontSize: 11, fontWeight: 700, background: mCfg.bg, color: mCfg.color,
             border: `1px solid ${mCfg.border}`, borderRadius: 20, padding: '2px 8px',
@@ -190,7 +204,7 @@ function InstanceCard({ instance, onViewDetails }: { instance: CourseInstance; o
             cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
-          View details →
+          {t('view_details')}
         </button>
       </div>
     </div>
@@ -200,11 +214,16 @@ function InstanceCard({ instance, onViewDetails }: { instance: CourseInstance; o
 // ── Instance detail sheet ─────────────────────────────────────────────────────
 
 function InstanceDetailSheet({ instance }: { instance: CourseInstance | null }) {
+  const t = useTranslations('trip_detail');
+  const tCommon = useTranslations('common');
+  const locale = useLocale();
+  const instanceStatus = useInstanceStatusConfig();
+  const matchingStatus = useMatchingConfig();
   if (!instance) return null;
-  const iCfg    = INSTANCE_STATUS_CONFIG[instance.status]          ?? INSTANCE_STATUS_CONFIG.pending;
-  const mCfg    = MATCHING_CONFIG[instance.matching_status]        ?? MATCHING_CONFIG.PENDING;
+  const iCfg    = instanceStatus[instance.status]          ?? instanceStatus.pending;
+  const mCfg    = matchingStatus[instance.matching_status]        ?? matchingStatus.PENDING;
   const isGo    = instance.trip_direction === 'go';
-  const dateStr = new Date(instance.trip_date).toLocaleDateString('en-EG', {
+  const dateStr = new Date(instance.trip_date).toLocaleDateString(locale, {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   });
 
@@ -219,7 +238,7 @@ function InstanceDetailSheet({ instance }: { instance: CourseInstance | null }) 
             background: isGo ? '#E0FAF6' : '#F3F0FF', color: isGo ? '#00A896' : '#7C3AED',
             border: `1px solid ${isGo ? '#B2DDD8' : '#C4B5FD'}`,
           }}>
-            {isGo ? '↑ Go' : '↓ Return'}
+            {isGo ? t('go') : t('return')}
           </span>
           <span style={{
             fontSize: 11, fontWeight: 700, background: iCfg.bg, color: iCfg.color,
@@ -229,11 +248,11 @@ function InstanceDetailSheet({ instance }: { instance: CourseInstance | null }) 
           </span>
         </div>
       </div>
-      <p style={{ margin: '0 0 20px', fontSize: 12, color: '#9AA0A6' }}>Trip #{instance.id} · Course #{instance.course_id}</p>
+      <p style={{ margin: '0 0 20px', fontSize: 12, color: '#9AA0A6' }}>{t('trip_ref', { id: instance.id, courseId: instance.course_id })}</p>
 
       {/* Route card */}
       <div style={{ background: '#F8F9FA', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
-        <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: '#9AA0A6', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Route</p>
+        <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: '#9AA0A6', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('route')}</p>
         <div style={{ display: 'flex', gap: 12, marginBottom: 10 }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 4, flexShrink: 0 }}>
             <div style={{ width: 9, height: 9, borderRadius: '50%', border: '2px solid #00C2A8', background: '#fff' }} />
@@ -246,32 +265,32 @@ function InstanceDetailSheet({ instance }: { instance: CourseInstance | null }) 
           </div>
         </div>
         <div style={{ display: 'flex', gap: 16, paddingTop: 10, borderTop: '1px solid #E2E8F0', fontSize: 12, color: '#5A6A7A' }}>
-          <span>📏 {instance.route.expected_distance.toFixed(1)} km</span>
-          <span>⏱ ~{instance.route.estimated_duration_minutes} min</span>
+          <span>📏 {instance.route.expected_distance.toFixed(1)} {tCommon('km')}</span>
+          <span>⏱ ~{instance.route.estimated_duration_minutes} {tCommon('min')}</span>
         </div>
       </div>
 
       {/* Time window */}
       <div style={{ background: '#F8F9FA', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
-        <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: '#9AA0A6', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Time window</p>
+        <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: '#9AA0A6', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('time_window')}</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-            <span style={{ color: '#5A6A7A' }}>Pickup</span>
+            <span style={{ color: '#5A6A7A' }}>{t('pickup')}</span>
             <span style={{ fontWeight: 700, color: '#0B1E3D' }}>{fmtTime(instance.start_time_from)} – {fmtTime(instance.start_time_to)}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-            <span style={{ color: '#5A6A7A' }}>Arrival</span>
+            <span style={{ color: '#5A6A7A' }}>{t('arrival')}</span>
             <span style={{ fontWeight: 700, color: '#0B1E3D' }}>{fmtTime(instance.end_time_from)} – {fmtTime(instance.end_time_to)}</span>
           </div>
           {instance.actual_start_time && (
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-              <span style={{ color: '#5A6A7A' }}>Actual start</span>
+              <span style={{ color: '#5A6A7A' }}>{t('actual_start')}</span>
               <span style={{ fontWeight: 700, color: '#27AE60' }}>{fmtTime(instance.actual_start_time)}</span>
             </div>
           )}
           {instance.actual_end_time && (
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-              <span style={{ color: '#5A6A7A' }}>Actual end</span>
+              <span style={{ color: '#5A6A7A' }}>{t('actual_end')}</span>
               <span style={{ fontWeight: 700, color: '#27AE60' }}>{fmtTime(instance.actual_end_time)}</span>
             </div>
           )}
@@ -280,10 +299,10 @@ function InstanceDetailSheet({ instance }: { instance: CourseInstance | null }) 
 
       {/* Matching */}
       <div style={{ background: '#F8F9FA', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
-        <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: '#9AA0A6', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Matching</p>
+        <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: '#9AA0A6', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t('matching')}</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
-            <span style={{ color: '#5A6A7A' }}>Status</span>
+            <span style={{ color: '#5A6A7A' }}>{t('status_label')}</span>
             <span style={{
               fontSize: 11, fontWeight: 700, background: mCfg.bg, color: mCfg.color,
               border: `1px solid ${mCfg.border}`, borderRadius: 20, padding: '3px 10px',
@@ -293,25 +312,25 @@ function InstanceDetailSheet({ instance }: { instance: CourseInstance | null }) 
           </div>
           {instance.matching_price && (
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-              <span style={{ color: '#5A6A7A' }}>Matched price</span>
+              <span style={{ color: '#5A6A7A' }}>{t('matched_price')}</span>
               <span style={{ fontWeight: 700, color: '#0B1E3D' }}>EGP {parseFloat(instance.matching_price).toLocaleString()}</span>
             </div>
           )}
           {instance.matching_group_code && (
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-              <span style={{ color: '#5A6A7A' }}>Group code</span>
+              <span style={{ color: '#5A6A7A' }}>{t('group_code')}</span>
               <span style={{ fontWeight: 700, color: '#0B1E3D', letterSpacing: '0.08em' }}>{instance.matching_group_code}</span>
             </div>
           )}
           {instance.driver_id && (
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-              <span style={{ color: '#5A6A7A' }}>Driver ID</span>
+              <span style={{ color: '#5A6A7A' }}>{t('driver_id')}</span>
               <span style={{ fontWeight: 700, color: '#0B1E3D' }}>#{instance.driver_id}</span>
             </div>
           )}
           {instance.driver_price && (
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-              <span style={{ color: '#5A6A7A' }}>Driver price</span>
+              <span style={{ color: '#5A6A7A' }}>{t('driver_price')}</span>
               <span style={{ fontWeight: 700, color: '#0B1E3D' }}>EGP {parseFloat(instance.driver_price).toLocaleString()}</span>
             </div>
           )}
@@ -322,7 +341,7 @@ function InstanceDetailSheet({ instance }: { instance: CourseInstance | null }) 
       {instance.participants.length > 0 && (
         <div style={{ background: '#F8F9FA', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
           <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: '#9AA0A6', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Passengers ({instance.participants.length})
+            {t('passengers_count', { count: instance.participants.length })}
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {instance.participants.map((p, i) => (
@@ -336,7 +355,7 @@ function InstanceDetailSheet({ instance }: { instance: CourseInstance | null }) 
                     {p.type === 'passenger' ? '👤' : '🙋'}
                   </span>
                   <span style={{ color: '#0B1E3D', fontWeight: 600 }}>
-                    {p.type === 'passenger' ? `Passenger #${p.passenger_id}` : `User #${p.user_id}`}
+                    {p.type === 'passenger' ? t('passenger_n', { n: p.passenger_id }) : t('user_n', { id: p.user_id })}
                   </span>
                 </div>
                 <span style={{
@@ -373,6 +392,10 @@ function OverviewRow({ icon, label, value, noBorder }: { icon: React.ReactNode; 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function CourseDetailPage() {
+  const t = useTranslations('trip_detail');
+  const tCommon = useTranslations('common');
+  const locale = useLocale();
+  const STATUS_CONFIG = useStatusConfig();
   const router = useRouter();
   const params = useParams();
   const id = Number(params.id);
@@ -410,7 +433,7 @@ export default function CourseDetailPage() {
     if (!id) return;
     getCourse(id)
       .then(res => setCourse(res.data))
-      .catch(() => setError('Failed to load trip details.'))
+      .catch(() => setError(t('load_error')))
       .finally(() => setLoading(false));
 
     setInstancesLoading(true);
@@ -429,7 +452,7 @@ export default function CourseDetailPage() {
     setPayError(null);
     const cost = Math.round(parseFloat(course.estimated_total_price));
     if (balance !== null && balance < cost) {
-      setPayError(`Insufficient balance — wallet has EGP ${balance.toLocaleString()}, but the trip costs EGP ${cost.toLocaleString()}.`);
+      setPayError(t('insufficient_balance', { balance: balance.toLocaleString(), cost: cost.toLocaleString() }));
       return;
     }
     setPaying(true);
@@ -440,7 +463,7 @@ export default function CourseDetailPage() {
       setBalance(b => b !== null ? b - cost : b);
       setPayDone(true);
     } catch (e: unknown) {
-      setPayError(e instanceof Error ? e.message : 'Payment failed. Please try again.');
+      setPayError(e instanceof Error ? e.message : t('payment_failed'));
     } finally {
       setPaying(false);
     }
@@ -449,9 +472,9 @@ export default function CourseDetailPage() {
   if (loading) {
     return (
       <div style={{ maxWidth: 640, margin: '0 auto', fontFamily: 'Inter, system-ui, sans-serif' }}>
-        <PageHeader title="Trip details" onBack={() => router.back()} />
+        <PageHeader title={t('title')} onBack={() => router.back()} />
         <div style={{ textAlign: 'center', padding: '64px 0', color: '#9AA0A6', fontSize: 14 }}>
-          Loading…
+          {t('loading')}
         </div>
       </div>
     );
@@ -460,9 +483,9 @@ export default function CourseDetailPage() {
   if (error || !course) {
     return (
       <div style={{ maxWidth: 640, margin: '0 auto', fontFamily: 'Inter, system-ui, sans-serif' }}>
-        <PageHeader title="Trip details" onBack={() => router.back()} />
+        <PageHeader title={t('title')} onBack={() => router.back()} />
         <div style={{ textAlign: 'center', padding: '64px 16px', color: '#E74C3C', fontSize: 14 }}>
-          {error ?? 'Trip not found.'}
+          {error ?? t('not_found')}
         </div>
       </div>
     );
@@ -478,7 +501,7 @@ export default function CourseDetailPage() {
   return (
     <>
     <div style={{ maxWidth: 640, margin: '0 auto', fontFamily: 'Inter, system-ui, sans-serif' }}>
-      <PageHeader title="Trip details" onBack={() => router.back()} />
+      <PageHeader title={t('title')} onBack={() => router.back()} />
 
       <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
@@ -486,7 +509,7 @@ export default function CourseDetailPage() {
         <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 16, padding: '16px', boxShadow: '0 1px 4px rgba(11,30,61,0.06)' }}>
           {/* Header row */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-            <p style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0B1E3D' }}>Overview</p>
+            <p style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0B1E3D' }}>{t('overview')}</p>
             <span
               style={{
                 fontSize: 12,
@@ -502,19 +525,19 @@ export default function CourseDetailPage() {
             </span>
           </div>
           <p style={{ margin: '0 0 14px', fontSize: 12, color: '#9AA0A6' }}>
-            Created {fmtCreatedAt(course.created_at)}
+            {t('created', { date: fmtCreatedAt(course.created_at, locale) })}
           </p>
 
           {/* Info rows */}
           <div>
-            <OverviewRow icon={<IcCalendar />} label="Dates"  value={`${course.start_date} → ${course.end_date}`} />
-            <OverviewRow icon={<IcPrice />}    label="Price"  value={`EGP ${estimatedTotalPrice.toLocaleString()}`} />
-            <OverviewRow icon={<IcWallet />}   label="Wallet" value={course.wallet_status} />
-            <OverviewRow icon={<IcCar />}      label="Type"   value={course.trip_type + (course.group_type ? ` · ${course.group_type}` : '')} />
+            <OverviewRow icon={<IcCalendar />} label={t('dates')}  value={`${course.start_date} → ${course.end_date}`} />
+            <OverviewRow icon={<IcPrice />}    label={t('price')}  value={`${tCommon('egp')} ${estimatedTotalPrice.toLocaleString()}`} />
+            <OverviewRow icon={<IcWallet />}   label={t('wallet_label')} value={course.wallet_status} />
+            <OverviewRow icon={<IcCar />}      label={t('type_label')}   value={course.trip_type + (course.group_type ? ` · ${course.group_type}` : '')} />
             {firstGo && (
               <OverviewRow
                 icon={<IcClock />}
-                label="Pickup window"
+                label={t('pickup_window')}
                 value={`${fmtTime(firstGo.start_time_from)} – ${fmtTime(firstGo.start_time_to)}`}
                 noBorder
               />
@@ -526,18 +549,18 @@ export default function CourseDetailPage() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#5A6A7A', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Weekly schedule {instances.length > 0 && <span style={{ color: '#00C2A8', fontWeight: 800 }}>({instances.length})</span>}
+              {t('weekly_schedule')} {instances.length > 0 && <span style={{ color: '#00C2A8', fontWeight: 800 }}>({instances.length})</span>}
             </p>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><IcRoute /></span>
           </div>
 
           {instancesLoading ? (
             <div style={{ textAlign: 'center', padding: '28px 0', color: '#9AA0A6', fontSize: 13 }}>
-              Loading trips…
+              {t('loading_trips')}
             </div>
           ) : instances.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '28px 0', color: '#9AA0A6', fontSize: 13, background: '#F8F9FA', borderRadius: 12 }}>
-              No trips scheduled yet.
+              {t('no_trips')}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -556,7 +579,7 @@ export default function CourseDetailPage() {
         {course.notes && (
           <div>
             <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: '#5A6A7A', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Notes
+              {t('notes_label')}
             </p>
             <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, padding: '12px 14px', fontSize: 14, color: '#0B1E3D', lineHeight: 1.6, boxShadow: '0 1px 4px rgba(11,30,61,0.04)' }}>
               {course.notes}
@@ -567,11 +590,11 @@ export default function CourseDetailPage() {
         {/* ── Payment card (only for draft + waiting) ── */}
         {course.status === 'draft' && course.wallet_status === 'waiting' && (
           <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 16, padding: '16px', boxShadow: '0 1px 4px rgba(11,30,61,0.06)' }}>
-            <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 800, color: '#0B1E3D' }}>Payment</p>
+            <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 800, color: '#0B1E3D' }}>{t('payment')}</p>
 
             {/* Balance row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <span style={{ fontSize: 13, color: '#5A6A7A' }}>Wallet balance</span>
+              <span style={{ fontSize: 13, color: '#5A6A7A' }}>{t('wallet_balance')}</span>
               <span style={{ fontSize: 14, fontWeight: 700, color: balance !== null && balance < estimatedTotalPrice ? '#E74C3C' : '#27AE60' }}>
                 {balance !== null ? `EGP ${balance.toLocaleString()}` : '…'}
               </span>
@@ -579,20 +602,20 @@ export default function CourseDetailPage() {
 
             {/* Cost row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 14, borderBottom: '1px solid #F1F3F4', marginBottom: 14 }}>
-              <span style={{ fontSize: 13, color: '#5A6A7A' }}>Trip cost</span>
+              <span style={{ fontSize: 13, color: '#5A6A7A' }}>{t('trip_cost')}</span>
               <span style={{ fontSize: 14, fontWeight: 700, color: '#0B1E3D' }}>EGP {estimatedTotalPrice.toLocaleString()}</span>
             </div>
 
             {/* Insufficient balance warning */}
             {balance !== null && balance < estimatedTotalPrice && (
               <div style={{ background: '#FFF3E0', border: '1px solid #FFCCBC', borderRadius: 10, padding: '10px 12px', marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: '#BF360C', fontWeight: 600 }}>Not enough balance</span>
+                <span style={{ fontSize: 12, color: '#BF360C', fontWeight: 600 }}>{t('not_enough')}</span>
                 <button
                   type="button"
                   onClick={() => router.push('/user/wallet')}
                   style={{ fontSize: 12, fontWeight: 700, color: '#00C2A8', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                 >
-                  Top up →
+                  {t('top_up')}
                 </button>
               </div>
             )}
@@ -607,8 +630,8 @@ export default function CourseDetailPage() {
             {/* Success / Pay button */}
             {payDone ? (
               <div style={{ background: '#E8F5E9', border: '1px solid #A8D5B5', borderRadius: 10, padding: '14px', textAlign: 'center' }}>
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#27AE60' }}>✓ Payment successful</p>
-                <p style={{ margin: '4px 0 0', fontSize: 13, color: '#5A6A7A' }}>Your trip is now active.</p>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#27AE60' }}>✓ {t('payment_success')}</p>
+                <p style={{ margin: '4px 0 0', fontSize: 13, color: '#5A6A7A' }}>{t('trip_active')}</p>
               </div>
             ) : (
               <button
@@ -628,7 +651,7 @@ export default function CourseDetailPage() {
                   fontFamily: 'inherit',
                 }}
               >
-                {paying ? 'Processing…' : 'Confirm Pay'}
+                {paying ? t('processing') : t('confirm_pay')}
               </button>
             )}
           </div>
@@ -641,11 +664,11 @@ export default function CourseDetailPage() {
     <BottomSheet
       isOpen={sheetOpen}
       onClose={() => { setSheetOpen(false); setSelectedInstance(null); }}
-      title="Trip details"
+      title={t('title')}
     >
       {instanceLoading ? (
         <div style={{ textAlign: 'center', padding: '40px 0', color: '#9AA0A6', fontSize: 14, fontFamily: 'Inter, system-ui, sans-serif' }}>
-          Loading…
+          {t('loading')}
         </div>
       ) : (
         <InstanceDetailSheet

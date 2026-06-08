@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 import authApi, {
   extractToken, extractRole, extractName, extractId,
   type AuthApiResponse,
@@ -18,12 +19,10 @@ import Step3Otp from './steps/Step3Otp';
 
 // ── Step indicator ────────────────────────────────────────────────────────────
 
-const STEPS = ['Personal info', 'Address', 'Verify email'] as const;
-
-function StepBar({ current }: { current: 1 | 2 | 3 }) {
+function StepBar({ current, steps }: { current: 1 | 2 | 3; steps: readonly string[] }) {
   return (
     <div className="flex items-center mb-8" role="list" aria-label="Sign-up progress">
-      {STEPS.map((label, idx) => {
+      {steps.map((label, idx) => {
         const n        = (idx + 1) as 1 | 2 | 3;
         const done     = n < current;
         const active   = n === current;
@@ -57,7 +56,7 @@ function StepBar({ current }: { current: 1 | 2 | 3 }) {
             </span>
 
             {/* connector */}
-            {idx < STEPS.length - 1 && (
+            {idx < steps.length - 1 && (
               <div className={`flex-1 h-px mx-3 ${done ? 'bg-[#00C2A8]' : 'bg-[#E2E8F0]'}`} aria-hidden />
             )}
           </div>
@@ -70,6 +69,7 @@ function StepBar({ current }: { current: 1 | 2 | 3 }) {
 // ── Wizard ────────────────────────────────────────────────────────────────────
 
 export default function UserSignUpForm() {
+  const t = useTranslations('sign_up_form');
   const router = useRouter();
   const { login } = useAuth();
 
@@ -117,7 +117,7 @@ export default function UserSignUpForm() {
       await sendOtp(step1Data.email!.trim());
       setStep(3);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Sign up failed. Please try again.');
+      toast.error(err instanceof Error ? err.message : t('signup_failed'));
     } finally {
       setLoading(false);
     }
@@ -149,7 +149,7 @@ export default function UserSignUpForm() {
           gender:          step1Data.gender ?? 'male',
           date_of_birth:   step1Data.birthdate ?? '',
         });
-        toast.success(`Welcome to Commuter, ${step1Data.name!.trim()}! 🎉`);
+        toast.success(t('welcome_toast', { name: step1Data.name!.trim() }));
         router.replace('/user/onboarding');
       } else {
         // No auto-login token from backend — send to sign-in with success flag
@@ -168,9 +168,9 @@ export default function UserSignUpForm() {
     setOtpError(null);
     try {
       await sendOtp(step1Data.email.trim());
-      toast.success('A new code has been sent to your email.');
+      toast.success(t('resend_success'));
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to resend code.');
+      toast.error(err instanceof Error ? err.message : t('resend_failed'));
     } finally {
       setResendLoading(false);
     }
@@ -178,10 +178,10 @@ export default function UserSignUpForm() {
 
   return (
     <div>
-      <h1 className="text-[28px] font-bold text-[#0B1E3D] mb-1">Create your account</h1>
-      <p className="text-sm text-[#5A6A7A] mb-6">Join Commuter as a passenger</p>
+      <h1 className="text-[28px] font-bold text-[#0B1E3D] mb-1">{t('title')}</h1>
+      <p className="text-sm text-[#5A6A7A] mb-6">{t('subtitle')}</p>
 
-      <StepBar current={step} />
+      <StepBar current={step} steps={[t('step_personal'), t('step_address'), t('step_verify')]} />
 
       {step === 1 && (
         <Step1Info initial={step1Data} onNext={handleStep1} />
@@ -206,9 +206,9 @@ export default function UserSignUpForm() {
       )}
 
       <p className="mt-5 text-center text-sm text-[#5A6A7A]">
-        Already have an account?{' '}
+        {t('have_account')}{' '}
         <Link href="/sign-in" className="text-[#00C2A8] font-medium hover:underline">
-          Sign in →
+          {t('sign_in_link')}
         </Link>
       </p>
     </div>

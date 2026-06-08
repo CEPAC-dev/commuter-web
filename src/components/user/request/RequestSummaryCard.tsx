@@ -5,6 +5,7 @@ import type { RequestFormData } from './RequestForm';
 import { formatTime12h } from '@/lib/timeUtils';
 import { calculatePriceRange } from '@/lib/pricing';
 import { getNextAvailableCycleStart, formatCycleStartDate, getCycleEndDate } from '@/lib/cycleUtils';
+import { useTranslations } from 'next-intl';
 
 interface LocationValue {
   address: string;
@@ -33,6 +34,10 @@ export default function RequestSummaryCard({
   onEdit,
   onSubmit,
 }: RequestSummaryCardProps) {
+  const trsc = useTranslations('request_summary_card');
+  const trs = useTranslations('request_summary');
+  const tf = useTranslations('request_form');
+  const tsl = useTranslations('time_slot');
   const hasRoundTripSlot = formData.time_slots.some((slot) => slot.trip_type === 'round_trip');
 
   const priceRange = calculatePriceRange({
@@ -44,7 +49,7 @@ export default function RequestSummaryCard({
     days:       Math.max(formData.days.length, 1),
   });
 
-  const seatLabel = 'Any seat · Free';
+  const seatLabel = trsc('any_seat_free');
 
 
   const cycleStart = getNextAvailableCycleStart();
@@ -53,11 +58,11 @@ export default function RequestSummaryCard({
   const cycleEndStr   = formatCycleStartDate(cycleEnd, 'en');
 
   const topRows: Array<[string, string]> = [
-    ['Ride type', formData.ride_type === 'shared' ? '🧑‍🤝‍🧑 Shared ride' : '🚗 Private'],
-    ['Seat preference', seatLabel],
-    ['Direction', hasRoundTripSlot ? 'Mixed / includes round trips' : 'One way'],
-    ['Days', formatDays(formData.days)],
-    ['Cycle', `${cycleStartStr} – ${cycleEndStr}`],
+    [trsc('ride_type'), formData.ride_type === 'shared' ? tf('shared') : tf('private')],
+    [trsc('seat_pref'), seatLabel],
+    [trs('trip_type'), hasRoundTripSlot ? tsl('round_trip') : tsl('one_way')],
+    [trs('days'), formatDays(formData.days)],
+    [trs('cycle_start'), `${cycleStartStr} – ${cycleEndStr}`],
   ];
   return (
     <div
@@ -71,7 +76,7 @@ export default function RequestSummaryCard({
       }}
     >
       <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#0B1E3D' }}>
-        Review your request
+        {trs('title')}
       </h2>
 
       {/* Route */}
@@ -121,7 +126,7 @@ export default function RequestSummaryCard({
 
       {/* Schedule section */}
       <div style={{ background: '#F8F9FA', borderRadius: 10, border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-        <div style={{ padding: '10px 14px', background: '#EFF7F6', borderBottom: '1px solid #C8E8E4', fontSize: 13, fontWeight: 700, color: '#0B1E3D' }}>Schedule</div>
+        <div style={{ padding: '10px 14px', background: '#EFF7F6', borderBottom: '1px solid #C8E8E4', fontSize: 13, fontWeight: 700, color: '#0B1E3D' }}>{trs('schedule_title')}</div>
         <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           {formData.time_slots.map((slot, index) => (
             <div
@@ -167,7 +172,7 @@ export default function RequestSummaryCard({
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#5A6A7A', marginTop: 4 }}>
                 <span>Trip type</span>
                 <span style={{ color: '#0B1E3D', fontWeight: 600 }}>
-                  {slot.trip_type === 'round_trip' ? 'Round trip' : 'One way'}
+                  {slot.trip_type === 'round_trip' ? trsc('round_trip') : trsc('one_way')}
                 </span>
               </div>
 
@@ -204,7 +209,7 @@ export default function RequestSummaryCard({
         }}
       >
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>
-          💰 Your estimated cost
+          💰 {trs('price_estimate')}
         </div>
         <div style={{ fontSize: 22, fontWeight: 700, color: '#fff' }}>
           EGP {priceRange.min} – {priceRange.max} / week
@@ -254,7 +259,7 @@ export default function RequestSummaryCard({
           onMouseEnter={(e) => (e.currentTarget.style.background = '#00A896')}
           onMouseLeave={(e) => (e.currentTarget.style.background = '#00C2A8')}
         >
-          Submit request ✓
+          {trs('submit_btn')}
         </button>
       </div>
     </div>

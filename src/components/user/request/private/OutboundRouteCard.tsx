@@ -2,6 +2,7 @@
 
 import type { GeoLocation } from '@/types/shared';
 import type { ORSRoute } from '@/lib/openrouteservice';
+import { useTranslations } from 'next-intl';
 
 interface Props {
   origin:       GeoLocation | null;
@@ -50,6 +51,8 @@ export default function OutboundRouteCard({
   onRemovePickupPoint,
   onSetRoute, onRemoveRouteStop,
 }: Props) {
+  const to = useTranslations('outbound_route');
+  const tc = useTranslations('common');
   const routeReady = !!origin && !!destination;
 
   // Dynamic row indices so numbering stays consecutive
@@ -64,7 +67,7 @@ export default function OutboundRouteCard({
 
       <Row
         index={idx++}
-        title="From"
+        title={to('from')}
         hint="Trip start area"
         value={origin?.address ?? null}
         action={null}
@@ -83,7 +86,7 @@ export default function OutboundRouteCard({
               className="text-[11px] text-[#E74C3C] font-medium hover:underline"
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
             >
-              Remove
+              {tc('delete')}
             </button>
           }
         />
@@ -91,7 +94,7 @@ export default function OutboundRouteCard({
 
       <Row
         index={idx++}
-        title="Destination"
+        title={to('destination')}
         hint="Final drop-off"
         value={destination?.address ?? null}
         action={null}
@@ -100,7 +103,7 @@ export default function OutboundRouteCard({
       {hasPickupPoint && (
         <Row
           index={idx++}
-          title="Pickup point"
+          title={to('pickup')}
           hint="Meeting point for pickup"
           value={pickupPoint?.address ?? null}
           action={
@@ -110,7 +113,7 @@ export default function OutboundRouteCard({
               className="text-[11px] text-[#E74C3C] font-medium hover:underline"
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
             >
-              Remove
+              {tc('delete')}
             </button>
           }
         />
@@ -142,7 +145,7 @@ export default function OutboundRouteCard({
             fontFamily: 'inherit',
           }}
         >
-          {routeReady ? '✏ Edit route' : 'Set route'}
+          {routeReady ? `✏ ${to('edit_route')}` : to('set_route')}
         </button>
       </div>
 

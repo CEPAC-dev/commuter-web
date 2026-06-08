@@ -6,6 +6,7 @@ import type { TimeSlot, GeoLocation, WeekDay } from '@/types/shared';
 import { PRIVATE_SEAT_LABELS } from '@/types/shared';
 import type { ApiPassenger } from '@/lib/api/passengers';
 import { ALL_DAYS_SUN_FIRST, formatTime12h } from '@/lib/timeUtils';
+import { useTranslations } from 'next-intl';
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
@@ -70,6 +71,12 @@ export default function ReviewModal({
   notes, submitting, error,
   onConfirm, onCancel,
 }: Props) {
+  const trm = useTranslations('review_modal');
+  const trs = useTranslations('request_summary');
+  const trf = useTranslations('ride_form');
+  const to = useTranslations('outbound_route');
+  const tsl = useTranslations('time_slot');
+  const td = useTranslations('days');
   const [adjMax, setAdjMax] = useState(priceMax);
   const [rawMax, setRawMax] = useState(String(priceMax));
 
@@ -97,9 +104,9 @@ export default function ReviewModal({
         >
           ← Back
         </button>
-        <h2 className="text-base font-bold text-[#0B1E3D] flex-1">Review your request</h2>
+        <h2 className="text-base font-bold text-[#0B1E3D] flex-1">{trs('title')}</h2>
         <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#EFF7F6] text-[#00C2A8] border border-[#C8E8E4]">
-          Private
+          {trf('private')}
         </span>
       </div>
 
@@ -107,11 +114,11 @@ export default function ReviewModal({
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
 
         {/* Route */}
-        <Section title="Route">
-          <Row icon="📍" label="From"        value={origin.address} />
-          {routeStop  && <Row icon="🔵" label="Route stop"   value={routeStop.address} />}
-          <Row icon="🏁" label="Destination" value={destination.address} />
-          {pickupPoint && <Row icon="🤝" label="Pickup point" value={pickupPoint.address} />}
+        <Section title={trs('route')}>
+          <Row icon="📍" label={to('from')}        value={origin.address} />
+          {routeStop  && <Row icon="🔵" label={to('pickup')}   value={routeStop.address} />}
+          <Row icon="🏁" label={to('destination')} value={destination.address} />
+          {pickupPoint && <Row icon="🤝" label={to('pickup')} value={pickupPoint.address} />}
           <div className="flex items-center gap-2 pt-1">
             <span
               className="text-xs font-semibold px-3 py-1 rounded-full"
@@ -120,7 +127,7 @@ export default function ReviewModal({
                 color:      tripType === 'round_trip' ? '#00C2A8' : '#5A6A7A',
               }}
             >
-              {tripType === 'round_trip' ? '↕ Round trip' : '→ One way'}
+              {tripType === 'round_trip' ? `↕ ${tsl('round_trip')}` : `→ ${tsl('one_way')}`}
             </span>
           </div>
         </Section>
@@ -278,7 +285,7 @@ export default function ReviewModal({
         <div className="bg-[#F8F9FA] border border-[#E2E8F0] rounded-xl px-4 py-3 flex items-center gap-3">
           <span className="text-xl">📅</span>
           <div>
-            <p className="text-xs font-semibold text-[#5A6A7A]">Cycle start</p>
+            <p className="text-xs font-semibold text-[#5A6A7A]">{trs('cycle_start')}</p>
             <p className="text-sm font-bold text-[#0B1E3D]">{cycleStartLabel}</p>
           </div>
         </div>
@@ -311,7 +318,7 @@ export default function ReviewModal({
             fontFamily: 'inherit',
           }}
         >
-          {submitting ? 'Submitting…' : 'Confirm & Submit ✓'}
+          {submitting ? trm('submitting') : trm('confirm_submit')}
         </button>
       </div>
     </div>

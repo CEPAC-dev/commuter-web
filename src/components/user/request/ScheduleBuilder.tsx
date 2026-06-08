@@ -2,6 +2,7 @@
 
 import type { TimeSlot, WeekDay } from '@/types/shared';
 import TimeSlotCard from './TimeSlotCard';
+import { useTranslations } from 'next-intl';
 
 interface ScheduleBuilderProps {
   timeSlots:    TimeSlot[];
@@ -34,6 +35,8 @@ export default function ScheduleBuilder({
   onReturnArrivalChange = () => {},
   onDayToggle,
 }: ScheduleBuilderProps) {
+  const t = useTranslations('schedule_builder');
+  const trs = useTranslations('request_schedule');
   const slot1 = timeSlots[0];
 
   const lastSlot = timeSlots[timeSlots.length - 1];
@@ -76,12 +79,12 @@ export default function ScheduleBuilder({
         `}
       >
         {allDaysAssigned
-          ? 'All 7 days scheduled'
+          ? t('all_days')
           : timeSlots.length >= 4
-            ? 'Maximum 4 slots reached'
+            ? t('max_slots')
             : lastSlotNeedsDay
-              ? 'Select days for current slot first'
-              : '+ Add time slot'}
+              ? t('select_days_first')
+              : `+ ${trs('add_slot')}`}
       </button>
 
       <div className="w-full bg-[#F1F3F4] rounded-full h-1.5">

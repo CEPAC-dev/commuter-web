@@ -15,6 +15,7 @@ import ChangePasswordModal from '@/components/user/profile/ChangePasswordModal';
 import FavoritePlacesModal from '@/components/user/profile/FavoritePlacesModal';
 import RelatedPassengersModal from '@/components/user/profile/RelatedPassengersModal';
 import authApi from '@/lib/api/auth';
+import { useTranslations } from 'next-intl';
 
 function formatAddress(p: UserProfile) {
   return [p.building, p.street, p.sub_district, p.district, p.province, p.landmark]
@@ -81,6 +82,8 @@ function Tile({
 }
 
 export default function ProfileDesktop() {
+  const tp = useTranslations('profile_mobile');
+  const tc = useTranslations('common');
   const router = useRouter();
   const { logout, updateName, profilePhoto, updateProfilePhoto } = useAuth();
   const [profile,      setProfile]      = useState<UserProfile | null>(null);
@@ -96,7 +99,7 @@ export default function ProfileDesktop() {
     const file = e.target.files?.[0];
     if (!file) return;
     const MAX_SIZE = 2 * 1024 * 1024; // 2 MB
-    if (file.size > MAX_SIZE) { alert('Image must be under 2 MB'); return; }
+    if (file.size > MAX_SIZE) { alert(tp('photo_size_error')); return; }
     const reader = new FileReader();
     reader.onload = () => updateProfilePhoto(reader.result as string);
     reader.readAsDataURL(file);
@@ -157,7 +160,7 @@ export default function ProfileDesktop() {
           {/* Avatar */}
           <div
             onClick={() => photoInputRef.current?.click()}
-            title="Change profile photo"
+            title={tp('photo_title')}
             style={{
               width: 84, height: 84, borderRadius: '50%', flexShrink: 0,
               background: 'linear-gradient(135deg, #00C2A8 0%, #007A6A 100%)',
@@ -201,7 +204,7 @@ export default function ProfileDesktop() {
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginTop: 12, padding: '5px 13px', borderRadius: 20, background: 'rgba(0,194,168,0.14)', border: '1px solid rgba(0,194,168,0.28)' }}>
               <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#00C2A8', boxShadow: '0 0 6px #00C2A8' }} />
               <span style={{ fontSize: 12, color: '#00C2A8', fontWeight: 700, letterSpacing: '0.01em' }}>
-                Member since {formatJoinDate(profile.joined_at)}
+                {tp('member_since', { date: formatJoinDate(profile.joined_at) })}
               </span>
             </div>
           </div>
@@ -222,7 +225,7 @@ export default function ProfileDesktop() {
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.2)'; }}
           >
             <Pencil size={15} color="#fff" />
-            Edit Profile
+            {tp('edit_profile')}
           </button>
         </div>
 
@@ -263,24 +266,24 @@ export default function ProfileDesktop() {
           <Sliders size={24} color="#fff" strokeWidth={1.8} />
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', lineHeight: 1.2, letterSpacing: '-0.2px' }}>Ride Preferences</div>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.72)', marginTop: 4 }}>Customize how drivers match your style and comfort</div>
+          <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', lineHeight: 1.2, letterSpacing: '-0.2px' }}>{tp('ride_preferences')}</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.72)', marginTop: 4 }}>{tp('ride_preferences_desc')}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.18)' }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>Configure</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{tp('configure')}</span>
           <ChevronRight size={15} color="#fff" />
         </div>
       </button>
 
       {/* â•â• ACCOUNT TILES â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <div style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.09em', textTransform: 'uppercase', marginBottom: 10, paddingLeft: 2 }}>
-        Account
+        {tp('account_section')}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
-        <Tile icon={Wallet}   label="My Wallet"            sub="Balance & transactions"         href="/user/wallet" />
-        <Tile icon={Bookmark} label="Favorite Places"      sub="Manage saved locations"         onClick={() => setPlacesOpen(true)} />
-        <Tile icon={Users}    label="Related Passengers"   sub="Family & group members"         onClick={() => setPassOpen(true)} />
-        <Tile icon={Shield}   label="Security"             sub="Password & account security"    onClick={() => setChangePwOpen(true)} accent="#6366F1" />
+        <Tile icon={Wallet}   label={tp('menu_wallet')}            sub={tp('tile_wallet_sub')}         href="/user/wallet" />
+        <Tile icon={Bookmark} label={tp('favorite_places')}      sub={tp('tile_places_sub')}         onClick={() => setPlacesOpen(true)} />
+        <Tile icon={Users}    label={tp('related_passengers')}   sub={tp('tile_passengers_sub')}         onClick={() => setPassOpen(true)} />
+        <Tile icon={Shield}   label={tp('menu_security')}             sub={tp('tile_security_sub')}    onClick={() => setChangePwOpen(true)} accent="#6366F1" />
       </div>
 
       {/* â•â• SIGN OUT â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
@@ -298,7 +301,7 @@ export default function ProfileDesktop() {
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#FFF5F5'; (e.currentTarget as HTMLElement).style.borderColor = '#FEE2E2'; }}
       >
         <LogOut size={17} color="#EF4444" />
-        Sign out
+        {tc('sign_out')}
       </button>
 
       {/* â”€â”€ Modals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}

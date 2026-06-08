@@ -1,10 +1,16 @@
-const legendItems = [
-  { fill: '#E8EAED', stroke: '#9AA0A6', label: 'Available', icon: null },
-  { fill: '#00C2A8', stroke: '#007A6A', label: 'Selected',  icon: '✓' },
-  { fill: '#F28B82', stroke: '#C5221F', label: 'Taken',     icon: '✕' },
-];
+'use client';
+
+import { useTranslations } from 'next-intl';
 
 export default function SeatSelectorLegend() {
+  const ts = useTranslations('seat_selector');
+
+  const legendItems = [
+    { fill: '#E8EAED', stroke: '#9AA0A6', label: ts('available'), icon: null },
+    { fill: '#00C2A8', stroke: '#007A6A', label: ts('selected'),  icon: '✓' },
+    { fill: '#F28B82', stroke: '#C5221F', label: ts('taken'),     icon: '✕' },
+  ];
+
   return (
     <div
       style={{

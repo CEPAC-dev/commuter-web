@@ -4,14 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const NAV_ICONS = {
-  requests: (active: boolean) => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#00C2A8' : '#5A6A7A'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" />
-      <line x1="16" y1="17" x2="8" y2="17" />
-    </svg>
-  ),
   cycles: (active: boolean) => (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#00C2A8' : '#5A6A7A'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="17 1 21 5 17 9" />
@@ -38,7 +30,6 @@ const NAV_ICONS = {
 } as const;
 
 const NAV_ITEMS = [
-  { key: 'requests'     as const, label: 'Requests',     href: '/driver/requests'     },
   { key: 'cycles'       as const, label: 'My Cycles',    href: '/driver/my-cycles'    },
   { key: 'availability' as const, label: 'Availability', href: '/driver/availability' },
   { key: 'profile'      as const, label: 'Profile',      href: '/driver/profile'      },

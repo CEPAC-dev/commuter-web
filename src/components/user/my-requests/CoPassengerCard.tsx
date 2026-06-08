@@ -1,6 +1,7 @@
 'use client';
 
 import type { CoPassenger } from '@/types/user';
+import { useTranslations } from 'next-intl';
 
 interface CoPassengerCardProps {
   passengers: CoPassenger[];
@@ -26,6 +27,7 @@ function GenderIcon({ gender }: { gender: 'male' | 'female' }) {
 }
 
 export default function CoPassengerCard({ passengers }: CoPassengerCardProps) {
+  const t = useTranslations('co_passenger');
   if (!passengers.length) return null;
 
   return (
@@ -64,7 +66,7 @@ export default function CoPassengerCard({ passengers }: CoPassengerCardProps) {
                   {displayName}
                 </div>
                 <div style={{ fontSize: 12, color: '#5A6A7A' }}>
-                  {p.gender === 'female' ? 'Female' : 'Male'} · Stop {i + 1}
+                  {p.gender === 'female' ? t('female') : t('male')} · {t('stop', { n: i + 1 })}
                 </div>
               </div>
             </div>

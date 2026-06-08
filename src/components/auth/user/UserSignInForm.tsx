@@ -5,12 +5,14 @@ import { Mail, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 import PasswordInput from '@/components/shared/PasswordInput';
 import authApi, { extractToken, extractRole, extractName, extractId } from '@/lib/api/auth';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useRedirectIfAuth } from '@/lib/auth/useRedirectIfAuth';
 import { saveUserData } from '@/lib/auth/tokenStorage';
 export default function UserSignInForm() {
+  const t = useTranslations('sign_in_form');
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get('next');
@@ -29,8 +31,8 @@ export default function UserSignInForm() {
     let ok = true;
     setEmailErr('');
     setPwErr('');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setEmailErr('Enter a valid email address.'); ok = false; }
-    if (password.length < 8) { setPwErr('Password must be at least 8 characters.'); ok = false; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setEmailErr(t('email_error')); ok = false; }
+    if (password.length < 8) { setPwErr(t('password_error')); ok = false; }
     return ok;
   }
 
@@ -55,14 +57,14 @@ export default function UserSignInForm() {
       });
 
       if (typeof window !== 'undefined') localStorage.setItem('commuter_email', email);
-      toast.success(`Welcome back, ${name}! 👋`);
+      toast.success(t('welcome_toast', { name }));
 
       const safeNext = nextPath && !nextPath.startsWith('/sign') && !nextPath.startsWith('/driver/sign')
         ? nextPath
         : '/user/my-requests';
       router.replace(safeNext);
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Sign in failed. Please try again.';
+      const errorMsg = err instanceof Error ? err.message : t('signin_failed');
       toast.error(errorMsg);
     } finally {
       setLoading(false);
@@ -74,12 +76,12 @@ export default function UserSignInForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-      <h1 style={{ fontSize: 28, fontWeight: 700, color: '#0B1E3D', margin: '0 0 6px' }}>Welcome back</h1>
-      <p style={{ fontSize: 14, color: '#5A6A7A', margin: '0 0 16px' }}>Sign in to your Commuter account</p>
+      <h1 style={{ fontSize: 28, fontWeight: 700, color: '#0B1E3D', margin: '0 0 6px' }}>{t('title')}</h1>
+      <p style={{ fontSize: 14, color: '#5A6A7A', margin: '0 0 16px' }}>{t('subtitle')}</p>
 
       {/* Email */}
       <div style={{ marginBottom: 16 }}>
-        <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#0B1E3D', marginBottom: 6 }}>Email address</label>
+        <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#0B1E3D', marginBottom: 6 }}>{t('email_label')}</label>
         <div style={{ position: 'relative' }}>
           <Mail size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} aria-hidden />
           <input
@@ -108,15 +110,15 @@ export default function UserSignInForm() {
       {/* Password */}
       <div style={{ marginBottom: 28 }}>
         <PasswordInput
-          label="Password"
+          label={t('password_label')}
           accentColor="#00C2A8"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Your password"
+          placeholder={t('password_placeholder')}
           error={pwErr}
           autoComplete="current-password"
           rightLabel={
-            <Link href="/forgot-password" style={{ fontSize: 13, color: '#00C2A8', textDecoration: 'none' }}>Forgot password?</Link>
+            <Link href="/forgot-password" style={{ fontSize: 13, color: '#00C2A8', textDecoration: 'none' }}>{t('forgot_password')}</Link>
           }
         />
       </div>
@@ -134,16 +136,16 @@ export default function UserSignInForm() {
         }}
       >
         {loading && <Loader2 size={16} className="spin" />}
-        Sign in
+        {t('submit_btn')}
       </button>
 
       <p style={{ marginTop: 20, textAlign: 'center', fontSize: 14, color: '#5A6A7A' }}>
-        Don&apos;t have an account?{' '}
-        <Link href="/sign-up" style={{ color: '#00C2A8', fontWeight: 500, textDecoration: 'none' }}>Sign up →</Link>
+        {t('no_account')}{' '}
+        <Link href="/sign-up" style={{ color: '#00C2A8', fontWeight: 500, textDecoration: 'none' }}>{t('sign_up_link')}</Link>
       </p>
       <p style={{ marginTop: 10, textAlign: 'center', fontSize: 14, color: '#5A6A7A' }}>
-        Need to verify your email?{' '}
-        <Link href="/verify-email" style={{ color: '#00C2A8', fontWeight: 500, textDecoration: 'none' }}>Verify email →</Link>
+        {t('verify_prompt')}{' '}
+        <Link href="/verify-email" style={{ color: '#00C2A8', fontWeight: 500, textDecoration: 'none' }}>{t('verify_link')}</Link>
       </p>
     </form>
   );

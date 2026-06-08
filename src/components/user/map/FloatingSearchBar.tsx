@@ -264,7 +264,7 @@ export default function FloatingSearchBar({
 
         {showSuggestions && favPlaces.length > 0 && (
           <div style={{ padding: '8px 0' }}>
-            <SectionHeader label="Favourite Places" />
+            <SectionHeader label={t('saved_label')} />
             {favPlaces.map((fp) => {
               const nick = fp.nickname.toLowerCase();
               const isHome = nick === 'home';

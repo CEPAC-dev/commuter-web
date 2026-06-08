@@ -10,19 +10,27 @@ import { useUserLocation } from '@/lib/useUserLocation';
 import { reverseGeocode } from '@/lib/nominatim';
 import FloatingSearchBar from '@/components/user/map/FloatingSearchBar';
 import type { GeoLocation } from '@/types/shared';
+import { useTranslations } from 'next-intl';
+
+function MapLoading() {
+  const t = useTranslations('request_map');
+  return (
+    <div style={{ width: '100%', height: '100%', background: '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5A6A7A', fontSize: 14 }}>
+      {t('loading')}
+    </div>
+  );
+}
 
 const UserMap = dynamic(() => import('@/components/user/map/UserMap'), {
   ssr: false,
-  loading: () => (
-    <div style={{ width: '100%', height: '100%', background: '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5A6A7A', fontSize: 14 }}>
-      Loading map…
-    </div>
-  ),
+  loading: () => <MapLoading />,
 });
 
 // ── Inner map page — must be inside MapProvider + IntentProvider ─────────────
 
 function MapPageInner() {
+  const t = useTranslations('request_map');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const searchParams = useSearchParams();
   const rideType = (searchParams.get('type') as 'private' | 'shared') ?? 'shared';
@@ -115,10 +123,10 @@ function MapPageInner() {
             <>
               <div>
                 <span style={{ fontSize: 14, fontWeight: 600, color: '#0B1E3D' }}>
-                  {route.distance_km.toFixed(1)} km
+                  {route.distance_km.toFixed(1)} {tCommon('km')}
                 </span>
                 <span style={{ fontSize: 14, color: '#5A6A7A', marginLeft: 8 }}>
-                  · ~{Math.round(route.duration_minutes)} min
+                  · ~{Math.round(route.duration_minutes)} {tCommon('min')}
                 </span>
               </div>
               <button
@@ -136,7 +144,7 @@ function MapPageInner() {
                   fontFamily: 'inherit',
                 }}
               >
-                Continue →
+                {t('continue')}
               </button>
             </>
           ) : (

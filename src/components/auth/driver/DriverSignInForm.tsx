@@ -63,13 +63,13 @@ export default function DriverSignInForm() {
         } else {
           destination = nextPath && !nextPath.startsWith('/driver/sign') && !nextPath.startsWith('/sign')
             ? nextPath
-            : '/driver/requests';
+            : '/driver/my-requests';
         }
       } catch {
         // Network error or unexpected issue — default to dashboard.
         destination = nextPath && !nextPath.startsWith('/driver/sign') && !nextPath.startsWith('/sign')
           ? nextPath
-          : '/driver/requests';
+          : '/driver/my-requests';
       }
       router.replace(destination);
     } catch (err: unknown) {

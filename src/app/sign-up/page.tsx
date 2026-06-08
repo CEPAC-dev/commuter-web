@@ -1,24 +1,25 @@
 import { Toaster } from 'react-hot-toast';
 import AuthSplitLayout from '@/components/shared/AuthSplitLayout';
 import UserSignUpForm from '@/components/auth/user/UserSignUpForm';
+import { useTranslations } from 'next-intl';
 
 function UserSignUpLeft() {
+  const t = useTranslations('sign_up_page');
   const bullets = [
-    'Fixed weekly routes',
-    'Verified co-passengers',
-    'Split the fare automatically',
+    t('bullet_routes'),
+    t('bullet_verified'),
+    t('bullet_split'),
   ];
 
   return (
     <div className="text-white">
       <div className="mb-10">
         <h2 className="text-4xl font-bold leading-tight mb-2">
-          Your daily commute,<br />
-          <span style={{ color: '#00C2A8' }}>reinvented.</span>
+          {t('headline')}<br />
+          <span style={{ color: '#00C2A8' }}>{t('headline_accent')}</span>
         </h2>
         <p className="text-white/65 text-[15px] mt-4 leading-relaxed">
-          Join thousands of Egyptians who<br />
-          split their ride costs every week.
+          {t('tagline')}
         </p>
       </div>
 

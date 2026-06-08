@@ -2,12 +2,15 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useIntent } from '@/lib/IntentContext';
 import { isValidGroupCode } from '@/lib/groupCode';
 import WizardProgress from '@/components/user/onboarding/WizardProgress';
 
 export default function JoinGroupPage() {
   const router = useRouter();
+  const t = useTranslations('onboarding');
+  const tCommon = useTranslations('common');
   const { setIntent } = useIntent();
 
   const [part1, setPart1] = useState('');
@@ -47,7 +50,7 @@ export default function JoinGroupPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? 'Invalid code. Check with your friend and try again.');
+        setError(data.error ?? t('invalid_code'));
         return;
       }
       setIntent({
@@ -58,7 +61,7 @@ export default function JoinGroupPage() {
       });
       router.push('/user/request/new');
     } catch {
-      setError('Something went wrong. Please try again.');
+      setError(t('join_error'));
     } finally {
       setLoading(false);
     }
@@ -81,6 +84,8 @@ export default function JoinGroupPage() {
     transition: 'border-color 0.15s',
   };
 
+  const whatNextItems = [t('what_next_1'), t('what_next_2'), t('what_next_3'), t('what_next_4')];
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -92,15 +97,14 @@ export default function JoinGroupPage() {
       padding: '24px 16px',
       fontFamily: 'Inter, system-ui, sans-serif',
     }}>
-      {/* Back + Brand */}
       <div style={{ width: '100%', maxWidth: 560, display: 'flex', alignItems: 'center', marginBottom: 32 }}>
         <button
           onClick={() => router.push('/user/onboarding/shared/friends')}
           style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', fontSize: 14, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, padding: 0, marginRight: 'auto' }}
         >
-          ← Back
+          ← {tCommon('back')}
         </button>
-        <span style={{ fontSize: 18, fontWeight: 800, color: '#00C2A8' }}>[c] commuter</span>
+        <span style={{ fontSize: 18, fontWeight: 800, color: '#00C2A8' }}>{t('brand')}</span>
         <div style={{ marginLeft: 'auto', width: 60 }} />
       </div>
 
@@ -108,14 +112,13 @@ export default function JoinGroupPage() {
         <WizardProgress current={4} total={4} />
 
         <h1 style={{ color: '#fff', fontSize: 26, fontWeight: 700, margin: 0, marginBottom: 6 }}>
-          Enter your group code
+          {t('enter_code_title')}
         </h1>
         <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 15, margin: '0 0 28px' }}>
-          Ask your friend for the code they generated
+          {t('enter_code_desc')}
         </p>
 
         <div style={{ background: '#1C3557', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: 32 }}>
-          {/* Split input */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
             <input
               value={part1}
@@ -157,21 +160,15 @@ export default function JoinGroupPage() {
               fontFamily: 'inherit', transition: 'background 0.2s, color 0.2s',
             }}
           >
-            {loading ? 'Joining…' : 'Join group'}
+            {loading ? t('joining') : t('join_group')}
           </button>
         </div>
 
-        {/* What happens next */}
         <div style={{ marginTop: 24, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 24 }}>
           <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 12px' }}>
-            What happens next?
+            {t('what_next')}
           </p>
-          {[
-            "You'll join the group",
-            "See who else is in the group",
-            "The group's route and schedule will be shown to you",
-            "One driver will be matched for the whole group",
-          ].map((item, i) => (
+          {whatNextItems.map((item, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
               <span style={{ color: '#00C2A8', fontWeight: 700, flexShrink: 0, marginTop: 1 }}>✓</span>
               <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14 }}>{item}</span>

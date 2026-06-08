@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { GeoLocation } from '@/types/shared';
 import { searchAddress, getPlaceDetails, type NominatimResult, formatDisplayName } from '@/lib/nominatim';
+import { useTranslations } from 'next-intl';
 
 interface Props {
   title:    string;
@@ -12,6 +13,9 @@ interface Props {
 }
 
 export default function PointPicker({ title, initial, onConfirm, onCancel }: Props) {
+  const tp = useTranslations('point_picker');
+  const tc = useTranslations('common');
+  const tm = useTranslations('map');
   const [query, setQuery]       = useState(initial?.address ?? '');
   const [results, setResults]   = useState<NominatimResult[]>([]);
   const [selected, setSelected] = useState<GeoLocation | null>(initial ?? null);
@@ -81,12 +85,12 @@ export default function PointPicker({ title, initial, onConfirm, onCancel }: Pro
               type="text"
               value={query}
               onChange={(e) => { setQuery(e.target.value); setSelected(null); }}
-              placeholder="Type to search…"
+              placeholder={tp('search')}
               autoFocus
               className="w-full h-11 px-3 rounded-xl border border-[#E2E8F0] text-sm text-[#0B1E3D] focus:outline-none focus:border-[#00C2A8] mb-2"
             />
 
-            {loading && <p className="text-xs text-[#9AA0A6] py-2">Searching…</p>}
+            {loading && <p className="text-xs text-[#9AA0A6] py-2">{tm('searching')}</p>}
 
             {results.length > 0 && (
               <ul className="border border-[#E2E8F0] rounded-xl divide-y divide-[#F1F3F4] overflow-hidden">
@@ -122,13 +126,13 @@ export default function PointPicker({ title, initial, onConfirm, onCancel }: Pro
               onClick={onCancel}
               className="flex-1 h-11 rounded-xl bg-[#F1F3F4] text-sm font-semibold text-[#5A6A7A]"
               style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-            >Cancel</button>
+            >{tc('cancel')}</button>
             <button
               onClick={() => selected && onConfirm(selected)}
               disabled={!selected || busy}
               className="flex-[2] h-11 rounded-xl bg-[#00C2A8] text-sm font-bold text-[#0B1E3D] disabled:opacity-40"
               style={{ border: 'none', cursor: selected && !busy ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}
-            >Confirm</button>
+            >{tc('confirm')}</button>
           </div>
         </div>
       </div>

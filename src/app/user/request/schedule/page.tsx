@@ -20,11 +20,13 @@ import { ApiError } from '@/lib/api/client';
 import { getPassengers, type ApiPassenger } from '@/lib/api/passengers';
 import { getName, getUserId } from '@/lib/auth';
 import PrivateSchedulePage from '@/components/user/request/private/PrivateSchedulePage';
+import { useLocale, useTranslations } from 'next-intl';
 // Mock data removed
 
 // ── Group code display card ────────────────────────────────────────────────────
 
 function GroupCodeCard({ code }: { code: string }) {
+  const t = useTranslations('request_schedule');
   const [copied, setCopied] = React.useState(false);
   const display = code.replace('-', ' – ');
 
@@ -38,9 +40,9 @@ function GroupCodeCard({ code }: { code: string }) {
   return (
     <div className="bg-[#EFF7F6] border border-[#C8E8E4] rounded-xl p-4 flex items-center justify-between">
       <div>
-        <p className="text-xs font-semibold text-[#5A6A7A] mb-0.5">Your group code</p>
+        <p className="text-xs font-semibold text-[#5A6A7A] mb-0.5">{t('group_code')}</p>
         <p className="text-xl font-bold tracking-[0.18em] text-[#00C2A8]">{display}</p>
-        <p className="text-xs text-[#5A6A7A] mt-0.5">Share with friends · expires after 48 hours</p>
+        <p className="text-xs text-[#5A6A7A] mt-0.5">{t('share_friends')}</p>
       </div>
       <button
         type="button"
@@ -48,7 +50,7 @@ function GroupCodeCard({ code }: { code: string }) {
         className="ml-4 px-3 py-2 rounded-lg border border-[#C8E8E4] bg-white text-sm font-medium text-[#00C2A8] hover:bg-[#EFF7F6] transition-colors"
         style={{ fontFamily: 'inherit' }}
       >
-        {copied ? '✓ Copied' : '📋 Copy'}
+        {copied ? t('copied') : t('copy')}
       </button>
     </div>
   );
@@ -77,24 +79,24 @@ function makeDefaultSlot(usedDays: WeekDay[], inheritFrom?: WizardTimeSlot): Wiz
   };
 }
 
-function validateSchedule(slots: WizardTimeSlot[]): string[] {
+function validateSchedule(slots: WizardTimeSlot[], t: ReturnType<typeof useTranslations<'request_schedule'>>): string[] {
   const errors: string[] = [];
   if (slots.length === 0) {
-    errors.push('Add at least one time slot');
+    errors.push(t('add_slot'));
     return errors;
   }
   for (let i = 0; i < slots.length; i++) {
     const slot = slots[i];
     const n = i + 1;
     if (!slot.route_set || !slot.origin || !slot.destination)
-      errors.push(`Set a route for Time slot ${n}`);
+      errors.push(t('set_route', { n }));
     if (slot.days.length === 0)
-      errors.push(`Select days for Time slot ${n}`);
+      errors.push(t('select_days', { n }));
     const gap = parseInt(slot.pickup_to.split(':')[0]) * 60 +
       parseInt(slot.pickup_to.split(':')[1]) -
       (parseInt(slot.pickup_from.split(':')[0]) * 60 + parseInt(slot.pickup_from.split(':')[1]));
     if (gap < 15 || gap > 120)
-      errors.push(`Invalid pickup window for Time slot ${n} (must be 15 min–2 h)`);
+      errors.push(t('invalid_pickup', { n }));
   }
   return errors;
 }
@@ -102,6 +104,10 @@ function validateSchedule(slots: WizardTimeSlot[]): string[] {
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default function SchedulePage() {
+  const t = useTranslations('request_schedule');
+  const tForm = useTranslations('request_form');
+  const tCo = useTranslations('co_passenger');
+  const locale = useLocale();
   const router = useRouter();
   const wizard = useWizard();
   const {
@@ -134,7 +140,7 @@ export default function SchedulePage() {
   }, [include_self, selected_passenger_ids]);
 
   const cycleStartDate  = getNextAvailableCycleStart();
-  const cycleStartLabel = formatCycleStartDate(cycleStartDate, 'en');
+  const cycleStartLabel = formatCycleStartDate(cycleStartDate, locale);
 
   // ── Local slots state ───────────────────────────────────────────────────────
   const [slots, setSlotsLocal] = useState<WizardTimeSlot[]>(() => {
@@ -324,7 +330,7 @@ export default function SchedulePage() {
   }
 
   function handleReviewClick() {
-    const errs = validateSchedule(slots);
+    const errs = validateSchedule(slots, t);
     if (errs.length > 0) {
       setValidationError(errs.join('\n'));
       return;
@@ -438,7 +444,7 @@ export default function SchedulePage() {
       wizard.reset();
       router.push('/user/my-requests');
     } catch (e) {
-      const msg = e instanceof ApiError ? e.message : 'Failed to submit request. Try again.';
+      const msg = e instanceof ApiError ? e.message : t('submit_failed');
       setValidationError(msg);
       setSubmitting(false);
       setShowReview(false);
@@ -446,7 +452,7 @@ export default function SchedulePage() {
   }
 
   // ── Derive ride type label ──────────────────────────────────────────────────
-  const rideTypeLabel = ride_type === 'private' ? 'Private' : 'Shared';
+  const rideTypeLabel = ride_type === 'private' ? t('private') : t('shared');
 
   // ── Picker slot for pre-fill ────────────────────────────────────────────────
   const pickerSlot = slots.find(s => s.id === routePickerSlotId);
@@ -459,7 +465,7 @@ export default function SchedulePage() {
       <div style={{ maxWidth: 640, margin: '0 auto' }}>
 
         <PageHeader
-          title="Schedule your ride"
+          title={t('schedule_title')}
           onBack={() => router.back()}
           rightElement={
             <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#EFF7F6] text-[#00C2A8] border border-[#C8E8E4]">
@@ -478,16 +484,16 @@ export default function SchedulePage() {
           {/* Who is riding — private only */}
           {ride_type === 'private' && (
             <Section
-              title="Who is riding?"
-              rightLabel={`${(include_self ? 1 : 0) + selected_passenger_ids.length}/4 selected`}
+              title={t('who_riding')}
+              rightLabel={t('selected_label', { count: (include_self ? 1 : 0) + selected_passenger_ids.length })}
             >
               <p className="text-xs text-[#5A6A7A] mb-4">
-                Select up to 4 passengers. You can include yourself or book for others only.
+                {t('who_riding_desc')}
               </p>
 
               {/* Me row */}
               {(() => {
-                const myName = getName() ?? 'Me';
+                const myName = getName() ?? t('me');
                 const checked = include_self;
                 const total = (include_self ? 1 : 0) + selected_passenger_ids.length;
                 const disabled = !checked && total >= 4;
@@ -511,8 +517,8 @@ export default function SchedulePage() {
                       {myName.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-[#0B1E3D]">Me ({myName})</p>
-                      <p className="text-xs text-[#8A9AB0]">Account holder</p>
+                      <p className="text-sm font-semibold text-[#0B1E3D]">{t('me_with_name', { name: myName })}</p>
+                      <p className="text-xs text-[#8A9AB0]">{t('account_holder')}</p>
                     </div>
                   </button>
                 );
@@ -520,11 +526,11 @@ export default function SchedulePage() {
 
               {/* Related passengers */}
               {passengersLoading ? (
-                <p className="text-xs text-[#8A9AB0] py-2">Loading passengers…</p>
+                <p className="text-xs text-[#8A9AB0] py-2">{t('loading_passengers')}</p>
               ) : ridePassengers.length > 0 ? (
                 <>
                   <p className="text-xs font-semibold text-[#8A9AB0] uppercase tracking-wide mb-2">
-                    Related passengers
+                    {t('related_passengers')}
                   </p>
                   <div className="flex flex-col gap-2">
                     {ridePassengers.map((p) => {
@@ -564,7 +570,7 @@ export default function SchedulePage() {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-[#0B1E3D]">{p.name}</p>
                             <p className="text-xs text-[#8A9AB0]">
-                              {p.relation ? `${p.relation} · ` : ''}{p.age} yrs · {p.gender === 'male' ? 'Male' : 'Female'}
+                              {p.relation ? `${p.relation} · ` : ''}{p.age} yrs · {p.gender === 'male' ? tCo('male') : tCo('female')}
                             </p>
                           </div>
                         </button>
@@ -574,15 +580,15 @@ export default function SchedulePage() {
                 </>
               ) : (
                 <p className="text-xs text-[#8A9AB0] py-1">
-                  No related passengers saved. Add them in your{' '}
-                  <a href="/user/profile" className="text-[#00C2A8] font-medium hover:underline">profile</a>.
+                  {t('no_passengers_profile')}{' '}
+                  <a href="/user/profile" className="text-[#00C2A8] font-medium hover:underline">{t('profile_link')}</a>.
                 </p>
               )}
             </Section>
           )}
 
           {/* Schedule */}
-          <Section title="Schedule" rightLabel={`${assignedDays.length}/7 days`}>
+          <Section title={t('schedule')} rightLabel={t('days_label', { count: assignedDays.length })}>
             <ScheduleBuilder
               timeSlots={slots as TimeSlot[]}
               assignedDays={assignedDays}
@@ -601,17 +607,17 @@ export default function SchedulePage() {
           </Section>
 
           {/* Cycle start */}
-          <Section title="Cycle start">
+          <Section title={t('cycle_start')}>
             <div className="bg-[#F8F9FA] border border-[#E2E8F0] rounded-xl p-3">
               <p className="text-sm font-semibold text-[#0B1E3D]">{cycleStartLabel}</p>
-              <p className="text-xs text-[#5A6A7A] mt-0.5">Requests are grouped every Wednesday</p>
+              <p className="text-xs text-[#5A6A7A] mt-0.5">{t('cycle_note')}</p>
             </div>
           </Section>
 
           {/* Notes */}
-          <Section title="Notes">
+          <Section title={t('notes')}>
             <p className="text-xs text-[#5A6A7A] mb-2">
-              Optional details for the driver (e.g. luggage, pickup instructions).
+              {t('notes_desc')}
             </p>
             <div className="relative">
               <textarea
@@ -619,7 +625,7 @@ export default function SchedulePage() {
                 maxLength={500}
                 value={wizard.notes ?? ''}
                 onChange={(e) => wizard.setNotes(e.target.value)}
-                placeholder="Add notes…"
+                placeholder={t('notes_placeholder')}
                 className="w-full p-3 rounded-xl border border-[#E2E8F0] text-sm text-[#0B1E3D] resize-none focus:outline-none focus:border-[#00C2A8]"
               />
               <span className="absolute bottom-2 right-3 text-[10px] text-[#9AA0A6]">
@@ -645,7 +651,7 @@ export default function SchedulePage() {
             className="w-full py-4 bg-[#0B1E3D] text-white font-bold text-sm rounded-xl hover:bg-[#132D52] transition-colors disabled:opacity-40"
             style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            Review &amp; submit request
+            {t('review_submit')}
           </button>
 
           <div className="h-8" />

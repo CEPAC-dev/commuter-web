@@ -1,12 +1,15 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useIntent } from '@/lib/IntentContext';
 import OnboardingCard from '@/components/user/onboarding/OnboardingCard';
 import WizardProgress from '@/components/user/onboarding/WizardProgress';
 
 export default function FriendsPage() {
   const router = useRouter();
+  const t = useTranslations('onboarding');
+  const tCommon = useTranslations('common');
   const { setIntent } = useIntent();
 
   function chooseCreate() {
@@ -30,15 +33,14 @@ export default function FriendsPage() {
       padding: '24px 16px',
       fontFamily: 'Inter, system-ui, sans-serif',
     }}>
-      {/* Back + Brand */}
       <div style={{ width: '100%', maxWidth: 680, display: 'flex', alignItems: 'center', marginBottom: 32 }}>
         <button
           onClick={() => router.push('/user/onboarding/shared')}
           style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', fontSize: 14, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, padding: 0, marginRight: 'auto' }}
         >
-          ← Back
+          ← {tCommon('back')}
         </button>
-        <span style={{ fontSize: 18, fontWeight: 800, color: '#00C2A8' }}>[c] commuter</span>
+        <span style={{ fontSize: 18, fontWeight: 800, color: '#00C2A8' }}>{t('brand')}</span>
         <div style={{ marginLeft: 'auto', width: 60 }} />
       </div>
 
@@ -47,24 +49,24 @@ export default function FriendsPage() {
 
         <div style={{ marginBottom: 36 }}>
           <h1 style={{ color: '#fff', fontSize: 26, fontWeight: 700, margin: 0, marginBottom: 8 }}>
-            Create a group or join one
+            {t('create_or_join')}
           </h1>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <OnboardingCard
             icon="🔑"
-            title="Create a group"
-            description="Start a new group for this cycle. You'll get a code to share with your friends so they can join."
-            ctaLabel="Create group"
+            title={t('create_group')}
+            description={t('what_next_1')}
+            ctaLabel={t('create_group')}
             onClick={chooseCreate}
           />
 
           <OnboardingCard
             icon="📩"
-            title="Join a group"
-            description="Someone already created a group for your cycle. Enter the code they sent you to join."
-            ctaLabel="Enter group code"
+            title={t('join_group')}
+            description={t('enter_code_desc')}
+            ctaLabel={t('enter_group_code')}
             onClick={chooseJoin}
           />
         </div>

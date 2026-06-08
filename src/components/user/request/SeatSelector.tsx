@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import SeatSelectorLegend from './SeatSelectorLegend';
+import { useTranslations } from 'next-intl';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -27,12 +28,6 @@ const SEAT_COSTS: Record<'front' | 'rear-window', number> = {
   'rear-window': 8,
 };
 
-const SEAT_LABELS: Record<SeatId, string> = {
-  'front-passenger': 'Front seat (Passenger side)',
-  'rear-left':       'Rear seat (Left / Window)',
-  'rear-right':      'Rear seat (Right / Window)',
-};
-
 const SEAT_POSITIONS: Record<SeatId | 'driver', { cx: number; cy: number }> = {
   driver:             { cx: 76,  cy: 108 },
   'front-passenger':  { cx: 124, cy: 108 },
@@ -56,7 +51,16 @@ export default function SeatSelector({
   selectedSeat,
   takenSeats = [],
 }: SeatSelectorProps) {
+  const ts = useTranslations('seat_selector');
+  const tf = useTranslations('request_form');
+  const tc = useTranslations('common');
   const [animatingId, setAnimatingId] = useState<SeatId | null>(null);
+
+  const SEAT_LABELS: Record<SeatId, string> = {
+    'front-passenger': ts('front'),
+    'rear-left':       ts('rear_left'),
+    'rear-right':      ts('rear_right'),
+  };
 
   function getSeatState(id: SeatId): SeatState {
     if (takenSeats.includes(id)) return 'taken';
@@ -107,7 +111,7 @@ export default function SeatSelector({
         role={isDriver ? 'img' : 'button'}
         aria-label={
           isDriver
-            ? 'Driver seat — not selectable'
+            ? ts('driver')
             : state === 'taken'
             ? `Seat ${id} — taken`
             : `${SEAT_LABELS[id as SeatId]}${state === 'selected' ? ' — selected' : ''}`
@@ -158,7 +162,7 @@ export default function SeatSelector({
             fill="#5F6368"
             fontFamily="Inter, sans-serif"
           >
-            Driver
+            {tf('seat_driver')}
           </text>
         )}
 
@@ -308,7 +312,7 @@ export default function SeatSelector({
                 fontWeight: 600,
               }}
             >
-              Free
+              {tc('free')}
             </span>
           )}
         </div>

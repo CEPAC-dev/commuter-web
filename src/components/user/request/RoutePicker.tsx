@@ -10,6 +10,7 @@ import type { ORSRoute } from '@/lib/openrouteservice';
 import { useUserLocation } from '@/lib/useUserLocation';
 import { reverseGeocode } from '@/lib/nominatim';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 const UserMap = dynamic(() => import('@/components/user/map/UserMap'), {
   ssr: false,
@@ -56,6 +57,8 @@ function RoutePickerInner({
   onConfirm,
   onCancel,
 }: RoutePickerProps) {
+  const tr = useTranslations('route_picker');
+  const tc = useTranslations('common');
   const { origin, destination, stops, routes, setOrigin, setDestination, loading, error } = useMap();
   const { setIntent } = useIntent();
   const { lat: userLat, lng: userLng, locate } = useUserLocation();
@@ -125,9 +128,7 @@ function RoutePickerInner({
     onConfirm({ origin: origin as GeoLocation, destination: destination as GeoLocation, stops: filledStops, route });
   }
 
-  const headerTitle = mode === 'return'
-    ? `Edit return route for Time slot ${slotNumber}`
-    : `Set route for Time slot ${slotNumber}`;
+  const headerTitle = tr('set_route', { n: slotNumber });
 
   return (
     <div
@@ -141,7 +142,7 @@ function RoutePickerInner({
           className="text-sm text-[#5A6A7A] hover:text-[#0B1E3D] transition-colors"
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
         >
-          ← Cancel
+          ← {tc('cancel')}
         </button>
         <h2 className="text-sm font-semibold text-[#0B1E3D] flex-1">{headerTitle}</h2>
       </div>
@@ -212,7 +213,7 @@ function RoutePickerInner({
           <p className="text-sm text-[#EF4444]">{error}</p>
         ) : (
           <p className="text-sm text-[#5A6A7A]">
-            {loading ? 'Calculating route…' : 'Search origin and destination to see route'}
+            {loading ? tr('calculating') : tr('search_placeholder')}
           </p>
         )}
       </div>

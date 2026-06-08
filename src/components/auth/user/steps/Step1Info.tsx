@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { Mail, Phone } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import PasswordInput from '@/components/shared/PasswordInput';
 import PasswordStrengthMeter from '@/components/shared/PasswordStrengthMeter';
 import AgeGateInput from '@/components/shared/AgeGateInput';
@@ -46,6 +47,7 @@ function iconFieldCls(err?: string) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Step1Info({ initial, onNext }: Step1Props) {
+  const t = useTranslations('signup_step1');
   const [form, setForm] = useState<Step1Data>({
     name:                   initial.name                   ?? '',
     birthdate:              initial.birthdate              ?? '',
@@ -77,19 +79,19 @@ export default function Step1Info({ initial, onNext }: Step1Props) {
   function validate(): boolean {
     const e: Partial<Record<keyof Step1Data, string>> = {};
     if (!NAME_RE.test(form.name.trim()))
-      e.name = 'Enter your full name (at least 3 letters, no numbers).';
+      e.name = t('name_error');
     if (!form.birthdate)
-      e.birthdate = 'Please select your date of birth.';
+      e.birthdate = t('dob_error');
     if (!EMAIL_RE.test(form.email))
-      e.email = 'Enter a valid email address.';
+      e.email = t('email_error');
     if (!EGYPT_PHONE.test(form.phone_number))
-      e.phone_number = 'Enter a valid Egyptian mobile number (010/011/012/015…).';
+      e.phone_number = t('mobile_error');
     if (!form.whatsapp_same_as_phone && !EGYPT_PHONE.test(form.whatsapp_number))
-      e.whatsapp_number = 'Enter a valid Egyptian WhatsApp number.';
+      e.whatsapp_number = t('whatsapp_error');
     if (form.password.length < 8)
-      e.password = 'Password must be at least 8 characters.';
+      e.password = t('password_error');
     if (form.password_confirmation !== form.password)
-      e.password_confirmation = 'Passwords do not match.';
+      e.password_confirmation = t('confirm_error');
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -104,11 +106,11 @@ export default function Step1Info({ initial, onNext }: Step1Props) {
 
       {/* Full name */}
       <div>
-        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">Full name</label>
+        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">{t('name_label')}</label>
         <input
           value={form.name}
           onChange={set('name')}
-          placeholder="Your full name"
+          placeholder={t('name_placeholder')}
           autoComplete="name"
           className={fieldCls(errors.name)}
         />
@@ -117,7 +119,7 @@ export default function Step1Info({ initial, onNext }: Step1Props) {
 
       {/* Date of birth */}
       <div>
-        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">Date of birth</label>
+        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">{t('dob_label')}</label>
         <AgeGateInput
           onChange={(val) => setForm((f) => ({ ...f, birthdate: val }))}
           error={errors.birthdate}
@@ -127,7 +129,7 @@ export default function Step1Info({ initial, onNext }: Step1Props) {
 
       {/* Gender */}
       <div>
-        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">Gender</label>
+        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">{t('gender_label')}</label>
         <div className="grid grid-cols-2 gap-3">
           {(['male', 'female'] as const).map((g) => (
             <button
@@ -141,7 +143,7 @@ export default function Step1Info({ initial, onNext }: Step1Props) {
                   : 'border-[#D1D5DB] bg-white text-[#0B1E3D] hover:border-[#00C2A8]',
               ].join(' ')}
             >
-              {g === 'male' ? 'Male' : 'Female'}
+              {g === 'male' ? t('male') : t('female')}
             </button>
           ))}
         </div>
@@ -149,7 +151,7 @@ export default function Step1Info({ initial, onNext }: Step1Props) {
 
       {/* Email */}
       <div>
-        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">Email address</label>
+        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">{t('email_label')}</label>
         <div className="relative">
           <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9CA3AF] pointer-events-none" aria-hidden />
           <input
@@ -166,7 +168,7 @@ export default function Step1Info({ initial, onNext }: Step1Props) {
 
       {/* Mobile */}
       <div>
-        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">Mobile number</label>
+        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">{t('mobile_label')}</label>
         <div className="relative">
           <Phone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9CA3AF] pointer-events-none" aria-hidden />
           <input
@@ -183,7 +185,7 @@ export default function Step1Info({ initial, onNext }: Step1Props) {
 
       {/* WhatsApp */}
       <div>
-        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">WhatsApp number</label>
+        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">{t('whatsapp_label')}</label>
         <label className="flex items-center gap-2 text-sm text-[#5A6A7A] mb-2 cursor-pointer select-none">
           <input
             type="checkbox"
@@ -191,7 +193,7 @@ export default function Step1Info({ initial, onNext }: Step1Props) {
             onChange={handleWhatsappToggle}
             className="accent-[#00C2A8] w-4 h-4"
           />
-          Same as mobile number
+          {t('whatsapp_same')}
         </label>
         {!form.whatsapp_same_as_phone && (
           <div>
@@ -215,10 +217,10 @@ export default function Step1Info({ initial, onNext }: Step1Props) {
       {/* Password */}
       <div>
         <PasswordInput
-          label="Password"
+          label={t('password_label')}
           value={form.password}
           onChange={set('password')}
-          placeholder="Min. 8 characters"
+          placeholder={t('password_placeholder')}
           error={errors.password}
           autoComplete="new-password"
         />
@@ -228,10 +230,10 @@ export default function Step1Info({ initial, onNext }: Step1Props) {
       {/* Confirm password */}
       <div>
         <PasswordInput
-          label="Confirm password"
+          label={t('confirm_label')}
           value={form.password_confirmation}
           onChange={set('password_confirmation')}
-          placeholder="Repeat password"
+          placeholder={t('confirm_placeholder')}
           error={errors.password_confirmation}
           autoComplete="new-password"
         />
@@ -241,7 +243,7 @@ export default function Step1Info({ initial, onNext }: Step1Props) {
         type="submit"
         className="w-full h-[52px] rounded-lg text-sm font-bold bg-[#00C2A8] text-[#0B1E3D] flex items-center justify-center gap-2 transition-opacity hover:opacity-90 mt-2"
       >
-        continue
+        {t('continue_btn')}
       </button>
     </form>
   );

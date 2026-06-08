@@ -1,19 +1,15 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useWizard } from '@/lib/RequestWizardContext';
-
-// ── Custom SVG icons ──────────────────────────────────────────────────────────
 
 function CreateGroupIcon() {
   return (
     <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Background circle */}
       <circle cx="18" cy="18" r="18" fill="#E6FAF8" />
-      {/* Person 1 (left) */}
       <circle cx="13" cy="14" r="3" fill="#00C2A8" />
       <path d="M7 24c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="#00C2A8" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-      {/* Plus sign (right, teal) */}
       <circle cx="25" cy="14" r="5" fill="#00C2A8" />
       <line x1="25" y1="11" x2="25" y2="17" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
       <line x1="22" y1="14" x2="28" y2="14" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
@@ -24,24 +20,19 @@ function CreateGroupIcon() {
 function JoinGroupIcon() {
   return (
     <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Background circle */}
       <circle cx="18" cy="18" r="18" fill="#EEF2FF" />
-      {/* Two people (group) */}
       <circle cx="14" cy="13" r="3" fill="#4F6EF7" />
       <path d="M8 23c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="#4F6EF7" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-      {/* Arrow entering from right */}
       <line x1="22" y1="18" x2="29" y2="18" stroke="#4F6EF7" strokeWidth="1.8" strokeLinecap="round" />
       <polyline points="26,15 29,18 26,21" stroke="#4F6EF7" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      {/* Vertical door line */}
       <line x1="22" y1="13" x2="22" y2="23" stroke="#4F6EF7" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-
 export default function FriendsGroupPage() {
   const router = useRouter();
+  const t = useTranslations('request_shared');
   const { setGroupAction } = useWizard();
 
   function handleCreate() {
@@ -84,15 +75,15 @@ export default function FriendsGroupPage() {
           fontFamily: 'inherit',
         }}
       >
-        ← Back
+        {t('back')}
       </button>
 
       <div style={{ textAlign: 'center', marginBottom: 40 }}>
         <h1 style={{ fontSize: 28, fontWeight: 700, color: '#0B1E3D', marginBottom: 8 }}>
-          Friends group
+          {t('friends_title')}
         </h1>
         <p style={{ fontSize: 15, color: '#5A6A7A' }}>
-          Create a new group or join an existing one?
+          {t('friends_subtitle')}
         </p>
       </div>
 
@@ -105,7 +96,6 @@ export default function FriendsGroupPage() {
           maxWidth: 480,
         }}
       >
-        {/* ── Create a group ── */}
         <button
           onClick={handleCreate}
           style={{
@@ -135,15 +125,14 @@ export default function FriendsGroupPage() {
           </div>
           <div>
             <p style={{ fontSize: 16, fontWeight: 700, color: '#0B1E3D', marginBottom: 4, marginTop: 0 }}>
-              Create a group
+              {t('create_new')}
             </p>
             <p style={{ fontSize: 13, color: '#5A6A7A', lineHeight: 1.55, margin: 0 }}>
-              Start a new friends group and share the code so your friends can join your commute.
+              {t('create_new_desc')}
             </p>
           </div>
         </button>
 
-        {/* ── Join a group ── */}
         <button
           onClick={handleJoin}
           style={{
@@ -173,10 +162,10 @@ export default function FriendsGroupPage() {
           </div>
           <div>
             <p style={{ fontSize: 16, fontWeight: 700, color: '#0B1E3D', marginBottom: 4, marginTop: 0 }}>
-              Join a group
+              {t('join_existing')}
             </p>
             <p style={{ fontSize: 13, color: '#5A6A7A', lineHeight: 1.55, margin: 0 }}>
-              Enter a code from a friend to join their existing commute group.
+              {t('join_existing_desc')}
             </p>
           </div>
         </button>

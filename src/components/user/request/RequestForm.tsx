@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import type { WeekDay, RideType } from '@/types/user';
 import type { TimeSlot } from '@/types/shared';
 import {
@@ -44,6 +44,9 @@ export default function RequestForm({
   const [shake, setShake] = useState(false);
   const [scheduleError, setScheduleError] = useState<string | null>(null);
   const locale     = useLocale();
+  const t          = useTranslations('request_form');
+  const te         = useTranslations('request_form_errors');
+  const tCommon    = useTranslations('common');
   const cycleStart = getNextAvailableCycleStart();
 
   function update(partial: Partial<RequestFormData>) {
@@ -173,50 +176,50 @@ export default function RequestForm({
   }
 
   function validateSchedule(): string | null {
-    if (data.time_slots.length === 0) return 'Add at least one time slot';
+    if (data.time_slots.length === 0) return te('add_slot');
 
     for (const slot of data.time_slots) {
+      const slotNum = data.time_slots.indexOf(slot) + 1;
       if (slot.days.length === 0) {
-        return `Time slot ${data.time_slots.indexOf(slot) + 1} has no days assigned`;
+        return te('no_days', { n: slotNum });
       }
 
       const gap = timeDiffMinutes(slot.pickup_from, slot.pickup_to);
-      if (gap < 30) return 'Pickup window must be at least 30 minutes';
-      if (gap > 120) return 'Pickup window cannot exceed 2 hours';
+      if (gap < 30) return te('pickup_min');
+      if (gap > 120) return te('pickup_max');
 
       const arrivalGap = timeDiffMinutes(slot.arrival_from, slot.arrival_to);
-      if (arrivalGap < 30) return 'Arrival window must be at least 30 minutes';
-      if (arrivalGap > 120) return 'Arrival window cannot exceed 2 hours';
+      if (arrivalGap < 30) return te('arrival_min');
+      if (arrivalGap > 120) return te('arrival_max');
 
-      // Route-aware gap: arrival_to must be ≥ pickup_from + routeDuration + 30 min
       const routeDur   = Math.round(slot.route?.duration_minutes ?? 0);
       const minGapReqd = routeDur + 30;
       const totalGap   = timeDiffMinutes(slot.pickup_from, slot.arrival_to);
       if (routeDur > 0 && totalGap < minGapReqd) {
-        return `Arrival must be at least ${minGapReqd} min after pickup start (~${routeDur} min route + 30 min buffer)`;
+        return te('arrival_route_gap', { min: minGapReqd, route: routeDur });
       }
 
       if (slot.trip_type === 'round_trip') {
         if (!slot.return_pickup_from || !slot.return_pickup_to) {
-          return `Time slot ${data.time_slots.indexOf(slot) + 1} is missing return pickup times`;
+          return te('return_pickup_missing', { n: slotNum });
         }
         const returnGap = timeDiffMinutes(slot.return_pickup_from, slot.return_pickup_to);
-        if (returnGap < 30) return 'Return pickup window must be at least 30 minutes';
-        if (returnGap > 120) return 'Return pickup window cannot exceed 2 hours';
+        if (returnGap < 30) return te('return_pickup_min');
+        if (returnGap > 120) return te('return_pickup_max');
 
         if (!slot.return_arrival_from || !slot.return_arrival_to) {
-          return `Time slot ${data.time_slots.indexOf(slot) + 1} is missing return arrival times`;
+          return te('return_arrival_missing', { n: slotNum });
         }
         const returnArrivalGap = timeDiffMinutes(slot.return_arrival_from, slot.return_arrival_to);
-        if (returnArrivalGap < 30) return 'Return arrival window must be at least 30 minutes';
-        if (returnArrivalGap > 120) return 'Return arrival window cannot exceed 2 hours';
+        if (returnArrivalGap < 30) return te('return_arrival_min');
+        if (returnArrivalGap > 120) return te('return_arrival_max');
       }
     }
 
     const allSlotDays = data.time_slots.flatMap((slot) => slot.days);
     const uniqueDays = new Set(allSlotDays);
     if (allSlotDays.length !== uniqueDays.size) {
-      return 'A day cannot appear in more than one time slot';
+      return te('day_duplicate');
     }
 
     return null;
@@ -277,13 +280,13 @@ export default function RequestForm({
       {/* 1. Ride type */}
       <div>
         <div style={{ fontSize: 13, fontWeight: 600, color: '#5A6A7A', marginBottom: 8 }}>
-          Trip type
+          {t('trip_type_label')}
         </div>
         <RideTypeCards value={data.ride_type} onChange={(v) => update({ ride_type: v })} lockedToPrivate={lockedToPrivate} />
         {lockedToPrivate && (
           <div style={{ marginTop: 8, display: 'flex', alignItems: 'flex-start', gap: 8, background: '#FAEEDA', border: '1px solid #F6D580', borderRadius: 8, padding: '10px 12px' }}>
             <span style={{ fontSize: 16, flexShrink: 0 }}>🔒</span>
-            <span style={{ fontSize: 12, color: '#BA7517', lineHeight: 1.4 }}>Shared ride unavailable — stop points require a private car.</span>
+            <span style={{ fontSize: 12, color: '#BA7517', lineHeight: 1.4 }}>{te('stops_locked')}</span>
           </div>
         )}
       </div>
@@ -310,12 +313,12 @@ export default function RequestForm({
 
       {/* 7. Cycle start — auto-computed, read-only */}
       <div style={{ background: '#EFF7F6', border: '1px solid #C8E8E4', borderRadius: 8, padding: '12px 16px' }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: '#5A6A7A', marginBottom: 4 }}>Cycle start</div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: '#5A6A7A', marginBottom: 4 }}>{t('cycle_start_label')}</div>
         <div style={{ fontSize: 14, fontWeight: 600, color: '#00C2A8' }}>
-          Starts Saturday {formatCycleStartDate(cycleStart, locale)}
+          {t('cycle_starts_on', { date: formatCycleStartDate(cycleStart, locale) })}
         </div>
         <div style={{ fontSize: 11, color: '#5A6A7A', marginTop: 4 }}>
-          Requests are grouped every Wednesday · Cycles start the following Saturday
+          {t('cycle_planning_note')}
         </div>
       </div>
 
@@ -354,7 +357,7 @@ export default function RequestForm({
         onMouseEnter={(e) => (e.currentTarget.style.background = '#00A896')}
         onMouseLeave={(e) => (e.currentTarget.style.background = '#00C2A8')}
       >
-        Review &amp; submit request
+        {t('review_btn')}
       </button>
     </div>
   );
@@ -371,6 +374,8 @@ function RideTypeCards({
   onChange: (v: RideType) => void;
   lockedToPrivate?: boolean;
 }) {
+  const t = useTranslations('request_form');
+  const te = useTranslations('request_form_errors');
   const options: Array<{
     key: RideType;
     icon: string;
@@ -378,8 +383,8 @@ function RideTypeCards({
     sub: string;
     priceHint: string;
   }> = [
-    { key: 'shared',  icon: '🧑‍🤝‍🧑', label: 'Shared ride', sub: 'Share with others',      priceHint: 'Lower price' },
-    { key: 'private', icon: '🚗',       label: 'Private',     sub: 'You alone in the car', priceHint: 'Higher price' },
+    { key: 'shared',  icon: '🧑‍🤝‍🧑', label: t('shared'), sub: te('share_with_others'),      priceHint: te('lower_price') },
+    { key: 'private', icon: '🚗',       label: t('private'),     sub: te('alone_in_car'), priceHint: te('higher_price') },
   ];
 
   return (
@@ -462,6 +467,9 @@ function PriceStrip({
   daysCount: number;
 }) {
   const [open, setOpen] = useState(false);
+  const t = useTranslations('request_form');
+  const te = useTranslations('request_form_errors');
+  const tCommon = useTranslations('common');
 
   return (
     <div>
@@ -476,7 +484,7 @@ function PriceStrip({
         }}
       >
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>
-          💰 Estimated weekly cost
+          💰 {t('price_estimate_label')}
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
           <span
@@ -486,7 +494,7 @@ function PriceStrip({
           >
             EGP {min} – {max}
           </span>
-          <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>/ week</span>
+          <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>{tCommon('per_week')}</span>
         </div>
         <button
           type="button"
@@ -503,7 +511,7 @@ function PriceStrip({
             marginTop: 2,
           }}
         >
-          {open ? 'Hide breakdown ▴' : 'See breakdown ▾'}
+          {open ? te('hide_breakdown') : t('see_breakdown')}
         </button>
       </div>
 
@@ -518,33 +526,33 @@ function PriceStrip({
           }}
         >
           <div style={{ fontSize: 13, fontWeight: 700, color: '#0B1E3D', marginBottom: 10 }}>
-            Price breakdown
+            {t('breakdown_title')}
           </div>
           {[
             [
-              `Base distance (${distanceKm.toFixed(1)} km)`,
-              `EGP ${Math.round(breakdown.base)}`,
+              te('base_distance', { km: distanceKm.toFixed(1) }),
+              `${tCommon('egp')} ${Math.round(breakdown.base)}`,
             ],
             [
-              `Trip type (${rideType === 'shared' ? 'Shared ride' : 'Private'})`,
+              te('trip_type_mult', { type: rideType === 'shared' ? te('shared_ride_label') : te('private_label') }),
               `× ${breakdown.rideTypeMultiplier.toFixed(1)}`,
             ],
             [
-              `Seat preference (${selectedSeatLabel})`,
-              breakdown.seatFee > 0 ? `+ EGP ${breakdown.seatFee}` : 'No extra cost',
+              te('seat_pref', { seat: selectedSeatLabel }),
+              breakdown.seatFee > 0 ? `+ ${tCommon('egp')} ${breakdown.seatFee}` : tCommon('no_extra_cost'),
             ],
             ...(walkMinutes > 0
               ? [
                   [
-                    `Walk discount (${walkMinutes} min)`,
+                    te('walk_discount', { min: walkMinutes }),
                     `- ${Math.abs(breakdown.walkDiscount * 100)}%`,
                   ],
                 ]
               : []),
             ...(tripType === 'round_trip'
-              ? [[`Round trip`, `× ${breakdown.roundTripMultiplier}`]]
+              ? [[te('round_trip_mult'), `× ${breakdown.roundTripMultiplier}`]]
               : []),
-            [`× ${daysCount} day${daysCount !== 1 ? 's' : ''}/week`, ''],
+            [daysCount !== 1 ? te('days_per_week', { count: daysCount }) : te('day_per_week', { count: daysCount }), ''],
           ].map(([label, val], i, arr) => (
             <div
               key={i}
@@ -564,9 +572,9 @@ function PriceStrip({
           <div style={{ width: '100%', height: 1, background: '#E2E8F0', margin: '8px 0' }} />
 
           {[
-            ['Per trip', `EGP ${breakdown.perTrip}`],
-            ['Per week', `EGP ${breakdown.perWeek}`],
-            ['Range (driver may adjust)', '± 15%'],
+            [t('breakdown_per_trip'), `${tCommon('egp')} ${breakdown.perTrip}`],
+            [t('breakdown_per_week'), `${tCommon('egp')} ${breakdown.perWeek}`],
+            [te('range_adjust'), '± 15%'],
           ].map(([label, val]) => (
             <div
               key={label}
@@ -584,7 +592,7 @@ function PriceStrip({
           <div style={{ width: '100%', height: 1, background: '#E2E8F0', margin: '8px 0' }} />
 
           <div style={{ fontSize: 15, fontWeight: 700, color: '#0B1E3D', textAlign: 'right' }}>
-            EGP {min} – {max} / week
+            {tCommon('egp')} {min} – {max} {tCommon('per_week')}
           </div>
         </div>
       )}

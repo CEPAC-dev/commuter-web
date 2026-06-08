@@ -1,12 +1,15 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useIntent } from '@/lib/IntentContext';
 import OnboardingCard from '@/components/user/onboarding/OnboardingCard';
 import WizardProgress from '@/components/user/onboarding/WizardProgress';
 
 export default function SharedPage() {
   const router = useRouter();
+  const t = useTranslations('onboarding');
+  const tCommon = useTranslations('common');
   const { setIntent } = useIntent();
 
   function chooseFriends() {
@@ -30,15 +33,14 @@ export default function SharedPage() {
       padding: '24px 16px',
       fontFamily: 'Inter, system-ui, sans-serif',
     }}>
-      {/* Back + Brand */}
       <div style={{ width: '100%', maxWidth: 680, display: 'flex', alignItems: 'center', marginBottom: 32 }}>
         <button
           onClick={() => router.push('/user/onboarding')}
           style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', fontSize: 14, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, padding: 0, marginRight: 'auto' }}
         >
-          ← Back
+          ← {tCommon('back')}
         </button>
-        <span style={{ fontSize: 18, fontWeight: 800, color: '#00C2A8' }}>[c] commuter</span>
+        <span style={{ fontSize: 18, fontWeight: 800, color: '#00C2A8' }}>{t('brand')}</span>
         <div style={{ marginLeft: 'auto', width: 60 }} />
       </div>
 
@@ -47,24 +49,24 @@ export default function SharedPage() {
 
         <div style={{ marginBottom: 36 }}>
           <h1 style={{ color: '#fff', fontSize: 26, fontWeight: 700, margin: 0, marginBottom: 8 }}>
-            Who are you riding with?
+            {t('who_riding_with')}
           </h1>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <OnboardingCard
             icon="👥"
-            title="Ride with friends"
-            description="Share this ride with people you already know. Create a group code and send it to your friends, or enter a code someone shared with you."
-            ctaLabel="Ride with friends"
+            title={t('ride_with_friends')}
+            description={t('ride_with_friends_desc')}
+            ctaLabel={t('ride_with_friends')}
             onClick={chooseFriends}
           />
 
           <OnboardingCard
             icon="🔍"
-            title="Open match"
-            description="Get matched with other commuters heading the same way. Save more, meet new people."
-            ctaLabel="Open match"
+            title={t('open_match')}
+            description={t('open_match_desc')}
+            ctaLabel={t('open_match')}
             onClick={chooseOpen}
           />
         </div>

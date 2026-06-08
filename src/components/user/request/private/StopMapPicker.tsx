@@ -6,6 +6,7 @@ import { MapProvider, useMap } from '@/lib/MapContext';
 import { IntentProvider } from '@/lib/IntentContext';
 import { searchAddress, formatDisplayName, getPlaceDetails, reverseGeocode, type NominatimResult } from '@/lib/nominatim';
 import type { GeoLocation } from '@/types/shared';
+import { useTranslations } from 'next-intl';
 
 const UserMap = dynamic(
   () => import('@/components/user/map/UserMap'),
@@ -31,6 +32,9 @@ export interface StopMapPickerProps {
 // ── Inner component (must be inside MapProvider) ──────────────────────────────
 
 function StopMapPickerInner({ title, initial, onConfirm, onCancel }: StopMapPickerProps) {
+  const ts = useTranslations('stop_map_picker');
+  const tc = useTranslations('common');
+  const tm = useTranslations('map');
   const { setOrigin } = useMap();
 
   const [selected,  setSelected]  = useState<GeoLocation | null>(initial ?? null);
@@ -96,7 +100,7 @@ function StopMapPickerInner({ title, initial, onConfirm, onCancel }: StopMapPick
           className="text-sm text-[#5A6A7A] hover:text-[#0B1E3D] transition-colors"
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
         >
-          ← Cancel
+          ← {tc('cancel')}
         </button>
         <h2 className="text-sm font-semibold text-[#0B1E3D] flex-1">{title}</h2>
       </div>
@@ -123,7 +127,7 @@ function StopMapPickerInner({ title, initial, onConfirm, onCancel }: StopMapPick
                 type="text"
                 value={query}
                 onChange={(e) => { setQuery(e.target.value); if (selected) setSelected(null); }}
-                placeholder="Search or tap on map…"
+                placeholder={ts('search')}
                 className="flex-1 text-sm text-[#0B1E3D] focus:outline-none"
                 style={{ border: 'none', background: 'none', fontFamily: 'inherit' }}
               />
@@ -142,7 +146,7 @@ function StopMapPickerInner({ title, initial, onConfirm, onCancel }: StopMapPick
 
             {searching && (
               <div className="px-3 py-2 border-t border-[#F1F3F4]">
-                <p className="text-xs text-[#9AA0A6]">Searching…</p>
+                <p className="text-xs text-[#9AA0A6]">{tm('searching')}</p>
               </div>
             )}
 

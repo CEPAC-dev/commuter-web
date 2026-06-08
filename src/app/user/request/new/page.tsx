@@ -2,44 +2,46 @@
 
 import { useRouter } from 'next/navigation';
 import { useWizard } from '@/lib/RequestWizardContext';
-
-const CARDS = [
-  {
-    id: 'private' as const,
-    label: 'Private ride',
-    tagline: 'Your own commute, your own terms',
-    description: 'Book a full ride for yourself — optionally invite up to 3 passengers you choose.',
-    pills: ['Solo or group', 'No strangers', 'Up to 4 seats'],
-    accent: '#00C2A8',
-    accentBg: 'rgba(0,194,168,0.1)',
-    accentBorder: 'rgba(0,194,168,0.2)',
-    icon: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00C2A8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
-      </svg>
-    ),
-  },
-  {
-    id: 'shared' as const,
-    label: 'Shared ride',
-    tagline: 'Save money, reduce traffic',
-    description: 'Ride with friends or get matched with verified commuters on the same route.',
-    pills: ['Friends group', 'Auto-match', 'Lower cost'],
-    accent: '#7B8FFF',
-    accentBg: 'rgba(123,143,255,0.1)',
-    accentBorder: 'rgba(123,143,255,0.2)',
-    icon: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7B8FFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-    ),
-  },
-];
+import { useTranslations } from 'next-intl';
 
 export default function RequestNewPage() {
+  const t = useTranslations('request_new');
   const router = useRouter();
   const { setRideType } = useWizard();
+
+  const CARDS = [
+    {
+      id: 'private' as const,
+      label: t('private_label'),
+      tagline: t('private_tagline'),
+      description: t('private_desc'),
+      pills: [t('private_pill_1'), t('private_pill_2'), t('private_pill_3')],
+      accent: '#00C2A8',
+      accentBg: 'rgba(0,194,168,0.1)',
+      accentBorder: 'rgba(0,194,168,0.2)',
+      icon: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00C2A8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+        </svg>
+      ),
+    },
+    {
+      id: 'shared' as const,
+      label: t('shared_label'),
+      tagline: t('shared_tagline'),
+      description: t('shared_desc'),
+      pills: [t('shared_pill_1'), t('shared_pill_2'), t('shared_pill_3')],
+      accent: '#7B8FFF',
+      accentBg: 'rgba(123,143,255,0.1)',
+      accentBorder: 'rgba(123,143,255,0.2)',
+      icon: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7B8FFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      ),
+    },
+  ];
 
   function handleSelect(id: 'private' | 'shared') {
     setRideType(id);
@@ -54,21 +56,19 @@ export default function RequestNewPage() {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '0 20px 64px', /* 64px bottom = bottom nav height on mobile */
+      padding: '0 20px 64px',
       fontFamily: 'Inter, system-ui, sans-serif',
       position: 'relative',
       overflow: 'hidden',
     }}>
 
-      {/* Background glow blobs — removed for light theme */}
-
       {/* Heading */}
       <div style={{ textAlign: 'center', marginBottom: 28, maxWidth: 320 }}>
         <h1 style={{ fontSize: 26, fontWeight: 800, color: '#0B1E3D', margin: '0 0 8px', letterSpacing: '-0.02em', lineHeight: 1.25 }}>
-          How would you<br />like to travel?
+          {t('heading')}
         </h1>
         <p style={{ fontSize: 13, color: '#5A6A7A', margin: 0, lineHeight: 1.5 }}>
-          Choose your ride type to get started.
+          {t('subheading')}
         </p>
       </div>
 

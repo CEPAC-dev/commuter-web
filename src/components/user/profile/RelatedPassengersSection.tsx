@@ -7,17 +7,29 @@ import {
   getPassengerPreferences, savePassengerPreferences,
   type ApiPassenger, type PassengerPreferences,
 } from '@/lib/api/passengers';
+import { useTranslations } from 'next-intl';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function prefsTags(prefs: PassengerPreferences): string {
-  const interaction = { quiet: 'Quiet', normal: 'Normal', talkative: 'Talkative' };
-  const music = { no_music: 'No music', low: 'Low', normal: 'Normal' };
+function prefsTags(
+  prefs: PassengerPreferences,
+  tp: ReturnType<typeof useTranslations<'preferences_modal'>>,
+): string {
+  const interaction = {
+    quiet: tp('interaction_quiet'),
+    normal: tp('interaction_normal'),
+    talkative: tp('interaction_talkative'),
+  };
+  const music = {
+    no_music: tp('music_none'),
+    low: tp('music_low'),
+    normal: tp('music_normal'),
+  };
   const parts: string[] = [
     interaction[prefs.interaction_level] ?? prefs.interaction_level,
     music[prefs.music_preference]        ?? prefs.music_preference,
   ];
-  if (prefs.smoking_allowed) parts.push('Smoking OK');
+  if (prefs.smoking_allowed) parts.push(tp('smoking_yes'));
   return parts.join(' · ');
 }
 
@@ -50,6 +62,8 @@ function PassengerFormModal({
   initial,
   isLoading,
 }: PassengerFormModalProps) {
+  const tr = useTranslations('related_passengers');
+  const tc = useTranslations('common');
   const [form, setForm] = useState({
     name:     initial?.name     ?? '',
     phone:    initial?.phone    ?? '',
@@ -110,7 +124,7 @@ function PassengerFormModal({
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0]">
           <h2 className="text-base font-semibold text-[#0B1E3D]">
-            {initial ? 'Edit passenger' : 'Add a passenger'}
+            {initial ? tr('edit') : tr('add')}
           </h2>
           <button
             onClick={onClose}
@@ -126,7 +140,7 @@ function PassengerFormModal({
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-[#0B1E3D] mb-1">
-              Full name <span className="text-[#E74C3C]">*</span>
+              {tr('name_label')} <span className="text-[#E74C3C]">*</span>
             </label>
             <input
               value={form.name}
@@ -173,7 +187,7 @@ function PassengerFormModal({
           {/* Gender */}
           <div>
             <label className="block text-sm font-medium text-[#0B1E3D] mb-2">
-              Gender <span className="text-[#E74C3C]">*</span>
+              {tr('gender_label')} <span className="text-[#E74C3C]">*</span>
             </label>
             <div className="flex gap-3">
               {(['male', 'female'] as const).map((g) => (
@@ -209,14 +223,14 @@ function PassengerFormModal({
             onClick={onClose}
             className="flex-1 h-11 border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#5A6A7A] hover:bg-[#F8F9FA]"
           >
-            Cancel
+            {tc('cancel')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={isLoading}
             className="flex-1 h-11 bg-[#0B1E3D] text-white rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Saving...' : 'Save passenger'}
+            {isLoading ? tc('loading') : tr('save')}
           </button>
         </div>
       </div>
@@ -233,85 +247,87 @@ interface PrefsPanelProps {
   onSaved:   (prefs: PassengerPreferences) => void;
 }
 
-const PREF_FIELDS: Array<{
-  key:     keyof Omit<PassengerPreferences, 'id' | 'passenger_id'>;
-  label:   string;
-  options: Array<{ value: string | boolean; label: string }>;
-}> = [
-  {
-    key: 'gender_preference',
-    label: 'Gender preference',
-    options: [
-      { value: 'any',    label: 'Any' },
-      { value: 'male',   label: 'Male' },
-      { value: 'female', label: 'Female' },
-    ],
-  },
-  {
-    key: 'smoking_allowed',
-    label: 'Smoking allowed',
-    options: [
-      { value: false, label: 'Smoking not allowed' },
-      { value: true,  label: 'Smoking allowed' },
-    ],
-  },
-  {
-    key: 'interaction_level',
-    label: 'Interaction level',
-    options: [
-      { value: 'quiet',     label: 'Quiet' },
-      { value: 'normal',    label: 'Normal' },
-      { value: 'talkative', label: 'Talkative' },
-    ],
-  },
-  {
-    key: 'children_allowed',
-    label: 'Children allowed',
-    options: [
-      { value: false, label: 'Children not allowed' },
-      { value: true,  label: 'Children allowed' },
-    ],
-  },
-  {
-    key: 'music_preference',
-    label: 'Music preference',
-    options: [
-      { value: 'no_music', label: 'No music' },
-      { value: 'low',      label: 'Low' },
-      { value: 'normal',   label: 'Normal' },
-    ],
-  },
-  {
-    key: 'seat_preference',
-    label: 'Seat preference',
-    options: [
-      { value: 'front', label: 'Front' },
-      { value: 'back',  label: 'Back' },
-      { value: 'any',   label: 'Any' },
-    ],
-  },
-  {
-    key: 'walking_distance_preference',
-    label: 'Walking distance',
-    options: [
-      { value: 'no_walk',           label: 'No walk' },
-      { value: 'less_than_5_min',   label: 'Less than 5 min' },
-      { value: '5_to_10_min',       label: '5 to 10 min' },
-      { value: 'more_than_10_min',  label: 'More than 10 min' },
-    ],
-  },
-  {
-    key: 'air_conditioning_preference',
-    label: 'Air conditioning',
-    options: [
-      { value: 'not_important', label: 'Not important' },
-      { value: 'preferred',     label: 'Preferred if available' },
-      { value: 'mandatory',     label: 'Mandatory' },
-    ],
-  },
-];
+function usePrefFields() {
+  const tp = useTranslations('preferences_modal');
+  return [
+    {
+      key: 'gender_preference' as const,
+      label: tp('gender_pref'),
+      options: [
+        { value: 'any',    label: tp('gender_any') },
+        { value: 'male',   label: tp('gender_male_only') },
+        { value: 'female', label: tp('gender_female_only') },
+      ],
+    },
+    {
+      key: 'smoking_allowed' as const,
+      label: tp('smoking'),
+      options: [
+        { value: false, label: tp('smoking_no') },
+        { value: true,  label: tp('smoking_yes') },
+      ],
+    },
+    {
+      key: 'interaction_level' as const,
+      label: tp('interaction'),
+      options: [
+        { value: 'quiet',     label: tp('interaction_quiet') },
+        { value: 'normal',    label: tp('interaction_normal') },
+        { value: 'talkative', label: tp('interaction_talkative') },
+      ],
+    },
+    {
+      key: 'children_allowed' as const,
+      label: tp('children'),
+      options: [
+        { value: false, label: tp('children_no') },
+        { value: true,  label: tp('children_yes') },
+      ],
+    },
+    {
+      key: 'music_preference' as const,
+      label: tp('music'),
+      options: [
+        { value: 'no_music', label: tp('music_none') },
+        { value: 'low',      label: tp('music_low') },
+        { value: 'normal',   label: tp('music_normal') },
+      ],
+    },
+    {
+      key: 'seat_preference' as const,
+      label: tp('seat'),
+      options: [
+        { value: 'front', label: tp('seat_front') },
+        { value: 'back',  label: tp('seat_back') },
+        { value: 'any',   label: tp('seat_any') },
+      ],
+    },
+    {
+      key: 'walking_distance_preference' as const,
+      label: tp('walking'),
+      options: [
+        { value: 'no_walk',           label: tp('walking_none') },
+        { value: 'less_than_5_min',   label: tp('walking_5') },
+        { value: '5_to_10_min',       label: tp('walking_10') },
+        { value: 'more_than_10_min',  label: tp('walking_more') },
+      ],
+    },
+    {
+      key: 'air_conditioning_preference' as const,
+      label: tp('ac'),
+      options: [
+        { value: 'not_important', label: tp('ac_not_important') },
+        { value: 'preferred_if_available', label: tp('ac_preferred') },
+        { value: 'mandatory',     label: tp('ac_mandatory') },
+      ],
+    },
+  ];
+}
 
 function PreferencesPanel({ passenger, initial, onClose, onSaved }: PrefsPanelProps) {
+  const tp = useTranslations('preferences_modal');
+  const tc = useTranslations('common');
+  const PREF_FIELDS = usePrefFields();
   const [form, setForm] = useState<Omit<PassengerPreferences, 'id' | 'passenger_id'>>(
     initial
       ? {
@@ -333,7 +349,7 @@ function PreferencesPanel({ passenger, initial, onClose, onSaved }: PrefsPanelPr
     try {
       const saved = await savePassengerPreferences(passenger.id, form);
       onSaved(saved);
-      toast.success('Preferences saved');
+      toast.success(tp('save_success'));
       onClose();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to save');
@@ -440,7 +456,7 @@ function PreferencesPanel({ passenger, initial, onClose, onSaved }: PrefsPanelPr
           className="w-full h-14 bg-[#0B1E3D] text-white rounded-2xl text-base font-semibold disabled:opacity-50"
           style={{ fontFamily: 'inherit' }}
         >
-          {saving ? 'Saving...' : 'Save preferences'}
+          {saving ? tc('loading') : tp('save_btn')}
         </button>
       </div>
     </div>
@@ -455,6 +471,9 @@ interface RelatedPassengersSectionProps {
 }
 
 export default function RelatedPassengersSection({ isMobilePage }: RelatedPassengersSectionProps) {
+  const tr = useTranslations('related_passengers');
+  const tp = useTranslations('preferences_modal');
+  const tc = useTranslations('common');
   const [passengers,       setPassengers]       = useState<ApiPassenger[]>([]);
   const [loading,          setLoading]          = useState(true);
   const [formOpen,         setFormOpen]         = useState(false);
@@ -486,16 +505,16 @@ export default function RelatedPassengersSection({ isMobilePage }: RelatedPassen
       if (editing) {
         const updated = await updatePassenger(editing.id, data);
         setPassengers((prev) => prev.map((p) => (p.id === editing.id ? updated : p)));
-        toast.success('Passenger updated');
+        toast.success(tr('save_success'));
       } else {
         const created = await createPassenger(data);
         setPassengers((prev) => [...prev, created]);
-        toast.success('Passenger added');
+        toast.success(tr('save_success'));
       }
       setFormOpen(false);
       setEditing(undefined);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Save failed');
+      toast.error(err instanceof Error ? err.message : tr('save_failed'));
     } finally {
       setSaving(false);
     }
@@ -506,7 +525,7 @@ export default function RelatedPassengersSection({ isMobilePage }: RelatedPassen
       await deletePassenger(id);
       setPassengers((prev) => prev.filter((p) => p.id !== id));
       setConfirmingDelete(null);
-      toast.success('Passenger removed');
+      toast.success(tr('delete_success'));
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Delete failed');
     }
@@ -529,17 +548,17 @@ export default function RelatedPassengersSection({ isMobilePage }: RelatedPassen
     <>
       {/* Header row */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-bold text-[#0B1E3D]">Your passengers</h3>
+        <h3 className="text-base font-bold text-[#0B1E3D]">{tr('add')}</h3>
         <button
           onClick={() => { setEditing(undefined); setFormOpen(true); }}
           className="flex items-center gap-1.5 text-sm font-semibold text-[#00C2A8] hover:text-[#009e88]"
         >
-          <span className="text-lg leading-none">+</span> Add passenger
+          <span className="text-lg leading-none">+</span> {tr('add')}
         </button>
       </div>
 
       {loading ? (
-        <div className="py-8 text-center text-sm text-[#8A9AB0]">Loading…</div>
+        <div className="py-8 text-center text-sm text-[#8A9AB0]">{tc('loading')}</div>
       ) : passengers.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-8 text-center">
           <span className="text-4xl">👥</span>
@@ -580,7 +599,7 @@ export default function RelatedPassengersSection({ isMobilePage }: RelatedPassen
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00C2A8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/>
                       </svg>
-                      <span className="text-xs text-[#00917D] font-medium">{prefsTags(cachedPrefs)}</span>
+                      <span className="text-xs text-[#00917D] font-medium">{prefsTags(cachedPrefs, tp)}</span>
                     </div>
                   )}
                 </div>

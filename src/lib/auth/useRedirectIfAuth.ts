@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from './AuthContext';
 
 export function useRedirectIfAuth(
-  defaultDriver = '/driver/requests',
+  defaultDriver = '/driver/my-requests',
   defaultUser   = '/user/my-requests',
 ) {
   const { isAuth, role, loading } = useAuth();

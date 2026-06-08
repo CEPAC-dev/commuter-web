@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import type { WeekDay } from '@/types/user';
+import { useTranslations } from 'next-intl';
 
 const ALL_DAYS: WeekDay[] = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 // JS Date.getDay() → 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
@@ -15,6 +16,8 @@ interface DaysPickerProps {
 }
 
 export default function DaysPicker({ selected, onChange, error, startDate }: DaysPickerProps) {
+  const td = useTranslations('days');
+  const tf = useTranslations('request_form');
   const orderedDays = useMemo(() => {
     if (!startDate) return ALL_DAYS;
     const jsDay = new Date(startDate + 'T00:00:00').getDay();
@@ -64,14 +67,14 @@ export default function DaysPicker({ selected, onChange, error, startDate }: Day
                 transition: 'all 0.15s',
               }}
             >
-              {day}
+              {td(day.toLowerCase() as 'sun')}
             </button>
           );
         })}
       </div>
       {error && selected.length === 0 && (
         <p style={{ fontSize: 12, color: '#E74C3C', margin: '4px 0 0' }}>
-          Select at least one day
+          {tf('days_label')}
         </p>
       )}
     </div>

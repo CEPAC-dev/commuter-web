@@ -15,6 +15,7 @@ import { getNextAvailableCycleStart } from '@/lib/cycleUtils';
 import { computeArrivalFrom, computeArrivalTo } from '@/lib/timeUtils';
 import RequestForm, { type RequestFormData } from '@/components/user/request/RequestForm';
 import FloatingSearchBar, { saveRecentRoute } from '@/components/user/map/FloatingSearchBar';
+import { useTranslations } from 'next-intl';
 
 const UserMap = dynamic(() => import('@/components/user/map/UserMap'), { ssr: false });
 
@@ -35,6 +36,8 @@ interface RideFormInnerProps {
 }
 
 function RideFormInner({ rideType, backHref }: RideFormInnerProps) {
+  const trf = useTranslations('ride_form');
+  const tMap = useTranslations('map');
   const router = useRouter();
   const { intent } = useIntent();
   const { origin, destination, routes, setOrigin, setDestination, setStop } = useMap();
@@ -91,18 +94,18 @@ function RideFormInner({ rideType, backHref }: RideFormInnerProps) {
       if (field === 'from') setOrigin(loc); else setDestination(loc);
     } else {
       locate();
-      toast('Getting your location…', { icon: '📡' });
+      toast(tMap('getting_location'), { icon: '📡' });
     }
   }
 
   function handleReview() {
     if (!origin || !destination) {
       setShowErrors(true);
-      toast.error('Please set origin and destination.');
+      toast.error(tMap('set_origin_dest'));
       return;
     }
     if (origin && destination) saveRecentRoute(origin, destination);
-    toast.success('Ride request submitted!');
+    toast.success(tMap('request_submitted'));
     router.push('/user/my-requests');
   }
 
@@ -114,21 +117,21 @@ function RideFormInner({ rideType, backHref }: RideFormInnerProps) {
           onClick={() => router.push(backHref)}
           style={{ background: 'none', border: 'none', color: '#5A6A7A', cursor: 'pointer', fontSize: 14, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, padding: 0 }}
         >
-          ← Back
+          {trf('back')}
         </button>
-        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0B1E3D' }}>Plan your ride</h2>
+        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0B1E3D' }}>{trf('plan_ride')}</h2>
         <span style={{
           background: isPrivate ? '#EFF7F6' : '#FFF8EC',
           color: isPrivate ? '#00C2A8' : '#F5A623',
           border: `1px solid ${isPrivate ? '#C8E8E4' : '#F5E2B0'}`,
           borderRadius: 20, padding: '4px 12px', fontSize: 12, fontWeight: 600,
         }}>
-          {isPrivate ? 'Private' : 'Shared'}
+          {isPrivate ? trf('private') : trf('shared')}
         </span>
       </div>
 
       {/* Route section */}
-      <SectionDivider title="Route" />
+      <SectionDivider title={trf('route')} />
 
       {/* Map preview — 280px */}
       <div style={{ height: 280, borderRadius: 16, overflow: 'hidden', marginBottom: 16, position: 'relative', border: '1px solid #E2E8F0' }}>
@@ -140,7 +143,7 @@ function RideFormInner({ rideType, backHref }: RideFormInnerProps) {
         />
         {(pickingField || pickingStopIdx >= 0) && (
           <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', background: '#0B1E3D', color: '#fff', borderRadius: 20, padding: '8px 16px', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', zIndex: 10 }}>
-            Tap the map to pick a location
+            {trf('tap_map')}
             <button
               onClick={() => { setPickingField(null); setPickingStopIdx(-1); }}
               style={{ marginLeft: 10, background: 'none', border: 'none', color: '#A0AEC0', cursor: 'pointer', fontSize: 14 }}
@@ -166,7 +169,7 @@ function RideFormInner({ rideType, backHref }: RideFormInnerProps) {
       {/* Passengers — private only */}
       {isPrivate && (
         <>
-          <SectionDivider title="Passengers" />
+          <SectionDivider title={trf('passengers')} />
           <p style={{ fontSize: 14, color: '#0B1E3D', fontWeight: 500, margin: '0 0 4px' }}>
             How many people will ride with you?
           </p>

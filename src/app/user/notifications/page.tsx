@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useTranslations, useLocale } from 'next-intl';
 import type { Notification } from '@/types/user';
-// Mock data removed
 
 const TYPE_ICONS: Record<Notification['type'], string> = {
   request_matched: '✅',
@@ -16,25 +16,36 @@ const TYPE_ICONS: Record<Notification['type'], string> = {
   request_cancelled: '❌',
 };
 
-function timeAgo(iso: string): string {
+type NotificationTranslator = ReturnType<typeof useTranslations<'notifications'>>;
+
+function timeAgo(iso: string, t: NotificationTranslator, locale: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return 'Just now';
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 1) return t('just_now');
+  if (minutes < 60) return t('minutes_ago', { count: minutes });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return t('hours_ago', { count: hours });
   const days = Math.floor(hours / 24);
-  if (days === 1) return 'Yesterday';
-  return new Date(iso).toLocaleDateString('en-EG', { month: 'short', day: 'numeric' });
+  if (days === 1) return t('yesterday');
+  return new Date(iso).toLocaleDateString(locale, { month: 'short', day: 'numeric' });
 }
 
 function NotificationItem({
   notification,
   onRead,
+  t,
+  locale,
 }: {
   notification: Notification;
   onRead: (id: string) => void;
+  t: NotificationTranslator;
+  locale: string;
 }) {
+  const actionLabel =
+    notification.type === 'price_raised' ? t('action_review') :
+    notification.type === 'cycle_completed' ? t('action_rate') :
+    t('action_view');
+
   return (
     <div
       onClick={() => onRead(notification.id)}
@@ -68,7 +79,7 @@ function NotificationItem({
             {notification.title}
           </div>
           <span style={{ fontSize: 12, color: '#5A6A7A', flexShrink: 0, marginTop: 1 }}>
-            {timeAgo(notification.createdAt)}
+            {timeAgo(notification.createdAt, t, locale)}
           </span>
         </div>
 
@@ -89,9 +100,7 @@ function NotificationItem({
               textDecoration: 'none',
             }}
           >
-            {notification.type === 'price_raised' ? 'Review offer →' :
-             notification.type === 'cycle_completed' ? 'Rate driver →' :
-             'View request →'}
+            {actionLabel}
           </Link>
         )}
       </div>
@@ -100,7 +109,9 @@ function NotificationItem({
 }
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<Notification[]>([]); // TODO: fetch from API
+  const t = useTranslations('notifications');
+  const locale = useLocale();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -119,7 +130,6 @@ export default function NotificationsPage() {
 
   return (
     <div style={{ maxWidth: 700, margin: '0 auto' }}>
-      {/* Header */}
       <div
         style={{
           display: 'flex',
@@ -132,11 +142,11 @@ export default function NotificationsPage() {
       >
         <div>
           <h1 style={{ margin: '0 0 4px', fontSize: 24, fontWeight: 700, color: '#0B1E3D' }}>
-            Notifications
+            {t('page_title')}
           </h1>
           {unreadCount > 0 && (
             <p style={{ margin: 0, fontSize: 14, color: '#5A6A7A' }}>
-              {unreadCount} unread
+              {t('unread_count', { count: unreadCount })}
             </p>
           )}
         </div>
@@ -156,12 +166,11 @@ export default function NotificationsPage() {
               minHeight: 40,
             }}
           >
-            Mark all read
+            {t('mark_all_read')}
           </button>
         )}
       </div>
 
-      {/* List */}
       <div
         style={{
           background: '#fff',
@@ -173,17 +182,17 @@ export default function NotificationsPage() {
         {notifications.length === 0 ? (
           <div style={{ padding: 48, textAlign: 'center', color: '#5A6A7A', fontSize: 14 }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>🔔</div>
-            No notifications yet
+            {t('empty')}
           </div>
         ) : (
           <>
             {unread.length > 0 && (
               <>
                 <div style={{ padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#5A6A7A', textTransform: 'uppercase', letterSpacing: '0.06em', background: '#F8F9FA', borderBottom: '1px solid #E2E8F0' }}>
-                  New
+                  {t('new_label')}
                 </div>
                 {unread.map((n) => (
-                  <NotificationItem key={n.id} notification={n} onRead={markRead} />
+                  <NotificationItem key={n.id} notification={n} onRead={markRead} t={t} locale={locale} />
                 ))}
               </>
             )}
@@ -191,10 +200,10 @@ export default function NotificationsPage() {
             {read.length > 0 && (
               <>
                 <div style={{ padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#5A6A7A', textTransform: 'uppercase', letterSpacing: '0.06em', background: '#F8F9FA', borderBottom: '1px solid #E2E8F0' }}>
-                  Older
+                  {t('older_label')}
                 </div>
                 {read.map((n) => (
-                  <NotificationItem key={n.id} notification={n} onRead={markRead} />
+                  <NotificationItem key={n.id} notification={n} onRead={markRead} t={t} locale={locale} />
                 ))}
               </>
             )}

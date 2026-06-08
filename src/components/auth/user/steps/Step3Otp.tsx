@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Loader2, Mail, RefreshCw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface Step3OtpProps {
   email:         string;
@@ -23,6 +24,7 @@ export default function Step3Otp({
   onResend,
 }: Step3OtpProps) {
   const [digits, setDigits] = useState<string[]>(Array(DIGITS).fill(''));
+  const t = useTranslations('signup_step3');
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Auto-focus first box on mount
@@ -105,12 +107,10 @@ export default function Step3Otp({
       </div>
 
       <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0B1E3D', margin: '0 0 6px' }}>
-        Verify your email
+        {t('heading')}
       </h2>
       <p style={{ fontSize: 14, color: '#5A6A7A', margin: '0 0 24px' }}>
-        We sent a 6-digit code to{' '}
-        <strong style={{ color: '#0B1E3D' }}>{email}</strong>.
-        Enter it below.
+        {t('description', { email })}
       </p>
 
       {/* OTP boxes */}
@@ -167,12 +167,12 @@ export default function Step3Otp({
         }}
       >
         {loading && <Loader2 size={16} className="spin" />}
-        Verify email
+        {t('verify_btn')}
       </button>
 
       {/* Resend */}
       <div style={{ textAlign: 'center' }}>
-        <span style={{ fontSize: 13, color: '#5A6A7A' }}>Didn&apos;t receive it? </span>
+        <span style={{ fontSize: 13, color: '#5A6A7A' }}>{t('no_code')} </span>
         <button
           type="button"
           onClick={onResend}
@@ -186,7 +186,7 @@ export default function Step3Otp({
         >
           {resendLoading && <Loader2 size={12} className="spin" />}
           {!resendLoading && <RefreshCw size={12} />}
-          Resend code
+          {t('resend_btn')}
         </button>
       </div>
     </div>

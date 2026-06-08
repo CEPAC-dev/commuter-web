@@ -30,27 +30,27 @@ interface DriverProfileMeData {
   car_type: string | null;
   car_brand: string | null;
   car_model: string | null;
-  car_year: number | null;
+  car_year: string | number | null;
   car_color: string | null;
   license_plate: string | null;
+  car_capacity: number | null;
   location_name: string | null;
-  default_lng: string | null;
-  default_lat: string | null;
-  profile_photo: string | null;
-  national_id_image_front: string | null;
-  national_id_image_back: string | null;
-  driving_license: string | null;
-  vehicle_license_front: string | null;
-  vehicle_license_back: string | null;
-  vehicle_license: string | null;
-  criminal_record_certificate: string | null;
+  default_lng: number | null;
+  default_lat: number | null;
+  price_per_km: string | number | null;
+  waiting_price_per_hour: string | number | null;
+  passenger_type: string | null;
   is_verified: boolean;
   created_at: string;
   updated_at: string;
-  price_per_km: number | null;
-  waiting_time: number | null;
-  seats: number | null;
-  passenger_gender: string | null;
+  // image URL fields returned by API
+  profile_photo_url: string | null;
+  national_id_image_front_url: string | null;
+  national_id_image_back_url: string | null;
+  driving_license_url: string | null;
+  vehicle_license_front_url: string | null;
+  vehicle_license_back_url: string | null;
+  criminal_record_certificate_url: string | null;
 }
 
 const STORAGE_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api')
@@ -244,15 +244,16 @@ function MobileProfile({ displayName, email, phone, address, profileData, docUrl
           <div style={CARD}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 16px' }}>
               {[
-                { label: 'National ID',     value: profileData.national_id     ?? '—' },
-                { label: 'License expiry',  value: profileData.license_expiry  ?? '—' },
-                { label: 'Car type',        value: profileData.car_type        ?? '—' },
-                { label: 'Vehicle',         value: vehicle },
-                { label: 'Price per km',    value: profileData.price_per_km    != null ? `${profileData.price_per_km} EGP/km` : '—' },
-                { label: 'Waiting time',    value: profileData.waiting_time    != null ? `${profileData.waiting_time} min`    : '—' },
-                { label: 'Available seats', value: profileData.seats           != null ? String(profileData.seats)            : '—' },
-                { label: 'Passenger type',  value: profileData.passenger_gender === 'male' ? 'Male only' : profileData.passenger_gender === 'female' ? 'Female only' : profileData.passenger_gender === 'any' ? 'Any' : '—' },
-                { label: 'Profile since',   value: fmtDateTime(profileData.created_at) },
+                { label: 'National ID',           value: profileData.national_id        ?? '—' },
+                { label: 'License expiry',        value: profileData.license_expiry     ?? '—' },
+                { label: 'Car type',              value: profileData.car_type           ?? '—' },
+                { label: 'Vehicle',               value: vehicle },
+                { label: 'License plate',         value: profileData.license_plate      ?? '—' },
+                { label: 'Car capacity',          value: profileData.car_capacity       != null ? String(profileData.car_capacity) : '—' },
+                { label: 'Price per km',          value: profileData.price_per_km       != null ? `${profileData.price_per_km} EGP/km` : '—' },
+                { label: 'Waiting price / hour',  value: profileData.waiting_price_per_hour != null ? `${profileData.waiting_price_per_hour} EGP/hr` : '—' },
+                { label: 'Passenger type',        value: profileData.passenger_type === 'male' ? 'Male only' : profileData.passenger_type === 'female' ? 'Female only' : profileData.passenger_type === 'mixed' ? 'Mixed' : '—' },
+                { label: 'Profile since',         value: fmtDateTime(profileData.created_at) },
               ].map(({ label, value }, i) => (
                 <div key={i}>
                   <div style={{ fontSize: 11, color: '#6B7280', fontWeight: 600, marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</div>
@@ -463,15 +464,15 @@ function DesktopProfile({ displayName, email, phone, address, profileData, docUr
       <div style={{ marginBottom: 16 }}>
         <Section title="Driver Details">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', columnGap: 32, rowGap: 16 }}>
-            <InfoRow label="Car type"        value={profileData?.car_type       ?? '—'} />
-            <InfoRow label="Vehicle"         value={vehicle} />
-            <InfoRow label="License plate"   value={profileData?.license_plate  ?? '—'} />
-            <InfoRow label="License expiry"  value={profileData?.license_expiry ?? '—'} />
-            <InfoRow label="Price per km"    value={profileData?.price_per_km   != null ? `${profileData.price_per_km} EGP/km` : '—'} />
-            <InfoRow label="Waiting time"    value={profileData?.waiting_time   != null ? `${profileData.waiting_time} min`    : '—'} />
-            <InfoRow label="Available seats" value={profileData?.seats          != null ? String(profileData.seats)           : '—'} />
-            <InfoRow label="Passenger type"  value={profileData?.passenger_gender === 'male' ? 'Male only' : profileData?.passenger_gender === 'female' ? 'Female only' : profileData?.passenger_gender === 'any' ? 'Any' : '—'} />
-            <InfoRow label="Profile since"   value={fmtDateTime(profileData?.created_at)} />
+            <InfoRow label="Car type"              value={profileData?.car_type       ?? '—'} />
+            <InfoRow label="Vehicle"               value={vehicle} />
+            <InfoRow label="License plate"         value={profileData?.license_plate  ?? '—'} />
+            <InfoRow label="License expiry"        value={profileData?.license_expiry ?? '—'} />
+            <InfoRow label="Car capacity"          value={profileData?.car_capacity   != null ? String(profileData.car_capacity) : '—'} />
+            <InfoRow label="Price per km"          value={profileData?.price_per_km   != null ? `${profileData.price_per_km} EGP/km` : '—'} />
+            <InfoRow label="Waiting price / hour"  value={profileData?.waiting_price_per_hour != null ? `${profileData.waiting_price_per_hour} EGP/hr` : '—'} />
+            <InfoRow label="Passenger type"        value={profileData?.passenger_type === 'male' ? 'Male only' : profileData?.passenger_type === 'female' ? 'Female only' : profileData?.passenger_type === 'mixed' ? 'Mixed' : '—'} />
+            <InfoRow label="Profile since"         value={fmtDateTime(profileData?.created_at)} />
           </div>
         </Section>
       </div>
@@ -591,15 +592,15 @@ export default function ProfilePage() {
         const d = (driverRes.value as { data: DriverProfileMeData }).data;
         setProfileData(d);
         setDocUrls({
-          nationalIdFront: storageUrl(d.national_id_image_front),
-          nationalIdBack:  storageUrl(d.national_id_image_back),
-          drivingLicense:  storageUrl(d.driving_license),
-          carLicenseFront: storageUrl(d.vehicle_license_front ?? d.vehicle_license),
-          carLicenseBack:  storageUrl(d.vehicle_license_back),
-          criminalRecord:  storageUrl(d.criminal_record_certificate),
-          profilePhoto:    storageUrl(d.profile_photo),
+          nationalIdFront: d.national_id_image_front_url       ?? null,
+          nationalIdBack:  d.national_id_image_back_url        ?? null,
+          drivingLicense:  d.driving_license_url               ?? null,
+          carLicenseFront: d.vehicle_license_front_url         ?? null,
+          carLicenseBack:  d.vehicle_license_back_url          ?? null,
+          criminalRecord:  d.criminal_record_certificate_url   ?? null,
+          profilePhoto:    d.profile_photo_url                 ?? null,
         });
-        if (d.profile_photo) updateProfilePhoto(storageUrl(d.profile_photo));
+        if (d.profile_photo_url) updateProfilePhoto(d.profile_photo_url);
       }
       if (personalRes.status === 'fulfilled') {
         const raw = personalRes.value as Record<string, unknown>;

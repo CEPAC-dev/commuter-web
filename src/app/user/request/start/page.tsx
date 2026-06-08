@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useIntent } from '@/lib/IntentContext';
 
 type RideType = 'private' | 'shared';
@@ -20,6 +21,7 @@ function genCode(): string {
 
 export default function RequestStartPage() {
   const router = useRouter();
+  const t = useTranslations('request_start');
   const { intent, setIntent } = useIntent();
   const intentRideType = intent.ride_type;
 
@@ -130,6 +132,15 @@ export default function RequestStartPage() {
 
   const stepIndex = steps.indexOf(step.id);
 
+  const passengerLabel = passengerCount === 1
+    ? t('just_you')
+    : t(passengerCount - 1 > 1 ? 'you_plus_plural' : 'you_plus', { count: passengerCount - 1 });
+
+  const continueLabel =
+    step.id === 'sub-private' || (step.id === 'sub-shared' && sharedWith === 'anyone') || step.id === 'code'
+      ? t('continue_map')
+      : t('continue');
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <div className="flex items-center justify-between px-5 pt-5 pb-3">
@@ -137,7 +148,7 @@ export default function RequestStartPage() {
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M10 13L5 8l5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          Back
+          {t('back')}
         </button>
         <div className="flex items-center gap-2">
           {steps.map((s, i) => (
@@ -151,12 +162,12 @@ export default function RequestStartPage() {
 
         {step.id === 'ride' && (
           <>
-            <h1 className="text-xl font-medium text-[#0B1E3D] mb-1">How would you like to travel?</h1>
-            <p className="text-sm text-gray-500 mb-8">This sets how we match you with a driver.</p>
+            <h1 className="text-xl font-medium text-[#0B1E3D] mb-1">{t('how_travel')}</h1>
+            <p className="text-sm text-gray-500 mb-8">{t('how_travel_desc')}</p>
             <div className="grid grid-cols-2 gap-3 mb-auto">
               {[
-                { type: 'private', label: 'Private car', desc: 'Only your group in the car', badge: 'Up to 4 people' },
-                { type: 'shared', label: 'Shared ride', desc: 'Share with commuters, lower cost', badge: 'Up to 3 people' },
+                { type: 'private', label: t('private_car'), desc: t('private_car_desc'), badge: t('private_badge') },
+                { type: 'shared', label: t('shared_ride'), desc: t('shared_ride_desc'), badge: t('shared_badge') },
               ].map(({ type, label, desc, badge }) => (
                 <button key={type} onClick={() => handleRideType(type as RideType)}
                   className={"flex flex-col items-start p-4 rounded-2xl border text-left transition-all duration-150 " + (rideType === type ? 'border-[#00C2A8] bg-[#EFF7F6]' : 'border-gray-200 bg-white hover:border-gray-300')}>
@@ -171,32 +182,32 @@ export default function RequestStartPage() {
 
         {step.id === 'sub-private' && (
           <>
-            <h1 className="text-xl font-medium text-[#0B1E3D] mb-1">How many people will be riding?</h1>
-            <p className="text-sm text-gray-500 mb-8">Including yourself. Max 4 in a private car.</p>
+            <h1 className="text-xl font-medium text-[#0B1E3D] mb-1">{t('how_many')}</h1>
+            <p className="text-sm text-gray-500 mb-8">{t('how_many_desc')}</p>
             <div className="flex flex-col items-center gap-6 mb-auto">
               <div className="flex items-center gap-6">
                 <button onClick={() => setPassengerCount(c => Math.max(1, c - 1))} disabled={passengerCount === 1}
                   className="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-xl font-light text-gray-600 hover:bg-gray-50 disabled:opacity-30 transition-all">−</button>
                 <div className="text-center">
                   <div className="text-5xl font-medium text-[#0B1E3D] leading-none">{passengerCount}</div>
-                  <div className="text-sm text-gray-400 mt-2">{passengerCount === 1 ? 'just you' : "you + " + (passengerCount - 1) + " passenger" + (passengerCount - 1 > 1 ? 's' : '')}</div>
+                  <div className="text-sm text-gray-400 mt-2">{passengerLabel}</div>
                 </div>
                 <button onClick={() => setPassengerCount(c => Math.min(4, c + 1))} disabled={passengerCount === 4}
                   className="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-xl font-light text-gray-600 hover:bg-gray-50 disabled:opacity-30 transition-all">+</button>
               </div>
-              <div className="text-xs text-gray-400 text-center">Max 4 total (including you). Driver not counted.</div>
+              <div className="text-xs text-gray-400 text-center">{t('max_note')}</div>
             </div>
           </>
         )}
 
         {step.id === 'sub-shared' && (
           <>
-            <h1 className="text-xl font-medium text-[#0B1E3D] mb-1">Who will you share with?</h1>
-            <p className="text-sm text-gray-500 mb-8">This decides how we group your ride.</p>
+            <h1 className="text-xl font-medium text-[#0B1E3D] mb-1">{t('who_share')}</h1>
+            <p className="text-sm text-gray-500 mb-8">{t('who_share_desc')}</p>
             <div className="grid grid-cols-2 gap-3 mb-auto">
               {[
-                { val: 'known', label: 'People I know', desc: 'Friends or colleagues — use a group code', badge: 'Up to 3 per group' },
-                { val: 'anyone', label: 'Anyone nearby', desc: 'We match you with commuters going the same way', badge: 'Auto-matched' },
+                { val: 'known', label: t('people_know'), desc: t('people_know_desc'), badge: t('people_know_badge') },
+                { val: 'anyone', label: t('anyone_nearby'), desc: t('anyone_nearby_desc'), badge: t('auto_matched') },
               ].map(({ val, label, desc, badge }) => (
                 <button key={val} onClick={() => setSharedWith(val as SharedWith)}
                   className={"flex flex-col items-start p-4 rounded-2xl border text-left transition-all duration-150 " + (sharedWith === val ? 'border-[#00C2A8] bg-[#EFF7F6]' : 'border-gray-200 bg-white hover:border-gray-300')}>
@@ -211,12 +222,12 @@ export default function RequestStartPage() {
 
         {step.id === 'code' && (
           <>
-            <h1 className="text-xl font-medium text-[#0B1E3D] mb-1">Group code</h1>
-            <p className="text-sm text-gray-500 mb-6">Create a group or join one a friend started.</p>
+            <h1 className="text-xl font-medium text-[#0B1E3D] mb-1">{t('group_code')}</h1>
+            <p className="text-sm text-gray-500 mb-6">{t('group_code_desc')}</p>
             <div className="grid grid-cols-2 gap-3 mb-6">
               {[
-                { val: 'generate', label: 'Create a group', desc: 'Get a code to share' },
-                { val: 'join', label: 'Join a group', desc: 'Enter a code from a friend' },
+                { val: 'generate', label: t('create_group'), desc: t('create_group_desc') },
+                { val: 'join', label: t('join_group'), desc: t('join_group_desc') },
               ].map(({ val, label, desc }) => (
                 <button key={val} onClick={() => { setGroupAction(val as GroupAction); setGeneratedCode(null); setJoinCodeInput(''); setJoinError(false); }}
                   className={"flex flex-col items-start p-4 rounded-2xl border text-left transition-all duration-150 " + (groupAction === val ? 'border-[#00C2A8] bg-[#EFF7F6]' : 'border-gray-200 bg-white hover:border-gray-300')}>
@@ -229,16 +240,16 @@ export default function RequestStartPage() {
             {groupAction === 'generate' && (
               <div className="mb-auto">
                 {!generatedCode ? (
-                  <button onClick={handleGenerateCode} className="w-full h-12 rounded-xl bg-[#EFF7F6] border border-[#00C2A8] text-[#085041] text-sm font-medium hover:bg-[#00C2A8] hover:text-[#0B1E3D] transition-all">Generate code</button>
+                  <button onClick={handleGenerateCode} className="w-full h-12 rounded-xl bg-[#EFF7F6] border border-[#00C2A8] text-[#085041] text-sm font-medium hover:bg-[#00C2A8] hover:text-[#0B1E3D] transition-all">{t('generate_code')}</button>
                 ) : (
                   <div className="space-y-3">
-                    <div className="text-xs text-green-700 bg-green-50 rounded-lg px-3 py-2">Share this code with your group. Valid for 48 hours.</div>
+                    <div className="text-xs text-green-700 bg-green-50 rounded-lg px-3 py-2">{t('share_code_note')}</div>
                     <button onClick={() => navigator.clipboard.writeText(generatedCode).catch(() => {})}
                       className="w-full flex items-center justify-center gap-3 py-4 rounded-xl border border-gray-200 bg-gray-50 font-mono text-2xl font-medium tracking-[6px] text-[#0B1E3D] hover:border-[#00C2A8] transition-all">
                       {generatedCode}
                     </button>
-                    <a href={"https://wa.me/?text=Join my commuter group: " + generatedCode} target="_blank" rel="noreferrer"
-                      className="flex items-center justify-center py-2.5 rounded-xl border border-gray-200 text-xs text-gray-600 hover:bg-gray-50 transition-all">Share via WhatsApp</a>
+                    <a href={"https://wa.me/?text=" + encodeURIComponent(t('whatsapp_message', { code: generatedCode }))} target="_blank" rel="noreferrer"
+                      className="flex items-center justify-center py-2.5 rounded-xl border border-gray-200 text-xs text-gray-600 hover:bg-gray-50 transition-all">{t('share_whatsapp')}</a>
                   </div>
                 )}
               </div>
@@ -253,10 +264,10 @@ export default function RequestStartPage() {
                     className={"flex-1 h-12 rounded-xl border text-center font-mono text-lg tracking-widest outline-none transition-all " + (joinError ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-[#00C2A8]')} />
                   <button onClick={handleJoinCode} disabled={joinCodeInput.length !== 6 || joining}
                     className="h-12 px-5 rounded-xl bg-[#0B1E3D] text-[#00C2A8] text-sm font-medium disabled:opacity-40 hover:opacity-90 transition-all">
-                    {joining ? '…' : 'Join'}
+                    {joining ? '…' : t('join')}
                   </button>
                 </div>
-                {joinError && <p className="text-xs text-red-500">Code not found or expired. Try again.</p>}
+                {joinError && <p className="text-xs text-red-500">{t('code_not_found')}</p>}
               </div>
             )}
           </>
@@ -265,7 +276,7 @@ export default function RequestStartPage() {
         <div className="mt-8 pt-4 border-t border-gray-100">
           <button onClick={handleNext} disabled={!canProceed()}
             className={"w-full h-12 rounded-xl text-sm font-medium transition-all " + (canProceed() ? 'bg-[#0B1E3D] text-[#00C2A8] hover:opacity-90' : 'bg-gray-100 text-gray-400 cursor-not-allowed')}>
-            {step.id === 'sub-private' || (step.id === 'sub-shared' && sharedWith === 'anyone') || step.id === 'code' ? 'Continue to map' : 'Continue'}
+            {continueLabel}
           </button>
         </div>
       </div>

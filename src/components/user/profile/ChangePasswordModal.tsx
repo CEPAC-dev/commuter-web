@@ -5,6 +5,7 @@ import { X, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import PasswordInput from '@/components/shared/PasswordInput';
 import { changePassword } from '@/lib/api/auth';
+import { useTranslations } from 'next-intl';
 
 interface Props {
   isOpen: boolean;
@@ -12,6 +13,8 @@ interface Props {
 }
 
 export default function ChangePasswordModal({ isOpen, onClose }: Props) {
+  const t = useTranslations('change_password');
+  const tc = useTranslations('common');
   const [current, setCurrent]     = useState('');
   const [password, setPassword]   = useState('');
   const [confirm, setConfirm]     = useState('');
@@ -33,9 +36,9 @@ export default function ChangePasswordModal({ isOpen, onClose }: Props) {
   function validate(): boolean {
     let ok = true;
     setCurrentErr(''); setPwErr(''); setConfirmErr('');
-    if (current.length < 1) { setCurrentErr('Enter your current password.'); ok = false; }
-    if (password.length < 8) { setPwErr('Password must be at least 8 characters.'); ok = false; }
-    if (password !== confirm) { setConfirmErr('Passwords do not match.'); ok = false; }
+    if (current.length < 1) { setCurrentErr(t('current_error')); ok = false; }
+    if (password.length < 8) { setPwErr(t('pw_error')); ok = false; }
+    if (password !== confirm) { setConfirmErr(t('confirm_error')); ok = false; }
     return ok;
   }
 
@@ -45,10 +48,10 @@ export default function ChangePasswordModal({ isOpen, onClose }: Props) {
     setLoading(true);
     try {
       await changePassword(current, password, confirm);
-      toast.success('Password changed successfully!');
+      toast.success(t('success'));
       handleClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to change password.';
+      const msg = err instanceof Error ? err.message : t('failed');
       // Surface backend errors on the relevant field
       if (msg.toLowerCase().includes('current') || msg.toLowerCase().includes('wrong') || msg.toLowerCase().includes('incorrect')) {
         setCurrentErr(msg);
@@ -82,10 +85,10 @@ export default function ChangePasswordModal({ isOpen, onClose }: Props) {
       >
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0B1E3D' }}>Change password</h2>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0B1E3D' }}>{t('title')}</h2>
           <button
             onClick={handleClose}
-            aria-label="Close"
+            aria-label={t('close')}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', display: 'flex', alignItems: 'center', padding: 4 }}
           >
             <X size={20} />
@@ -94,26 +97,26 @@ export default function ChangePasswordModal({ isOpen, onClose }: Props) {
 
         <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <PasswordInput
-            label="Current password"
+            label={t('current_label')}
             value={current}
             onChange={(e) => setCurrent(e.target.value)}
-            placeholder="Your current password"
+            placeholder={t('current_placeholder')}
             error={currentErr}
             autoComplete="current-password"
           />
           <PasswordInput
-            label="New password"
+            label={t('new_label')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="At least 8 characters"
+            placeholder={t('new_placeholder')}
             error={pwErr}
             autoComplete="new-password"
           />
           <PasswordInput
-            label="Confirm new password"
+            label={t('confirm_label')}
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            placeholder="Repeat your new password"
+            placeholder={t('confirm_placeholder')}
             error={confirmErr}
             autoComplete="new-password"
           />
@@ -128,7 +131,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: Props) {
                 cursor: 'pointer', fontFamily: 'inherit',
               }}
             >
-              Cancel
+              {tc('cancel')}
             </button>
             <button
               type="submit"
@@ -142,7 +145,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: Props) {
               }}
             >
               {loading && <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} />}
-              Save password
+              {t('save_btn')}
             </button>
           </div>
         </form>

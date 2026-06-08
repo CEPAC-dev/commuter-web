@@ -5,6 +5,7 @@ import type { WizardTimeSlot } from '@/lib/RequestWizardContext';
 import type { ReturnRoute } from '@/lib/RequestWizardContext';
 import type { GeoLocation, SelectedSeat, WeekDay } from '@/types/shared';
 import { formatTime12h } from '@/lib/timeUtils';
+import { useTranslations } from 'next-intl';
 
 interface ReviewModalProps {
   onClose:   () => void;
@@ -63,6 +64,11 @@ export default function ReviewModal({
   cycleStartDate,
   priceMax,
 }: ReviewModalProps) {
+  const trm = useTranslations('review_modal');
+  const trs = useTranslations('request_summary');
+  const tf = useTranslations('request_form');
+  const tsl = useTranslations('time_slot');
+  const td = useTranslations('days');
   const [adjMax, setAdjMax] = React.useState(priceMax);
   const [rawMax, setRawMax] = React.useState(String(priceMax));
 
@@ -74,13 +80,13 @@ export default function ReviewModal({
   }
 
   const rideLabel = rideType === 'private'
-    ? `Private ride · ${passengerCount + 1} passengers`
+    ? trm('private_passengers', { count: passengerCount + 1 })
     : groupType === 'friends'
-      ? 'Shared ride · Friends group'
-      : 'Shared ride · Open match';
+      ? tf('shared')
+      : tf('shared');
 
   const seatLabel = seatPreference === 'any'
-    ? 'Any available seat'
+    ? tf('seat_any')
     : (seatPreference as SelectedSeat).label + ` (+EGP ${(seatPreference as SelectedSeat).extra_cost_egp}/trip)`;
 
   return (
@@ -111,7 +117,7 @@ export default function ReviewModal({
       >
         {/* Header */}
         <div className="sticky top-0 bg-white flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0] z-10">
-          <h3 className="text-base font-bold text-[#0B1E3D]">Review your request</h3>
+          <h3 className="text-base font-bold text-[#0B1E3D]">{trs('title')}</h3>
           <button
             onClick={onClose}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5A6A7A', fontSize: 20 }}
@@ -125,11 +131,11 @@ export default function ReviewModal({
           {/* Ride details */}
           <ReviewSection title="Ride details">
             <ReviewRow label="Type" value={rideLabel} />
-            <ReviewRow label="Seat" value={seatLabel} />
+            <ReviewRow label={trs('seat')} value={seatLabel} />
           </ReviewSection>
 
           {/* Schedule — each slot shows its own route */}
-          <ReviewSection title="Schedule">
+          <ReviewSection title={trs('schedule_title')}>
             {timeSlots.map((slot, i) => {
               const rr = returnRoutes[slot.id];
               const slotOrigin        = slot.origin      ?? origin;
@@ -148,7 +154,7 @@ export default function ReviewModal({
                   <div className="flex items-center justify-between mb-2.5">
                     <span className="text-xs font-semibold text-[#0B1E3D]">Time slot {i + 1}</span>
                     <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${slot.trip_type === 'round_trip' ? 'bg-[#EFF7F6] text-[#00C2A8]' : 'bg-[#F1F3F4] text-[#5A6A7A]'}`}>
-                      {slot.trip_type === 'round_trip' ? 'Round trip' : 'One way'}
+                      {slot.trip_type === 'round_trip' ? tsl('round_trip') : tsl('one_way')}
                     </span>
                   </div>
 
@@ -227,7 +233,7 @@ export default function ReviewModal({
                         key={d}
                         className={`text-[10px] px-1.5 py-0.5 rounded ${slot.days.includes(d as WeekDay) ? 'bg-[#0B1E3D] text-white font-semibold' : 'bg-[#E2E8F0] text-[#9AA0A6]'}`}
                       >
-                        {d}
+                        {td(d.toLowerCase() as 'sun')}
                       </span>
                     ))}
                   </div>
@@ -310,7 +316,7 @@ export default function ReviewModal({
               fontFamily: 'inherit',
             }}
           >
-            {submitting ? 'Submitting…' : 'Submit request ✓'}
+            {submitting ? trm('submitting') : trm('submit')}
           </button>
         </div>
       </div>

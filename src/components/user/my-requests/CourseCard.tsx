@@ -4,14 +4,15 @@ import type { ApiCourse, CourseStatus } from '@/lib/api/courses';
 import { confirmCoursePayment } from '@/lib/api/courses';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 // ── Status config ─────────────────────────────────────────────────────────────
 
-const STATUS_CONFIG: Record<CourseStatus, { label: string; bg: string; color: string; border: string }> = {
-  draft:     { label: 'draft',     bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
-  active:    { label: 'active',    bg: '#E8F5E9', color: '#27AE60', border: '#A8D5B5' },
-  completed: { label: 'completed', bg: '#F1F3F4', color: '#5A6A7A', border: '#E2E8F0' },
-  cancelled: { label: 'cancelled', bg: '#FFEBEE', color: '#E74C3C', border: '#FFCDD2' },
+const STATUS_STYLE: Record<CourseStatus, { bg: string; color: string; border: string }> = {
+  draft:     { bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
+  active:    { bg: '#E8F5E9', color: '#27AE60', border: '#A8D5B5' },
+  completed: { bg: '#F1F3F4', color: '#5A6A7A', border: '#E2E8F0' },
+  cancelled: { bg: '#FFEBEE', color: '#E74C3C', border: '#FFCDD2' },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -37,12 +38,15 @@ interface Props {
 }
 
 export default function CourseCard({ course, onPaid }: Props) {
+  const t = useTranslations('course_card');
+  const tc = useTranslations('common');
   const router = useRouter();
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
 
-  const cfg = STATUS_CONFIG[course.status] ?? STATUS_CONFIG.draft;
+  const style = STATUS_STYLE[course.status] ?? STATUS_STYLE.draft;
+  const statusLabel = t(`status_${course.status}` as 'status_draft');
 
   async function handleConfirmPayment() {
     setPaying(true);
@@ -66,7 +70,7 @@ export default function CourseCard({ course, onPaid }: Props) {
       onPaid?.();
       setPaying(false);
     } catch (e) {
-      setPayError(e instanceof Error ? e.message : 'Payment failed. Try again.');
+      setPayError(e instanceof Error ? e.message : t('payment_failed'));
       setPaying(false);
     }
   }
@@ -115,14 +119,14 @@ export default function CourseCard({ course, onPaid }: Props) {
                 style={{
                   fontSize: 12,
                   fontWeight: 700,
-                  background: cfg.bg,
-                  color: cfg.color,
-                  border: `1px solid ${cfg.border}`,
+                  background: style.bg,
+                  color: style.color,
+                  border: `1px solid ${style.border}`,
                   borderRadius: 20,
                   padding: '3px 10px',
                 }}
               >
-                {cfg.label}
+                {statusLabel}
               </span>
               <span style={{ color: '#9AA0A6', fontSize: 16 }}>›</span>
             </div>
@@ -163,7 +167,7 @@ export default function CourseCard({ course, onPaid }: Props) {
           {/* Days */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#0B1E3D', fontWeight: 600 }}>
             <span style={{ fontSize: 15 }}>📅</span>
-            {uniqueDays} day{uniqueDays !== 1 ? 's' : ''} / week
+            {uniqueDays} {tc('per_week').replace('/', '').trim()}
           </div>
         </div>
 
@@ -186,7 +190,7 @@ export default function CourseCard({ course, onPaid }: Props) {
             👤 {course.trip_type}
           </span>
           <span style={{ fontSize: 15, fontWeight: 800, color: '#0B1E3D' }}>
-            EGP {estimatedTotalPrice.toLocaleString()}
+            {tc('egp')} {estimatedTotalPrice.toLocaleString()}
           </span>
         </div>
       </div>
@@ -246,7 +250,7 @@ export default function CourseCard({ course, onPaid }: Props) {
                 opacity: paying ? 0.7 : 1,
               }}
             >
-              {paying ? 'Redirecting to payment…' : '💳 Confirm payment'}
+              {paying ? t('redirecting') : `💳 ${t('confirm_payment')}`}
             </button>
           )}
         </div>
@@ -270,7 +274,7 @@ export default function CourseCard({ course, onPaid }: Props) {
           textAlign: 'center',
         }}
       >
-        View details →
+        {t('view_details')} →
       </button>
     </div>
   );

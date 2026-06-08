@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MapPin, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export interface Step2Data {
   province:    string;
@@ -34,6 +35,7 @@ function fieldCls(err?: string) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Step2Address({ initial, loading, onBack, onSubmit }: Step2Props) {
+  const t = useTranslations('signup_step2');
   const [form, setForm] = useState<Step2Data>({
     province:    initial.province    ?? '',
     district:    initial.district    ?? '',
@@ -51,11 +53,11 @@ export default function Step2Address({ initial, loading, onBack, onSubmit }: Ste
 
   function validate(): boolean {
     const e: Partial<Record<keyof Step2Data, string>> = {};
-    if (!form.province.trim())    e.province    = 'Province is required.';
-    if (!form.district.trim())    e.district    = 'District is required.';
-    if (!form.sub_district.trim()) e.sub_district = 'Sub-district is required.';
-    if (!form.building.trim())    e.building    = 'Building is required.';
-    if (!form.street.trim())      e.street      = 'Street is required.';
+    if (!form.province.trim())    e.province    = t('province_error');
+    if (!form.district.trim())    e.district    = t('district_error');
+    if (!form.sub_district.trim()) e.sub_district = t('subdistrict_error');
+    if (!form.building.trim())    e.building    = t('building_error');
+    if (!form.street.trim())      e.street      = t('street_error');
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -71,22 +73,22 @@ export default function Step2Address({ initial, loading, onBack, onSubmit }: Ste
       {/* Province + District */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">Province</label>
+          <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">{t('province_label')}</label>
           <input
             value={form.province}
             onChange={set('province')}
-            placeholder="Cairo"
+            placeholder={t('province_placeholder')}
             autoComplete="address-level1"
             className={fieldCls(errors.province)}
           />
           {errors.province && <p className="mt-1 text-xs text-[#E74C3C]">{errors.province}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">District</label>
+          <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">{t('district_label')}</label>
           <input
             value={form.district}
             onChange={set('district')}
-            placeholder="Nasr City"
+            placeholder={t('district_placeholder')}
             autoComplete="address-level2"
             className={fieldCls(errors.district)}
           />
@@ -96,11 +98,11 @@ export default function Step2Address({ initial, loading, onBack, onSubmit }: Ste
 
       {/* Sub-district */}
       <div>
-        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">Sub-district / Zone</label>
+        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">{t('subdistrict_label')}</label>
         <input
           value={form.sub_district}
           onChange={set('sub_district')}
-          placeholder="Zone 1"
+          placeholder={t('subdistrict_placeholder')}
           autoComplete="address-level3"
           className={fieldCls(errors.sub_district)}
         />
@@ -110,22 +112,22 @@ export default function Step2Address({ initial, loading, onBack, onSubmit }: Ste
       {/* Building + Street */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">Building</label>
+          <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">{t('building_label')}</label>
           <input
             value={form.building}
             onChange={set('building')}
-            placeholder="10"
+            placeholder={t('building_placeholder')}
             autoComplete="address-line2"
             className={fieldCls(errors.building)}
           />
           {errors.building && <p className="mt-1 text-xs text-[#E74C3C]">{errors.building}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">Street</label>
+          <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">{t('street_label')}</label>
           <input
             value={form.street}
             onChange={set('street')}
-            placeholder="Tayaran Street"
+            placeholder={t('street_placeholder')}
             autoComplete="address-line1"
             className={fieldCls(errors.street)}
           />
@@ -136,7 +138,7 @@ export default function Step2Address({ initial, loading, onBack, onSubmit }: Ste
       {/* Landmark */}
       <div>
         <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">
-          Landmark <span className="text-[#9CA3AF] font-normal">(optional)</span>
+          {t('landmark_label')} <span className="text-[#9CA3AF] font-normal">{t('landmark_optional')}</span>
         </label>
         <div className="relative">
           <MapPin
@@ -147,7 +149,7 @@ export default function Step2Address({ initial, loading, onBack, onSubmit }: Ste
           <input
             value={form.landmark}
             onChange={set('landmark')}
-            placeholder="near mall, opposite mosque…"
+            placeholder={t('landmark_placeholder')}
             autoComplete="off"
             className={`${fieldCls(undefined)} pl-10`}
           />
@@ -162,7 +164,7 @@ export default function Step2Address({ initial, loading, onBack, onSubmit }: Ste
           disabled={loading}
           className="flex-1 h-[52px] rounded-lg text-sm font-semibold border border-[#D1D5DB] text-[#5A6A7A] bg-white transition-colors hover:bg-[#F8F9FA] disabled:opacity-50"
         >
-          ← Back
+          {t('back_btn')}
         </button>
         <button
           type="submit"
@@ -170,7 +172,7 @@ export default function Step2Address({ initial, loading, onBack, onSubmit }: Ste
           className="flex-[2] h-[52px] rounded-lg text-sm font-bold bg-[#00C2A8] text-[#0B1E3D] flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-60"
         >
           {loading && <Loader2 size={16} className="animate-spin" />}
-          Create account
+          {t('create_btn')}
         </button>
       </div>
     </form>

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import type { ApiPassenger } from '@/lib/api/passengers';
+import { useTranslations } from 'next-intl';
 
 interface Props {
   meName:          string;
@@ -25,6 +26,8 @@ export default function PassengerPicker({
   onToggle,
   maxSelections,
 }: Props) {
+  const tp = useTranslations('passenger_picker');
+  const trs = useTranslations('request_schedule');
   const [search, setSearch] = useState('');
 
   const total = (includeSelf ? 1 : 0) + selectedIds.length;
@@ -76,7 +79,7 @@ export default function PassengerPicker({
       </button>
 
       {/* Related passengers heading */}
-      <p className="text-xs font-semibold text-[#5A6A7A] mb-2">Related passengers</p>
+      <p className="text-xs font-semibold text-[#5A6A7A] mb-2">{trs('related_passengers')}</p>
 
       {/* Search */}
       <div className="relative mb-3">
@@ -89,18 +92,18 @@ export default function PassengerPicker({
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search passengers…"
+          placeholder={tp('search')}
           className="w-full h-10 pl-9 pr-3 rounded-xl bg-[#F1F3F4] border border-transparent text-sm text-[#0B1E3D] placeholder:text-[#9AA0A6] focus:outline-none focus:bg-white focus:border-[#C8E8E4]"
         />
       </div>
 
       {/* Horizontal slider of passenger chips */}
       {loading ? (
-        <p className="text-xs text-[#8A9AB0] py-2">Loading passengers…</p>
+        <p className="text-xs text-[#8A9AB0] py-2">{trs('loading_passengers')}</p>
       ) : filtered.length === 0 ? (
         passengers.length === 0 ? (
           <p className="text-xs text-[#8A9AB0] py-1">
-            No related passengers saved. Add them in your{' '}
+            {trs('no_passengers')}{' '}
             <a href="/user/profile" className="text-[#00C2A8] font-medium hover:underline">profile</a>.
           </p>
         ) : (

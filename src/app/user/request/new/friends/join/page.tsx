@@ -2,17 +2,18 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useWizard } from '@/lib/RequestWizardContext';
 import { isValidGroupCode } from '@/lib/groupCode';
 
 export default function FriendsJoinPage() {
   const router = useRouter();
+  const t = useTranslations('request_shared');
   const { setGroupCode } = useWizard();
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
 
   function handleInput(raw: string) {
-    // Auto-format: insert dash after 3 chars
     const cleaned = raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
     const formatted =
       cleaned.length > 3
@@ -24,7 +25,7 @@ export default function FriendsJoinPage() {
 
   function handleJoin() {
     if (!isValidGroupCode(input)) {
-      setError('Enter a valid 6-character code (e.g. XK9-4BT)');
+      setError(t('code_error'));
       return;
     }
     setGroupCode(input);
@@ -61,15 +62,15 @@ export default function FriendsJoinPage() {
           fontFamily: 'inherit',
         }}
       >
-        ← Back
+        {t('back')}
       </button>
 
       <div style={{ textAlign: 'center', marginBottom: 40, width: '100%', maxWidth: 400 }}>
         <h1 style={{ fontSize: 28, fontWeight: 700, color: '#0B1E3D', marginBottom: 8 }}>
-          Join a group
+          {t('join_title')}
         </h1>
         <p style={{ fontSize: 15, color: '#5A6A7A', marginBottom: 32 }}>
-          Enter the group code your friend shared with you.
+          {t('join_desc')}
         </p>
 
         <input
@@ -122,7 +123,7 @@ export default function FriendsJoinPage() {
             transition: 'background 0.2s, color 0.2s',
           }}
         >
-          Join group →
+          {t('join_btn')}
         </button>
       </div>
     </div>

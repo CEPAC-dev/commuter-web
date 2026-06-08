@@ -7,6 +7,7 @@ import {
   getQuarterHourOptions,
   timeDiffMinutes,
 } from '@/lib/timeUtils';
+import { useTranslations } from 'next-intl';
 
 interface TimeSlotCardProps {
   slot:              TimeSlot;
@@ -56,7 +57,15 @@ export default function TimeSlotCard({
   onDayToggle,
   onRemove,
 }: TimeSlotCardProps) {
+  const tsl = useTranslations('time_slot');
+  const tf = useTranslations('request_form');
+  const tr = useTranslations('request_summary');
+  const td = useTranslations('days');
+  const to = useTranslations('outbound_route');
+  const tc = useTranslations('common');
   const palette = SLOT_COLORS[(slotNumber - 1) % SLOT_COLORS.length];
+
+  const dayLabel = (day: WeekDay) => td(day.toLowerCase() as 'sun');
 
   const routeLocked = !slot.route_set;
   const routeIsCustom =
@@ -144,14 +153,14 @@ export default function TimeSlotCard({
             className="text-xs hover:underline"
             style={{ color: palette.deep, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            ✕ Remove
+            ✕ {tc('delete')}
           </button>
         )}
       </div>
 
       {/* ── Route section ── */}
       <div>
-        <label className="block text-xs font-medium text-[#5A6A7A] mb-2">Route</label>
+        <label className="block text-xs font-medium text-[#5A6A7A] mb-2">{tr('route')}</label>
 
         {slot.route_set && slot.origin && slot.destination ? (
           <div className="bg-[#EFF7F6] border border-[#C8E8E4] rounded-xl p-3">
@@ -183,7 +192,7 @@ export default function TimeSlotCard({
                   className="text-xs font-medium hover:underline"
                   style={{ color: palette.accent, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                 >
-                  ✏ Edit route
+                  ✏ {to('edit_route')}
                 </button>
               ) : (
                 <span className="text-[10px] text-[#9AA0A6] italic">Locked · route from Time slot 1</span>
@@ -216,7 +225,7 @@ export default function TimeSlotCard({
               className="mt-1 px-4 py-2 bg-[#0B1E3D] text-white text-sm font-semibold rounded-xl"
               style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
             >
-              Set route
+              {to('set_route')}
             </button>
           </div>
         ) : (
@@ -231,20 +240,20 @@ export default function TimeSlotCard({
 
         {/* Trip type */}
         <div>
-          <label className="block text-xs font-medium text-[#5A6A7A] mb-2">Trip type for this slot</label>
+          <label className="block text-xs font-medium text-[#5A6A7A] mb-2">{tf('trip_type_label')}</label>
           <div className="grid grid-cols-2 gap-2">
-            {(['one_way', 'round_trip'] as const).map(tt => (
+            {(['one_way', 'round_trip'] as const).map((tripType) => (
               <button
-                key={tt}
+                key={tripType}
                 type="button"
                 disabled={routeLocked}
-                onClick={() => onTripTypeChange(tt)}
+                onClick={() => onTripTypeChange(tripType)}
                 className="h-10 rounded-lg border text-sm font-medium transition-colors"
-                style={slot.trip_type === tt
+                style={slot.trip_type === tripType
                   ? { borderColor: palette.accent, background: palette.soft, color: palette.deep }
                   : { borderColor: '#E2E8F0', background: '#fff', color: '#5A6A7A' }}
               >
-                {tt === 'one_way' ? 'One way' : 'Round trip'}
+                {tripType === 'one_way' ? tsl('one_way') : tsl('round_trip')}
               </button>
             ))}
           </div>
@@ -255,7 +264,7 @@ export default function TimeSlotCard({
           <label className="block text-xs font-medium text-[#5A6A7A] mb-2">Pickup time</label>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-[#9AA0A6] mb-1">From</label>
+              <label className="block text-xs text-[#9AA0A6] mb-1">{tf('arrival_from')}</label>
               <select
                 value={slot.pickup_from}
                 disabled={routeLocked}
@@ -269,7 +278,7 @@ export default function TimeSlotCard({
               </select>
             </div>
             <div>
-              <label className="block text-xs text-[#9AA0A6] mb-1">To</label>
+              <label className="block text-xs text-[#9AA0A6] mb-1">{tf('arrival_to')}</label>
               <select
                 value={slot.pickup_to}
                 disabled={routeLocked}
@@ -294,7 +303,7 @@ export default function TimeSlotCard({
             <label className="block text-xs font-medium text-[#5A6A7A] mb-2">Arrival time</label>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-[#9AA0A6] mb-1">From</label>
+                <label className="block text-xs text-[#9AA0A6] mb-1">{tf('arrival_from')}</label>
                 <select
                   value={slot.arrival_from || arrivalFromMin}
                   onChange={(e) => onArrivalChange(e.target.value, addMinutes(e.target.value, 15))}
@@ -307,7 +316,7 @@ export default function TimeSlotCard({
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-[#9AA0A6] mb-1">To</label>
+                <label className="block text-xs text-[#9AA0A6] mb-1">{tf('arrival_to')}</label>
                 <select
                   value={slot.arrival_to || addMinutes(slot.arrival_from || arrivalFromMin, 30)}
                   onChange={(e) => onArrivalChange(slot.arrival_from || arrivalFromMin, e.target.value)}
@@ -322,8 +331,8 @@ export default function TimeSlotCard({
             </div>
             <p className="text-xs text-[#9AA0A6] mt-1">
               {routeDuration > 0
-                ? `~${routeDuration} min route + ${BUFFER_MIN} min buffer = ${minTotalGap} min minimum`
-                : 'At least 30 min after pickup ends'}
+                ? tsl('route_buffer', { route: routeDuration, buffer: BUFFER_MIN, min: minTotalGap })
+                : tsl('min_after_pickup')}
             </p>
           </div>
         )}
@@ -366,7 +375,7 @@ export default function TimeSlotCard({
               <label className="block text-xs font-medium text-[#5A6A7A] mb-2">Return pickup time</label>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-[#9AA0A6] mb-1">From</label>
+                  <label className="block text-xs text-[#9AA0A6] mb-1">{tf('arrival_from')}</label>
                   <select
                     value={returnFrom}
                     onChange={(e) => handleReturnFromChange(e.target.value)}
@@ -379,7 +388,7 @@ export default function TimeSlotCard({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-[#9AA0A6] mb-1">To</label>
+                  <label className="block text-xs text-[#9AA0A6] mb-1">{tf('arrival_to')}</label>
                   <select
                     value={returnTo}
                     onChange={(e) => onReturnChange(returnFrom, e.target.value)}
@@ -399,7 +408,7 @@ export default function TimeSlotCard({
               <label className="block text-xs font-medium text-[#5A6A7A] mb-2">Return arrival time</label>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-[#9AA0A6] mb-1">From</label>
+                  <label className="block text-xs text-[#9AA0A6] mb-1">{tf('arrival_from')}</label>
                   <select
                     value={slot.return_arrival_from || retArrivalFromMin}
                     onChange={(e) => onReturnArrivalChange(e.target.value, addMinutes(e.target.value, 30))}
@@ -412,7 +421,7 @@ export default function TimeSlotCard({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-[#9AA0A6] mb-1">To</label>
+                  <label className="block text-xs text-[#9AA0A6] mb-1">{tf('arrival_to')}</label>
                   <select
                     value={slot.return_arrival_to || addMinutes(slot.return_arrival_from || retArrivalFromMin, 30)}
                     onChange={(e) => onReturnArrivalChange(slot.return_arrival_from || retArrivalFromMin, e.target.value)}
@@ -425,7 +434,7 @@ export default function TimeSlotCard({
                   </select>
                 </div>
               </div>
-              <p className="text-xs text-[#9AA0A6] mt-1">At least 30 min after return pickup ends</p>
+              <p className="text-xs text-[#9AA0A6] mt-1">{tsl('min_after_pickup')}</p>
             </div>
           </div>
         )}
@@ -433,7 +442,7 @@ export default function TimeSlotCard({
 
       {/* ── Days — locked until route is set ── */}
       <div className={routeLocked ? 'opacity-40 pointer-events-none select-none' : ''}>
-        <label className="block text-xs font-medium text-[#5A6A7A] mb-2">Days for this slot</label>
+        <label className="block text-xs font-medium text-[#5A6A7A] mb-2">{tf('days_label')}</label>
         <div className="flex gap-1.5 flex-wrap">
           {ALL_DAYS.map((day) => {
             const isSelected   = slot.days.includes(day);
@@ -458,7 +467,7 @@ export default function TimeSlotCard({
                     ? { borderColor: palette.border, color: palette.deep }
                     : undefined}
               >
-                {day}
+                {dayLabel(day)}
               </button>
             );
           })}

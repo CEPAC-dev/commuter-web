@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import {
   Car, Layers, Palette, Hash, MapPin, CreditCard, Shield,
-  Loader2, Info, CheckCircle, Upload, X, FileText, LogOut, Sliders,
+  Loader2, Info, CheckCircle, Upload, X, FileText, LogOut, Sliders, Camera,
 } from 'lucide-react';
 import driverApi from '@/lib/api/driver';
 import authApi from '@/lib/api/auth';
@@ -142,34 +142,37 @@ function FileField({ label, value, onChange, error }: {
 // ─── Form ────────────────────────────────────────────────────────────────────
 
 interface FormState {
-  national_id:    string;
-  license_number: string;
-  license_expiry: string;
-  car_type:       'private' | 'taxi';
-  car_brand:      string;
-  car_model:      string;
-  car_year:       number | '';
-  car_color:      string;
-  car_color_custom: string;
-  plateL1:        string;
-  plateL2:        string;
-  plateL3:        string;
-  plate_number:   string;
-  default_location_name: string;
-  default_lat:    string;
-  default_lng:    string;
-  price_per_km:   string;
-  waiting_time:   string;
-  seats:          string;
-  passenger_gender: string;
-  national_id_image_front: File | null;
-  national_id_image_back:  File | null;
-  license_image:           File | null;
+  national_id:               string;
+  license_expiry:            string;
+  car_type:                  'private' | 'taxi';
+  car_brand:                 string;
+  car_model:                 string;
+  car_year:                  number | '';
+  car_color:                 string;
+  car_color_custom:          string;
+  plateL1:                   string;
+  plateL2:                   string;
+  plateL3:                   string;
+  plate_number:              string;
+  location_name:             string;
+  default_lat:               string;
+  default_lng:               string;
+  price_per_km:              string;
+  waiting_price_per_hour:    string;
+  car_capacity:              string;
+  passenger_type:            string;
+  profile_photo:             File | null;
+  national_id_image_front:   File | null;
+  national_id_image_back:    File | null;
+  driving_license:           File | null;
+  vehicle_license_front:     File | null;
+  vehicle_license_back:      File | null;
+  criminal_record_certificate: File | null;
 }
 
 export default function DriverOnboardingPage() {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, name } = useAuth();
 
   async function handleLogout() {
     try { await authApi.logout(); } catch { /* ignore */ }
@@ -178,36 +181,41 @@ export default function DriverOnboardingPage() {
   }
 
   const [form, setForm] = useState<FormState>({
-    national_id:    '',
-    license_number: '',
-    license_expiry: '',
-    car_type:       'private',
-    car_brand:      '',
-    car_model:      '',
-    car_year:       '',
-    car_color:      '',
-    car_color_custom: '',
+    national_id:               '',
+    license_expiry:            '',
+    car_type:                  'private',
+    car_brand:                 '',
+    car_model:                 '',
+    car_year:                  '',
+    car_color:                 '',
+    car_color_custom:          '',
     plateL1: '', plateL2: '', plateL3: '',
-    plate_number: '',
-    default_location_name: '',
-    default_lat: '',
-    default_lng: '',
-    price_per_km: '',
-    waiting_time: '',
-    seats: '',
-    passenger_gender: '',
-    national_id_image_front: null,
-    national_id_image_back:  null,
-    license_image:           null,
+    plate_number:              '',
+    location_name:             '',
+    default_lat:               '',
+    default_lng:               '',
+    price_per_km:              '',
+    waiting_price_per_hour:    '',
+    car_capacity:              '',
+    passenger_type:            '',
+    profile_photo:             null,
+    national_id_image_front:   null,
+    national_id_image_back:    null,
+    driving_license:           null,
+    vehicle_license_front:     null,
+    vehicle_license_back:      null,
+    criminal_record_certificate: null,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [photoHov, setPhotoHov] = useState(false);
 
   const plateL1Ref = useRef<HTMLInputElement>(null);
   const plateL2Ref = useRef<HTMLInputElement>(null);
   const plateL3Ref = useRef<HTMLInputElement>(null);
-  const numRef     = useRef<HTMLInputElement>(null);
+  const numRef            = useRef<HTMLInputElement>(null);
+  const profilePhotoRef  = useRef<HTMLInputElement>(null);
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -215,7 +223,6 @@ export default function DriverOnboardingPage() {
   function validate(): boolean {
     const e: Record<string, string> = {};
     if (!/^\d{14}$/.test(form.national_id)) e.national_id = 'Enter a valid 14-digit National ID.';
-    if (!form.license_number.trim()) e.license_number = 'Enter your license number.';
     if (!form.license_expiry) e.license_expiry = 'Select the license expiry date.';
     if (!form.car_brand.trim()) e.car_brand = 'Enter the car brand.';
     if (!form.car_model.trim()) e.car_model = 'Enter the car model.';
@@ -225,9 +232,17 @@ export default function DriverOnboardingPage() {
     if (!form.plateL1 || !form.plateL2 || !form.plateL3) e.plate = 'Enter all 3 Arabic letters.';
     else if (!form.plate_number) e.plate = 'Enter the plate number.';
     if (!form.default_lat || !form.default_lng) e.default_location = 'Pick a location on the map or search for one.';
-    if (!form.national_id_image_front) e.national_id_image_front = 'Upload the front of your National ID.';
-    if (!form.national_id_image_back)  e.national_id_image_back  = 'Upload the back of your National ID.';
-    if (!form.license_image)           e.license_image           = 'Upload your driving license.';
+    if (!form.car_capacity || isNaN(Number(form.car_capacity)) || Number(form.car_capacity) < 1) e.car_capacity = 'Enter the number of seats.';
+    if (!form.price_per_km || isNaN(Number(form.price_per_km)) || Number(form.price_per_km) <= 0) e.price_per_km = 'Enter a valid price per km.';
+    if (!form.waiting_price_per_hour || isNaN(Number(form.waiting_price_per_hour)) || Number(form.waiting_price_per_hour) <= 0) e.waiting_price_per_hour = 'Enter a valid waiting price per hour.';
+    if (!form.passenger_type) e.passenger_type = 'Select accepted passengers.';
+    if (!form.profile_photo)             e.profile_photo             = 'Upload your profile photo.';
+    if (!form.national_id_image_front)   e.national_id_image_front   = 'Upload the front of your National ID.';
+    if (!form.national_id_image_back)    e.national_id_image_back    = 'Upload the back of your National ID.';
+    if (!form.driving_license)           e.driving_license           = 'Upload your driving license.';
+    if (!form.vehicle_license_front)     e.vehicle_license_front     = 'Upload the front of your vehicle license.';
+    if (!form.vehicle_license_back)      e.vehicle_license_back      = 'Upload the back of your vehicle license.';
+    if (!form.criminal_record_certificate) e.criminal_record_certificate = 'Upload your criminal record certificate.';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -240,29 +255,32 @@ export default function DriverOnboardingPage() {
     }
     setLoading(true);
     try {
-      const carNumber = `${form.plateL1}${form.plateL2}${form.plateL3} ${form.plate_number}`;
-      const carColor  = form.car_color === 'other' ? form.car_color_custom.trim() : form.car_color;
-      const carModel  = [form.car_brand.trim(), form.car_model.trim(), String(form.car_year)]
-        .filter(Boolean).join(' ');
+      const licensePlate = `${form.plateL1}${form.plateL2}${form.plateL3} ${form.plate_number}`;
+      const carColor     = form.car_color === 'other' ? form.car_color_custom.trim() : form.car_color;
 
       const fd = new FormData();
-      fd.append('national_id',    form.national_id);
-      fd.append('license_number', form.license_number);
-      fd.append('license_expiry', form.license_expiry);
-      fd.append('car_type',       form.car_type);
-      fd.append('car_model',      carModel);
-      fd.append('car_number',     carNumber);
-      fd.append('car_color',      carColor);
-      fd.append('default_lat',    form.default_lat);
-      fd.append('default_lng',    form.default_lng);
-      fd.append('default_location_name', form.default_location_name.trim());
-      if (form.price_per_km)    fd.append('price_per_km',    form.price_per_km);
-      if (form.waiting_time)    fd.append('waiting_time',    form.waiting_time);
-      if (form.seats)           fd.append('seats',           form.seats);
-      if (form.passenger_gender) fd.append('passenger_gender', form.passenger_gender);
-      if (form.license_image)           fd.append('license_image',           form.license_image);
-      if (form.national_id_image_front) fd.append('national_id_image_front', form.national_id_image_front);
-      if (form.national_id_image_back)  fd.append('national_id_image_back',  form.national_id_image_back);
+      fd.append('national_id',             form.national_id);
+      fd.append('license_expiry',          form.license_expiry);
+      fd.append('car_type',                form.car_type);
+      fd.append('car_brand',               form.car_brand.trim());
+      fd.append('car_model',               form.car_model.trim());
+      fd.append('car_year',                String(form.car_year));
+      fd.append('car_color',               carColor);
+      fd.append('license_plate',           licensePlate);
+      fd.append('location_name',           form.location_name.trim());
+      fd.append('default_lat',             form.default_lat);
+      fd.append('default_lng',             form.default_lng);
+      fd.append('car_capacity',            form.car_capacity);
+      fd.append('price_per_km',            form.price_per_km);
+      fd.append('waiting_price_per_hour',  form.waiting_price_per_hour);
+      fd.append('passenger_type',          form.passenger_type);
+      if (form.profile_photo)               fd.append('profile_photo',               form.profile_photo);
+      if (form.national_id_image_front)     fd.append('national_id_image_front',     form.national_id_image_front);
+      if (form.national_id_image_back)      fd.append('national_id_image_back',      form.national_id_image_back);
+      if (form.driving_license)             fd.append('driving_license',             form.driving_license);
+      if (form.vehicle_license_front)       fd.append('vehicle_license_front',       form.vehicle_license_front);
+      if (form.vehicle_license_back)        fd.append('vehicle_license_back',        form.vehicle_license_back);
+      if (form.criminal_record_certificate) fd.append('criminal_record_certificate', form.criminal_record_certificate);
 
       await driverApi.submitProfile(fd);
       setSuccess(true);
@@ -284,7 +302,7 @@ export default function DriverOnboardingPage() {
             <strong className="text-[#0B1E3D]"> 24–48 hours</strong>.
           </p>
           <button
-            onClick={() => router.replace('/driver/requests')}
+            onClick={() => router.replace('/driver/my-requests')}
             className="w-full h-[52px] rounded-lg text-sm font-bold transition-opacity hover:opacity-90"
             style={{ background: '#00C2A8', color: '#fff' }}
           >
@@ -329,6 +347,58 @@ export default function DriverOnboardingPage() {
 
         <form onSubmit={handleSubmit} noValidate>
 
+          {/* Profile card */}
+          <div style={{ background: '#EFF7F5', border: '1.5px solid #C8E6E2', borderRadius: 16, padding: '18px 16px', marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              {/* Clickable avatar */}
+              <div
+                style={{ position: 'relative', cursor: 'pointer', flexShrink: 0 }}
+                onClick={() => profilePhotoRef.current?.click()}
+                onMouseEnter={() => setPhotoHov(true)}
+                onMouseLeave={() => setPhotoHov(false)}
+                title="Upload profile photo"
+              >
+                <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#C8E6E2', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2.5px solid #fff', boxShadow: '0 2px 10px rgba(0,194,168,0.2)' }}>
+                  {form.profile_photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={URL.createObjectURL(form.profile_photo)} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <span style={{ fontSize: 26, fontWeight: 700, color: '#00C2A8' }}>{(name ?? 'D').charAt(0).toUpperCase()}</span>
+                  )}
+                </div>
+                <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(0,0,0,0.42)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: photoHov ? 1 : 0, transition: 'opacity 0.15s', pointerEvents: 'none' }}>
+                  <Camera size={22} color="#fff" />
+                </div>
+                <input
+                  ref={profilePhotoRef}
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    if (!['image/jpeg', 'image/png'].includes(f.type)) { toast.error('Only JPEG or PNG allowed.'); return; }
+                    if (f.size > 3 * 1024 * 1024) { toast.error('File must be 3MB or smaller.'); return; }
+                    set('profile_photo', f);
+                    e.target.value = '';
+                  }}
+                />
+              </div>
+              {/* Info */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#0B1E3D', lineHeight: 1.2 }}>{name ?? 'Driver'}</div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 6, padding: '3px 10px', borderRadius: 20, background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)' }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#F97316' }} />
+                  <span style={{ fontSize: 11, color: '#F97316', fontWeight: 700 }}>Pending verification</span>
+                </div>
+                <p style={{ fontSize: 11, color: form.profile_photo ? '#00C2A8' : '#9CA3AF', margin: '8px 0 0' }}>
+                  {form.profile_photo ? '✓ Profile photo ready' : 'Tap to upload your profile photo'}
+                </p>
+              </div>
+            </div>
+            {errors.profile_photo && <p className="mt-2 text-xs text-[#E74C3C]">{errors.profile_photo}</p>}
+          </div>
+
           {/* Identity */}
           <SectionCard icon={<CreditCard size={14} />} title="Identity">
             <div className="mb-4">
@@ -344,28 +414,16 @@ export default function DriverOnboardingPage() {
               />
               {errors.national_id && <p className="mt-1 text-xs text-[#E74C3C]">{errors.national_id}</p>}
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-[#0B1E3D] mb-1.5">License number</label>
-                <input
-                  type="text"
-                  value={form.license_number}
-                  onChange={(e) => set('license_number', e.target.value)}
-                  placeholder="DL-1234567"
-                  className={inputCls(errors.license_number)}
-                />
-                {errors.license_number && <p className="mt-1 text-xs text-[#E74C3C]">{errors.license_number}</p>}
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-[#0B1E3D] mb-1.5">Driving license expiry</label>
-                <input
-                  type="date"
-                  value={form.license_expiry}
-                  onChange={(e) => set('license_expiry', e.target.value)}
-                  className={inputCls(errors.license_expiry)}
-                />
-                {errors.license_expiry && <p className="mt-1 text-xs text-[#E74C3C]">{errors.license_expiry}</p>}
-              </div>
+            <div>
+              <label className="block text-xs font-medium text-[#0B1E3D] mb-1.5">Driving license expiry</label>
+              <input
+                type="date"
+                value={form.license_expiry}
+                onChange={(e) => set('license_expiry', e.target.value)}
+                className={inputCls(errors.license_expiry)}
+                style={{ maxWidth: '50%' }}
+              />
+              {errors.license_expiry && <p className="mt-1 text-xs text-[#E74C3C]">{errors.license_expiry}</p>}
             </div>
           </SectionCard>
 
@@ -518,7 +576,7 @@ export default function DriverOnboardingPage() {
               lng={form.default_lng}
               name={form.default_location_name}
               onChange={(newLat, newLng, newName) => {
-                setForm((f) => ({ ...f, default_lat: newLat, default_lng: newLng, default_location_name: newName }));
+                setForm((f) => ({ ...f, default_lat: newLat, default_lng: newLng, location_name: newName }));
                 if (newLat && newLng) setErrors((e) => { const { default_location: _, ...rest } = e; return rest; });
               }}
               error={errors.default_location}
@@ -526,67 +584,67 @@ export default function DriverOnboardingPage() {
           </SectionCard>
 
           {/* Ride preferences */}
-          <SectionCard icon={<Sliders size={14} />} title="Ride preferences (optional)">
+          <SectionCard icon={<Sliders size={14} />} title="Ride preferences">
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div>
                 <label className="block text-xs font-medium text-[#0B1E3D] mb-1.5">Price per km</label>
                 <div className="relative">
                   <input
-                    type="number" min={0} step={0.5}
+                    type="number" min={0} step={0.01}
                     value={form.price_per_km}
                     onChange={(e) => set('price_per_km', e.target.value)}
-                    placeholder="e.g. 5"
-                    className={inputCls()}
+                    placeholder="e.g. 5.00"
+                    className={inputCls(errors.price_per_km)}
                     style={{ paddingRight: 48 }}
                   />
                   <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#9CA3AF]">EGP</span>
                 </div>
+                {errors.price_per_km && <p className="mt-1 text-xs text-[#E74C3C]">{errors.price_per_km}</p>}
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#0B1E3D] mb-1.5">Waiting time for passenger</label>
+                <label className="block text-xs font-medium text-[#0B1E3D] mb-1.5">Waiting price / hour</label>
                 <div className="relative">
-                  <select
-                    value={form.waiting_time}
-                    onChange={(e) => set('waiting_time', e.target.value)}
-                    className={selectCls()}
-                  >
-                    <option value="">Select</option>
-                    <option value="5">5 minutes</option>
-                    <option value="10">10 minutes</option>
-                    <option value="15">15 minutes</option>
-                    <option value="20">20 minutes</option>
-                    <option value="30">30 minutes</option>
-                  </select>
-                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]">▾</span>
+                  <input
+                    type="number" min={0} step={0.01}
+                    value={form.waiting_price_per_hour}
+                    onChange={(e) => set('waiting_price_per_hour', e.target.value)}
+                    placeholder="e.g. 30.00"
+                    className={inputCls(errors.waiting_price_per_hour)}
+                    style={{ paddingRight: 48 }}
+                  />
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#9CA3AF]">EGP</span>
                 </div>
+                {errors.waiting_price_per_hour && <p className="mt-1 text-xs text-[#E74C3C]">{errors.waiting_price_per_hour}</p>}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-[#0B1E3D] mb-1.5">Available seats</label>
+                <label className="block text-xs font-medium text-[#0B1E3D] mb-1.5">Car capacity (seats)</label>
                 <input
                   type="number" min={1} max={20}
-                  value={form.seats}
-                  onChange={(e) => set('seats', e.target.value)}
+                  value={form.car_capacity}
+                  onChange={(e) => set('car_capacity', e.target.value)}
                   placeholder="e.g. 4"
-                  className={inputCls()}
+                  className={inputCls(errors.car_capacity)}
                 />
+                {errors.car_capacity && <p className="mt-1 text-xs text-[#E74C3C]">{errors.car_capacity}</p>}
               </div>
               <div>
                 <label className="block text-xs font-medium text-[#0B1E3D] mb-1.5">Accepted passengers</label>
                 <div className="relative">
                   <select
-                    value={form.passenger_gender}
-                    onChange={(e) => set('passenger_gender', e.target.value)}
-                    className={selectCls()}
+                    value={form.passenger_type}
+                    onChange={(e) => set('passenger_type', e.target.value)}
+                    className={selectCls(errors.passenger_type)}
                   >
                     <option value="">Select</option>
-                    <option value="any">Any</option>
                     <option value="male">Male only</option>
                     <option value="female">Female only</option>
+                    <option value="mixed">Mixed</option>
                   </select>
                   <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]">▾</span>
                 </div>
+                {errors.passenger_type && <p className="mt-1 text-xs text-[#E74C3C]">{errors.passenger_type}</p>}
               </div>
             </div>
           </SectionCard>
@@ -607,10 +665,29 @@ export default function DriverOnboardingPage() {
             </div>
 
             <p className="text-[13px] font-semibold text-[#0B1E3D] mb-1">Driving license</p>
-            <p className="text-[11px] text-[#9CA3AF] mb-2">Clear photo of your license</p>
-            <FileField label="Driving license" value={form.license_image}
-              onChange={(f) => set('license_image', f)}
-              error={errors.license_image} />
+            <p className="text-[11px] text-[#9CA3AF] mb-2">Clear photo of your driving license</p>
+            <div className="mb-4">
+              <FileField label="Driving license" value={form.driving_license}
+                onChange={(f) => set('driving_license', f)}
+                error={errors.driving_license} />
+            </div>
+
+            <p className="text-[13px] font-semibold text-[#0B1E3D] mb-1">Vehicle license</p>
+            <p className="text-[11px] text-[#9CA3AF] mb-2">Both sides required</p>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <FileField label="Front" value={form.vehicle_license_front}
+                onChange={(f) => set('vehicle_license_front', f)}
+                error={errors.vehicle_license_front} />
+              <FileField label="Back" value={form.vehicle_license_back}
+                onChange={(f) => set('vehicle_license_back', f)}
+                error={errors.vehicle_license_back} />
+            </div>
+
+            <p className="text-[13px] font-semibold text-[#0B1E3D] mb-1">Criminal record certificate</p>
+            <p className="text-[11px] text-[#9CA3AF] mb-2">Issued within the last 3 months</p>
+            <FileField label="Criminal record certificate" value={form.criminal_record_certificate}
+              onChange={(f) => set('criminal_record_certificate', f)}
+              error={errors.criminal_record_certificate} />
           </SectionCard>
 
           {/* Info banner */}
