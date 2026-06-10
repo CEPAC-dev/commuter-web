@@ -353,7 +353,6 @@ function Step2CarProfile({ onNext, onBack, loading }: {
   function validate() {
     const e: typeof errors = {};
     if (!form.car_brand.trim()) e.car_brand = t('step2.car_brand_error');
-    if (!form.car_model.trim()) e.car_model = t('step2.car_model_error');
     if (!form.car_year) e.car_year = t('step2.car_year_error');
     if (!form.car_capacity || isNaN(Number(form.car_capacity)) || Number(form.car_capacity) < 1)
       e.car_capacity = t('step2.capacity_error');
@@ -413,8 +412,7 @@ function Step2CarProfile({ onNext, onBack, loading }: {
         </div>
         <div>
           <Label>{t('step2.car_model')}</Label>
-          <input value={form.car_model} onChange={set('car_model')} placeholder={t('step2.car_model_placeholder')} className={fieldCls(errors.car_model)} />
-          <FieldError msg={errors.car_model} />
+          <input value={form.car_model} onChange={set('car_model')} placeholder={t('step2.car_model_placeholder')} className={fieldCls()} />
         </div>
       </div>
 
