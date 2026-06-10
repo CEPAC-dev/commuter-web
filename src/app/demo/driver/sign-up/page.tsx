@@ -324,12 +324,6 @@ interface Step2State {
   car_capacity: string;
 }
 
-const SEATS_BY_TYPE: Record<'taxi' | 'private' | 'van', number[]> = {
-  taxi:    [3, 4, 5, 6],
-  private: [3, 4, 5, 6],
-  van:     [6, 10, 11],
-};
-
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: CURRENT_YEAR - 2005 + 1 }, (_, i) => CURRENT_YEAR - i);
 
@@ -389,7 +383,7 @@ function Step2CarProfile({ onNext, onBack, loading }: {
             <button
               key={value}
               type="button"
-              onClick={() => setForm((f) => ({ ...f, car_type: value, car_capacity: '' }))}
+              onClick={() => setForm((f) => ({ ...f, car_type: value }))}  
               className={[
                 'h-[52px] rounded-lg border-2 font-semibold text-sm capitalize transition-all',
                 form.car_type === value
@@ -430,12 +424,7 @@ function Step2CarProfile({ onNext, onBack, loading }: {
         </div>
         <div>
           <Label>{t('step2.capacity')}</Label>
-          <select value={form.car_capacity} onChange={set('car_capacity')} className={selectCls(errors.car_capacity)}>
-            <option value="">{t('step2.capacity_placeholder')}</option>
-            {SEATS_BY_TYPE[form.car_type].map((n) => (
-              <option key={n} value={n}>{n} {n > 1 ? (isRtl ? 'مقاعد' : 'seats') : (isRtl ? 'مقعد' : 'seat')}</option>
-            ))}
-          </select>
+          <input type="number" value={form.car_capacity} onChange={set('car_capacity')} placeholder={t('step2.capacity_placeholder')} min="1" className={fieldCls(errors.car_capacity)} />
           <FieldError msg={errors.car_capacity} />
         </div>
       </div>
