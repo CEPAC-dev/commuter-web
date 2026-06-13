@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, LogOut, User, Wallet, Bell } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import authApi from '@/lib/api/auth';
+import { getUnreadCount } from '@/lib/api/notifications';
 import LanguageToggle from './LanguageToggle';
 import { useTranslations } from 'next-intl';
 
@@ -23,14 +24,26 @@ export default function UserNavbar() {
   ];
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [userName, setUserName] = useState(t('default_user'));
+  const [unreadCount, setUnreadCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { name: authName, logout, profilePhoto } = useAuth();
-
-  const unreadCount = 0; // TODO: fetch from API when notifications endpoint available
 
   useEffect(() => {
     if (authName) setUserName(authName);
   }, [authName]);
+
+  useEffect(() => {
+    async function loadUnreadCount() {
+      try {
+        const count = await getUnreadCount();
+        setUnreadCount(count);
+      } catch (error) {
+        console.error('Failed to fetch unread notification count:', error);
+      }
+    }
+
+    loadUnreadCount();
+  }, []);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -70,6 +83,7 @@ export default function UserNavbar() {
 
       {/* Desktop only */}
       <nav
+        dir="ltr"
         className={`hidden md:flex ${isMapPage ? 'navbar-glass' : ''}`}
         style={{
           position: 'sticky',
@@ -151,7 +165,7 @@ export default function UserNavbar() {
         </div>
 
         {/* Right: language toggle + user avatar + dropdown */}
-        <div style={{ marginInlineStart: 'auto', display: 'flex', alignItems: 'center', gap: 8, position: 'relative', zIndex: 1 }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, position: 'relative', zIndex: 1 }}>
           <LanguageToggle />
         <div ref={dropdownRef} style={{ position: 'relative' }}>
           <button
@@ -196,7 +210,7 @@ export default function UserNavbar() {
                   style={{
                     position: 'absolute',
                     top: -2,
-                    insetInlineEnd: -2,
+                    right: -2,
                     width: 10,
                     height: 10,
                     background: '#E74C3C',
@@ -222,7 +236,7 @@ export default function UserNavbar() {
               style={{
                 position: 'absolute',
                 top: 'calc(100% + 6px)',
-                insetInlineEnd: 0,
+                right: 0,
                 background: '#fff',
                 border: '1px solid #E2E8F0',
                 borderRadius: 10,
@@ -246,7 +260,7 @@ export default function UserNavbar() {
                 {unreadCount > 0 && (
                   <span
                     style={{
-                      marginInlineStart: 'auto',
+                      marginLeft: 'auto',
                       background: '#E74C3C',
                       color: '#fff',
                       fontSize: 11,

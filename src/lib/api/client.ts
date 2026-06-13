@@ -23,6 +23,18 @@ interface CallOptions {
   multipart?: boolean;   // true = don't set Content-Type (browser sets boundary)
 }
 
+function formatApiErrorMessage(payload: unknown, fallback: string): string {
+  if (!payload || typeof payload !== 'object') return fallback;
+  const p = payload as { message?: string; errors?: Record<string, string[]> };
+  if (p.errors && typeof p.errors === 'object') {
+    const lines = Object.entries(p.errors).flatMap(([, msgs]) =>
+      Array.isArray(msgs) ? msgs : [],
+    );
+    if (lines.length > 0) return lines.join('\n');
+  }
+  return p.message ?? fallback;
+}
+
 export async function call<T = unknown>(
   path: string,
   opts: CallOptions = {},
@@ -65,9 +77,10 @@ export async function call<T = unknown>(
   }
 
   if (!res.ok) {
-    const msg =
-      (payload as { message?: string })?.message ??
-      `Request failed with status ${res.status}`;
+    const msg = formatApiErrorMessage(
+      payload,
+      `Request failed with status ${res.status}`,
+    );
 
     // 401 — token expired or invalid: clear session and bounce to sign-in.
     // Skip this for unauthenticated requests (auth: false) — a 401 on login

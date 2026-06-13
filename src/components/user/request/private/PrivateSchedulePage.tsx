@@ -13,8 +13,8 @@ import {
 import { getNextAvailableCycleStart, formatCycleStartDate, cycleDateForDayOfWeek, toApiDate } from '@/lib/cycleUtils';
 import { calculatePriceRange } from '@/lib/pricing';
 import { getPassengers, type ApiPassenger } from '@/lib/api/passengers';
-import { getName } from '@/lib/auth';
-import { createCourse, type WeeklyTripSchedule, type CourseStop } from '@/lib/api/courses';
+import { getName, getUserId } from '@/lib/auth';
+import { createCourse, type WeeklyTripSchedule, type CourseStop, type CourseParticipant } from '@/lib/api/courses';
 import { ApiError } from '@/lib/api/client';
 
 import PassengerPicker from './PassengerPicker';
@@ -24,7 +24,7 @@ import PointPicker from './PointPicker';
 import StopMapPicker from './StopMapPicker';
 import ReviewModal from './ReviewModal';
 import RoutePicker, { type RoutePickerResult } from '@/components/user/request/RoutePicker';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -61,6 +61,8 @@ export default function PrivateSchedulePage() {
   const tsb = useTranslations('schedule_builder');
   const tsl = useTranslations('time_slot');
   const trf = useTranslations('ride_form');
+  const td = useTranslations('days');
+  const locale = useLocale();
   const router = useRouter();
   const wizard = useWizard();
 
@@ -72,7 +74,7 @@ export default function PrivateSchedulePage() {
     getPassengers().then(setPassengers).catch(() => {}).finally(() => setLoadingPx(false));
   }, []);
 
-  const myName = getName() ?? 'Me';
+  const myName = getName() ?? trs('me');
 
   // Keep passenger_count in sync
   useEffect(() => {
@@ -94,7 +96,7 @@ export default function PrivateSchedulePage() {
 
   // ── Cycle start ─────────────────────────────────────────────────────────
   const cycleStart      = getNextAvailableCycleStart();
-  const cycleStartLabel = formatCycleStartDate(cycleStart, 'en');
+  const cycleStartLabel = formatCycleStartDate(cycleStart, locale);
 
   // ── Modals ──────────────────────────────────────────────────────────────
   const [pointPicker, setPointPicker] = useState<
@@ -112,13 +114,13 @@ export default function PrivateSchedulePage() {
   // ── Derived passenger list for seat layout ──────────────────────────────
   const seatPassengers = useMemo(() => {
     const list: { key: string; name: string }[] = [];
-    if (wizard.include_self) list.push({ key: 'me', name: `Me (${myName})` });
+    if (wizard.include_self) list.push({ key: 'me', name: trs('me_with_name', { name: myName }) });
     for (const id of wizard.selected_passenger_ids) {
       const p = passengers.find(p => p.id === id);
       if (p) list.push({ key: String(id), name: p.name });
     }
     return list;
-  }, [wizard.include_self, wizard.selected_passenger_ids, passengers, myName]);
+  }, [wizard.include_self, wizard.selected_passenger_ids, passengers, myName, trs]);
 
   // ── Outbound route handlers ─────────────────────────────────────────────
   function handleRouteConfirm(r: RoutePickerResult) {
@@ -269,13 +271,17 @@ export default function PrivateSchedulePage() {
     const schedules: WeeklyTripSchedule[] = [];
 
     for (const slot of slots) {
-      const participants = Object.entries(slot.seat_assignments ?? {})
-        .filter(([k]) => k !== 'me') // 'me' is the account holder; assume the API derives it from token
-        .map(([k, seat]) => ({
-          type: 'passenger' as const,
-          passenger_id: Number(k),
-          seat_position: seat,
-        }));
+      const participants: CourseParticipant[] = [];
+      for (const [k, seat] of Object.entries(slot.seat_assignments ?? {})) {
+        if (k === 'me') {
+          const userId = getUserId();
+          if (userId !== null) {
+            participants.push({ type: 'user', user_id: userId, seat_position: seat });
+          }
+        } else {
+          participants.push({ type: 'passenger', passenger_id: Number(k), seat_position: seat });
+        }
+      }
 
       for (const day of slot.days) {
         const dow = WEEKDAY_INDEX[day];
@@ -340,8 +346,10 @@ export default function PrivateSchedulePage() {
     }
 
     // start_date / end_date — earliest & latest day-of-week chosen, mapped to cycle dates.
-    const dayIndexes = Array.from(new Set(schedules.map(s => s.day_of_week))).sort((a, b) => a - b);
-    const dates      = dayIndexes.map(d => cycleDateForDayOfWeek(cycleStart, d));
+    const dayIndexes = Array.from(new Set(schedules.map(s => s.day_of_week)));
+    const dates      = dayIndexes
+      .map(d => cycleDateForDayOfWeek(cycleStart, d))
+      .sort((a, b) => a.getTime() - b.getTime());
     const start_date = toApiDate(dates[0] ?? cycleStart);
     const end_date   = toApiDate(dates[dates.length - 1] ?? cycleStart);
 
@@ -383,7 +391,7 @@ export default function PrivateSchedulePage() {
           {/* Who is riding */}
           <Section
             title={trs('who_riding')}
-            rightLabel={`${(wizard.include_self ? 1 : 0) + wizard.selected_passenger_ids.length}/4 selected`}
+            rightLabel={trs('selected_label', { count: (wizard.include_self ? 1 : 0) + wizard.selected_passenger_ids.length })}
           >
             <PassengerPicker
               meName={myName}
@@ -409,7 +417,7 @@ export default function PrivateSchedulePage() {
           {/* Schedule */}
           <Section
             title={trs('schedule')}
-            rightLabel={`${allDays.length}/7 days`}
+            rightLabel={trs('days_label', { count: allDays.length })}
           >
             <div className="space-y-3">
               {/* Time slot 1 always has the route + trip type controls above */}
@@ -437,8 +445,8 @@ export default function PrivateSchedulePage() {
                   {!routeReady && (
                     <div className="absolute inset-0 z-10 rounded-xl bg-white/80 backdrop-blur-[2px] flex flex-col items-center justify-center gap-1.5 pointer-events-auto">
                       <span className="text-xl">🗺️</span>
-                      <p className="text-sm font-semibold text-[#0B1E3D]">Set a route first</p>
-                      <p className="text-xs text-[#5A6A7A]">Choose origin & destination above to unlock this section.</p>
+                      <p className="text-sm font-semibold text-[#0B1E3D]">{tps('route_locked_title')}</p>
+                      <p className="text-xs text-[#5A6A7A]">{tps('route_locked_desc')}</p>
                     </div>
                   )}
 
@@ -536,7 +544,7 @@ export default function PrivateSchedulePage() {
           {/* Notes */}
           <Section title={tps('notes')}>
             <p className="text-xs text-[#5A6A7A] mb-2">
-              Optional details for the driver (e.g. luggage, pickup instructions).
+              {trs('notes_desc')}
             </p>
             <div className="relative">
               <textarea
@@ -629,7 +637,7 @@ export default function PrivateSchedulePage() {
       {/* ── Point Picker for pickup-point / return-pickup / stops ── */}
       {pointPicker?.kind === 'outbound-pickup' && (
         <PointPicker
-          title="Set outbound pickup point"
+          title={tps('outbound_pickup_title')}
           initial={wizard.private_outbound_pickup_point}
           onConfirm={handleOutboundPickupConfirm}
           onCancel={() => setPointPicker(null)}
@@ -637,7 +645,7 @@ export default function PrivateSchedulePage() {
       )}
       {pointPicker?.kind === 'return-pickup' && (
         <PointPicker
-          title="Set return pickup point"
+          title={tps('return_pickup_title')}
           initial={slots.find(s => s.id === pointPicker.slotId)?.return_pickup_point ?? null}
           onConfirm={(loc) => {
             patchSlot(pointPicker.slotId, { return_pickup_point: loc });
@@ -648,7 +656,10 @@ export default function PrivateSchedulePage() {
       )}
       {pointPicker?.kind === 'stop' && (
         <StopMapPicker
-          title={`Stop ${pointPicker.index + 1} · ${pointPicker.day}`}
+          title={tps('stop_title', {
+            n: pointPicker.index + 1,
+            day: td(pointPicker.day.toLowerCase() as 'sun'),
+          })}
           initial={
             slots.find(s => s.id === pointPicker.slotId)
               ?.day_stops?.[pointPicker.day]?.[pointPicker.index] ?? null

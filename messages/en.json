@@ -12,6 +12,8 @@
     "submit": "Submit",
     "edit": "Edit",
     "delete": "Delete",
+    "set": "Set",
+    "remove": "Remove",
     "view_details": "View details",
     "loading": "Loading...",
     "error_generic": "Something went wrong. Please try again.",
@@ -256,6 +258,18 @@
     "next_cycle": "Next available cycle",
     "price_estimate": "Your estimated cost",
     "price_note": "Final price confirmed after driver matches",
+    "pickup_window": "Pickup window",
+    "arrival_window": "Arrival window",
+    "passengers": "Passengers",
+    "stops_by_day": "Stops by day",
+    "return_trip": "Return trip",
+    "pickup": "Pickup",
+    "arrival": "Arrival",
+    "estimated_price": "Estimated price",
+    "estimated_price_note": "Final price confirmed after match",
+    "estimated_price_label": "Estimated price (EGP / week)",
+    "notes_for_driver": "Notes for driver",
+    "passenger_fallback": "Passenger {id}",
     "edit_btn": "Edit details",
     "submit_btn": "Submit request",
     "schedule_title": "Schedule",
@@ -691,14 +705,19 @@
     "older_label": "Older",
     "new_label": "New",
     "empty": "No notifications yet",
+    "loading": "Loading notifications...",
     "just_now": "Just now",
     "minutes_ago": "{count}m ago",
     "hours_ago": "{count}h ago",
     "yesterday": "Yesterday",
     "unread_count": "{count} unread",
+    "total_count": "{count} total notifications",
     "action_review": "Review offer →",
     "action_rate": "Rate driver →",
     "action_view": "View request →",
+    "action_topup": "Top up now →",
+    "previous": "Previous",
+    "next": "Next",
     "type_request_matched": "Driver matched!",
     "type_price_raised": "Price updated for your ride",
     "type_confirmed": "Ride confirmed",
@@ -1084,7 +1103,7 @@
     "set_arrival_time": "Set arrival time for Time slot {n}",
     "set_return_times": "Set return times for Time slot {n}",
     "invalid_pickup": "Invalid pickup window for Time slot {n} (must be 15 min–2 h)",
-    "who_riding_desc": "Select up to 4 passengers. You can include yourself or book for others only.",
+    "who_riding_desc": "Select up to {max} passengers. You can include yourself or book for others only.",
     "selected_label": "{count}/4 selected",
     "me_with_name": "Me ({name})",
     "days_label": "{count}/7 days",
@@ -1176,7 +1195,21 @@
     "set_route_for_days": "Set a route above to choose days for this slot.",
     "select_one_day": "Select at least one day for this slot",
     "return_confirm_edit": "Click \"Edit\" to confirm return route",
-    "edited_tag": "(edited)"
+    "edited_tag": "(edited)",
+    "seat_layout_label": "Seat layout",
+    "return_trip": "Return trip",
+    "return_route_desc": "From and destination are reversed from your outbound trip. Set the return pickup meeting point only.",
+    "stops_per_day": "Stops per day",
+    "stops_optional": "(optional · up to 2 each)",
+    "add_stop": "+ Add stop",
+    "no_stops_day": "No stops for this day.",
+    "pick_time": "— Pick time —",
+    "return_arrival_note": "At least 1 h after pickup ends · 30 min window, max 2 h",
+    "auto_outbound_destination": "Auto — outbound destination",
+    "auto_outbound_origin": "Auto — outbound origin",
+    "return_pickup_hint": "Meeting point for return pickup",
+    "pickup_window": "Pickup window",
+    "arrival_window": "Arrival window"
   },
 
   "route_picker": {
@@ -1219,7 +1252,29 @@
     "one_way": "One way",
     "round_trip": "Round trip",
     "notes": "Notes",
-    "notes_placeholder": "Add notes for your driver…"
+    "notes_placeholder": "Add notes for your driver…",
+    "route_locked_title": "Set a route first",
+    "route_locked_desc": "Choose origin & destination above to unlock this section.",
+    "outbound_pickup_title": "Set outbound pickup point",
+    "return_pickup_title": "Set return pickup point",
+    "stop_title": "Stop {n} · {day}"
+  },
+
+  "seat_layout": {
+    "hint": "Tap a seat to assign each passenger. Driver seat is not selectable.",
+    "driver": "Driver",
+    "front": "Front",
+    "back_left": "Back left",
+    "back_center": "Back center",
+    "back_right": "Back right",
+    "assign": "Assign · {seat}",
+    "close": "Close",
+    "clear_seat": "Clear seat",
+    "tap_to_remove": "tap to remove",
+    "on_seat_tap_move": "on {seat} · tap to move",
+    "add_passengers_first": "Add passengers above first.",
+    "unassigned": "Unassigned: {names}",
+    "remove_aria": "Remove {name}"
   },
 
   "outbound_route": {
@@ -1243,7 +1298,10 @@
   },
 
   "passenger_picker": {
-    "search": "Search passengers…"
+    "search": "Search passengers…",
+    "no_matches": "No matches.",
+    "age_yrs": "{relation} · {age} yrs",
+    "your_account": "Your account"
   },
 
   "stop_map_picker": {
@@ -1357,7 +1415,10 @@
     "user_n": "User #{id}",
     "passengers_count": "Passengers ({count})",
     "actual_start": "Actual start",
-    "actual_end": "Actual end"
+    "actual_end": "Actual end",
+    "execution_timeline": "Trip Timeline",
+    "pickup_event": "Pickup",
+    "dropoff_event": "Dropoff"
   },
 
   "trip_live": {

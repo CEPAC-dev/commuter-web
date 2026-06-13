@@ -42,6 +42,7 @@ export default function DriverBottomNav() {
 
   return (
     <nav
+      dir="ltr"
       className="flex md:hidden"
       style={{
         position: 'fixed',

@@ -13,7 +13,7 @@ interface Props {
   loading:          boolean;
   selectedIds:      number[];
   onToggle:         (id: number) => void;
-  maxSelections:    number; // default 4 (passenger seats only — driver excluded)
+  maxSelections:    number;
 }
 
 export default function PassengerPicker({
@@ -46,15 +46,14 @@ export default function PassengerPicker({
   return (
     <div>
       <p className="text-xs text-[#5A6A7A] mb-3">
-        Select up to {maxSelections} passengers. You can include yourself or book for others only.
+        {trs('who_riding_desc', { max: maxSelections })}
       </p>
 
-      {/* Me row */}
       <button
         type="button"
         disabled={!includeSelf && remaining === 0}
         onClick={() => onToggleSelf(!includeSelf)}
-        className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl border-2 mb-4 text-left transition-colors ${
+        className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl border-2 mb-4 text-start transition-colors ${
           includeSelf
             ? 'border-[#00C2A8] bg-[#EFF7F6]'
             : !includeSelf && remaining === 0
@@ -73,17 +72,17 @@ export default function PassengerPicker({
           {meName.charAt(0).toUpperCase()}
         </span>
         <span className="flex-1 min-w-0">
-          <span className="block text-sm font-semibold text-[#0B1E3D]">Me ({meName})</span>
-          <span className="block text-xs text-[#8A9AB0]">Your account</span>
+          <span className="block text-sm font-semibold text-[#0B1E3D]">
+            {trs('me_with_name', { name: meName })}
+          </span>
+          <span className="block text-xs text-[#8A9AB0]">{tp('your_account')}</span>
         </span>
       </button>
 
-      {/* Related passengers heading */}
       <p className="text-xs font-semibold text-[#5A6A7A] mb-2">{trs('related_passengers')}</p>
 
-      {/* Search */}
       <div className="relative mb-3">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AA0A6]">
+        <span className="absolute start-3 top-1/2 -translate-y-1/2 text-[#9AA0A6]">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
@@ -93,21 +92,22 @@ export default function PassengerPicker({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={tp('search')}
-          className="w-full h-10 pl-9 pr-3 rounded-xl bg-[#F1F3F4] border border-transparent text-sm text-[#0B1E3D] placeholder:text-[#9AA0A6] focus:outline-none focus:bg-white focus:border-[#C8E8E4]"
+          className="w-full h-10 ps-9 pe-3 rounded-xl bg-[#F1F3F4] border border-transparent text-sm text-[#0B1E3D] placeholder:text-[#9AA0A6] focus:outline-none focus:bg-white focus:border-[#C8E8E4]"
         />
       </div>
 
-      {/* Horizontal slider of passenger chips */}
       {loading ? (
         <p className="text-xs text-[#8A9AB0] py-2">{trs('loading_passengers')}</p>
       ) : filtered.length === 0 ? (
         passengers.length === 0 ? (
           <p className="text-xs text-[#8A9AB0] py-1">
-            {trs('no_passengers')}{' '}
-            <a href="/user/profile" className="text-[#00C2A8] font-medium hover:underline">profile</a>.
+            {trs('no_passengers_profile')}{' '}
+            <a href="/user/profile" className="text-[#00C2A8] font-medium hover:underline">
+              {trs('profile_link')}
+            </a>.
           </p>
         ) : (
-          <p className="text-xs text-[#8A9AB0] py-1">No matches.</p>
+          <p className="text-xs text-[#8A9AB0] py-1">{tp('no_matches')}</p>
         )
       ) : (
         <div
@@ -125,7 +125,7 @@ export default function PassengerPicker({
                 type="button"
                 disabled={disabled}
                 onClick={() => onToggle(p.id)}
-                className={`flex-shrink-0 snap-start w-44 flex items-center gap-2.5 px-3 py-2.5 rounded-xl border-2 text-left transition-colors ${
+                className={`flex-shrink-0 snap-start w-44 flex items-center gap-2.5 px-3 py-2.5 rounded-xl border-2 text-start transition-colors ${
                   checked
                     ? 'border-[#00C2A8] bg-[#EFF7F6]'
                     : disabled
@@ -146,7 +146,7 @@ export default function PassengerPicker({
                 <span className="flex-1 min-w-0">
                   <span className="block text-sm font-semibold text-[#0B1E3D] truncate">{p.name}</span>
                   <span className="block text-[11px] text-[#8A9AB0] truncate">
-                    {p.relation || '—'} · {p.age} yrs
+                    {tp('age_yrs', { relation: p.relation || '—', age: p.age })}
                   </span>
                 </span>
               </button>

@@ -119,22 +119,43 @@ export interface WalletTransaction {
 
 // ── Notifications ─────────────────────────────────────────────────────────────
 
+export type NotificationType =
+  | 'payment_required'
+  | 'driver_assigned'
+  | 'wallet_settled'
+  | 'request_matched'
+  | 'price_raised'
+  | 'request_confirmed'
+  | 'cycle_starting_tomorrow'
+  | 'cycle_completed'
+  | 'payment_deducted'
+  | 'refund_issued'
+  | 'request_cancelled';
+
 export interface Notification {
-  id:        string;
-  type:
-    | 'request_matched'
-    | 'price_raised'
-    | 'request_confirmed'
-    | 'cycle_starting_tomorrow'
-    | 'cycle_completed'
-    | 'payment_deducted'
-    | 'refund_issued'
-    | 'request_cancelled';
+  id:         string | number;
+  type:       NotificationType;
   title:      string;
   body:       string;
-  isRead:     boolean;
-  createdAt:  string;
-  actionUrl?: string;
+  data:       Record<string, unknown>;
+  is_read:    boolean;
+  read_at:    string | null;
+  created_at: string;
+}
+
+export interface NotificationPaginatedResponse {
+  success: boolean;
+  data: Notification[];
+  meta: {
+    current_page: number;
+    last_page: number;
+    total: number;
+  };
+}
+
+export interface UnreadCountResponse {
+  success: boolean;
+  count: number;
 }
 
 // ── Rating ────────────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 'use client';
 
 import type { ApiCourse, CourseStatus } from '@/lib/api/courses';
-import { confirmCoursePayment } from '@/lib/api/courses';
+import { confirmCoursePayment, repeatCourse } from '@/lib/api/courses';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
@@ -30,20 +30,29 @@ function fmtDate(iso: string) {
   });
 }
 
+function getNextWeekDate(dateStr: string): string {
+  const date = new Date(dateStr + 'T00:00:00');
+  date.setDate(date.getDate() + 7);
+  return date.toISOString().split('T')[0];
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 interface Props {
   course: ApiCourse;
   onPaid?: () => void;
+  onRepeatSuccess?: () => void;
 }
 
-export default function CourseCard({ course, onPaid }: Props) {
+export default function CourseCard({ course, onPaid, onRepeatSuccess }: Props) {
   const t = useTranslations('course_card');
   const tc = useTranslations('common');
   const router = useRouter();
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+  const [repeating, setRepeating] = useState(false);
+  const [repeatError, setRepeatError] = useState<string | null>(null);
 
   const style = STATUS_STYLE[course.status] ?? STATUS_STYLE.draft;
   const statusLabel = t(`status_${course.status}` as 'status_draft');
@@ -72,6 +81,22 @@ export default function CourseCard({ course, onPaid }: Props) {
     } catch (e) {
       setPayError(e instanceof Error ? e.message : t('payment_failed'));
       setPaying(false);
+    }
+  }
+
+  async function handleRepeat() {
+    setRepeating(true);
+    setRepeatError(null);
+    try {
+      const nextWeekDate = getNextWeekDate(course.start_date);
+      await repeatCourse(course.id, { start_date: nextWeekDate });
+      onRepeatSuccess?.();
+      setTimeout(() => {
+        router.refresh();
+      }, 500);
+    } catch (e) {
+      setRepeatError(e instanceof Error ? e.message : 'Failed to repeat course');
+      setRepeating(false);
     }
   }
 
@@ -154,19 +179,33 @@ export default function CourseCard({ course, onPaid }: Props) {
         >
           {/* Dates */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#0B1E3D', fontWeight: 600 }}>
-            <span style={{ fontSize: 15 }}>🗓</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00C2A8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
             {fmtDate(course.start_date)} – {fmtDate(course.end_date)}
           </div>
           {/* Time */}
           {first && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#0B1E3D', fontWeight: 600 }}>
-              <span style={{ fontSize: 15 }}>🕐</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00C2A8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
               {fmtTime(first.start_time_from)} – {fmtTime(first.start_time_to)}
             </div>
           )}
           {/* Days */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#0B1E3D', fontWeight: 600 }}>
-            <span style={{ fontSize: 15 }}>📅</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00C2A8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="1" fill="#00C2A8" />
+              <circle cx="19" cy="12" r="1" fill="#00C2A8" />
+              <circle cx="5" cy="12" r="1" fill="#00C2A8" />
+              <circle cx="12" cy="19" r="1" fill="#00C2A8" />
+              <circle cx="12" cy="5" r="1" fill="#00C2A8" />
+            </svg>
             {uniqueDays} {tc('per_week').replace('/', '').trim()}
           </div>
         </div>
@@ -187,13 +226,56 @@ export default function CourseCard({ course, onPaid }: Props) {
               padding: '4px 10px',
             }}
           >
-            👤 {course.trip_type}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5A6A7A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            {course.trip_type}
           </span>
           <span style={{ fontSize: 15, fontWeight: 800, color: '#0B1E3D' }}>
             {tc('egp')} {estimatedTotalPrice.toLocaleString()}
           </span>
         </div>
       </div>
+
+      {/* ── Repeat CTA (active or completed courses) ── */}
+      {(course.status === 'active' || course.status === 'completed') && (
+        <div style={{ padding: '0 16px 16px' }}>
+          {repeatError && (
+            <p style={{ margin: '0 0 8px', fontSize: 12, color: '#E74C3C', textAlign: 'center' }}>
+              {repeatError}
+            </p>
+          )}
+          <button
+            type="button"
+            disabled={repeating}
+            onClick={handleRepeat}
+            style={{
+              width: '100%',
+              padding: '12px 14px',
+              borderRadius: 12,
+              background: repeating ? '#C5CDD6' : '#F8F9FA',
+              color: repeating ? '#9AA0A6' : '#00C2A8',
+              fontSize: 14,
+              fontWeight: 700,
+              border: '1.5px solid #00C2A8',
+              cursor: repeating ? 'not-allowed' : 'pointer',
+              fontFamily: 'inherit',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              opacity: repeating ? 0.6 : 1,
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="23 4 23 10 17 10" />
+              <path d="M20.49 15a9 9 0 1 1-2-8.83" />
+            </svg>
+            {repeating ? 'Creating...' : 'Repeat next week'}
+          </button>
+        </div>
+      )}
 
       {/* ── Confirm payment CTA (wallet_status === 'waiting') ── */}
       {needsPayment && (
@@ -225,7 +307,11 @@ export default function CourseCard({ course, onPaid }: Props) {
                 gap: 8,
               }}
             >
-              💳 Tap here to complete payment
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="1" y="5" width="23" height="14" rx="2" ry="2" />
+                <line x1="1" y1="10" x2="24" y2="10" />
+              </svg>
+              Tap here to complete payment
             </a>
           ) : (
             <button
@@ -250,7 +336,11 @@ export default function CourseCard({ course, onPaid }: Props) {
                 opacity: paying ? 0.7 : 1,
               }}
             >
-              {paying ? t('redirecting') : `💳 ${t('confirm_payment')}`}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="1" y="5" width="23" height="14" rx="2" ry="2" />
+                <line x1="1" y1="10" x2="24" y2="10" />
+              </svg>
+              {paying ? t('processing') : t('confirm_pay')}
             </button>
           )}
         </div>

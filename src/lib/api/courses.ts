@@ -228,6 +228,14 @@ export interface InstanceParticipant {
   seat_position: SeatPosition;
 }
 
+export interface ExecutionTimelineEvent {
+  order:         number;
+  type:          'pickup' | 'dropoff';
+  user_id:       number;
+  passenger_id:  number | null;
+  events_logged: unknown[];
+}
+
 export interface CourseInstance {
   id:                      number;
   course_id:               number;
@@ -248,7 +256,7 @@ export interface CourseInstance {
   actual_start_time:       string | null;
   actual_end_time:         string | null;
   actual_route:            unknown | null;
-  execution_timeline:      unknown | null;
+  execution_timeline:      ExecutionTimelineEvent[] | null;
   driver_id:               number | null;
   driver_price:            string | null;
   tracking:                unknown | null;
@@ -275,4 +283,19 @@ export function getCourseInstances(courseId: number): Promise<GetCourseInstances
 
 export function getCourseInstance(courseId: number, instanceId: number): Promise<GetCourseInstanceResponse> {
   return call<GetCourseInstanceResponse>(`courses/${courseId}/instances/${instanceId}`);
+}
+
+// ── Repeat Course ────────────────────────────────────────────────────────────
+
+export interface RepeatCoursePayload {
+  start_date: string; // YYYY-MM-DD
+}
+
+export interface RepeatCourseResponse {
+  success: boolean;
+  data:    ApiCourse;
+}
+
+export function repeatCourse(courseId: number, payload: RepeatCoursePayload): Promise<RepeatCourseResponse> {
+  return call<RepeatCourseResponse>(`courses/${courseId}/repeat`, { method: 'POST', body: payload as unknown as Record<string, unknown> });
 }

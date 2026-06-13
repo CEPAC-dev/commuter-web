@@ -3,7 +3,6 @@
 import { useState } from 'react';
 
 import type { TimeSlot, GeoLocation, WeekDay } from '@/types/shared';
-import { PRIVATE_SEAT_LABELS } from '@/types/shared';
 import type { ApiPassenger } from '@/lib/api/passengers';
 import { ALL_DAYS_SUN_FIRST, formatTime12h } from '@/lib/timeUtils';
 import { useTranslations } from 'next-intl';
@@ -54,10 +53,10 @@ function Row({ icon, label, value }: { icon: string; label: string; value: strin
   );
 }
 
-function DayChip({ day }: { day: WeekDay }) {
+function DayChip({ day, label }: { day: WeekDay; label: string }) {
   return (
     <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-[#EFF7F6] text-[#00C2A8] text-xs font-bold border border-[#C8E8E4]">
-      {day}
+      {label}
     </span>
   );
 }
@@ -76,6 +75,10 @@ export default function ReviewModal({
   const trf = useTranslations('ride_form');
   const to = useTranslations('outbound_route');
   const tsl = useTranslations('time_slot');
+  const tseat = useTranslations('seat_layout');
+  const trsch = useTranslations('request_schedule');
+  const td = useTranslations('days');
+  const tcommon = useTranslations('common');
   const [adjMax, setAdjMax] = useState(priceMax);
   const [rawMax, setRawMax] = useState(String(priceMax));
 
@@ -101,7 +104,7 @@ export default function ReviewModal({
           className="text-sm text-[#5A6A7A] hover:text-[#0B1E3D] transition-colors disabled:opacity-40"
           style={{ background: 'none', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
         >
-          ← Back
+          {tcommon('back')}
         </button>
         <h2 className="text-base font-bold text-[#0B1E3D] flex-1">{trs('title')}</h2>
         <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#EFF7F6] text-[#00C2A8] border border-[#C8E8E4]">
@@ -140,22 +143,24 @@ export default function ReviewModal({
             <Section key={slot.id} title={tsl('label', { n: i + 1 })}>
               {/* Days */}
               <div>
-                <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide mb-1.5">Days</p>
+                <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide mb-1.5">{trs('days')}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {sortedDays.map(d => <DayChip key={d} day={d} />)}
+                  {sortedDays.map(d => (
+                    <DayChip key={d} day={d} label={td(d.toLowerCase() as 'sun')} />
+                  ))}
                 </div>
               </div>
 
               {/* Pickup & Arrival */}
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <div>
-                  <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide mb-0.5">Pickup window</p>
+                  <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide mb-0.5">{trs('pickup_window')}</p>
                   <p className="text-sm font-semibold text-[#0B1E3D]">
                     {tw(slot.pickup_from)} – {tw(slot.pickup_to)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide mb-0.5">Arrival window</p>
+                  <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide mb-0.5">{trs('arrival_window')}</p>
                   <p className="text-sm font-semibold text-[#0B1E3D]">
                     {tw(slot.arrival_from)} – {tw(slot.arrival_to)}
                   </p>
@@ -165,15 +170,17 @@ export default function ReviewModal({
               {/* Passengers */}
               {slot.seat_assignments && Object.keys(slot.seat_assignments).length > 0 && (
                 <div className="pt-1">
-                  <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide mb-1.5">Passengers</p>
+                  <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide mb-1.5">{trs('passengers')}</p>
                   <div className="space-y-1">
                     {Object.entries(slot.seat_assignments).map(([key, seat]) => {
-                      const name = key === 'me' ? 'Me' : passengerMap.get(Number(key)) ?? `Passenger ${key}`;
+                      const name = key === 'me'
+                        ? trsch('me')
+                        : passengerMap.get(Number(key)) ?? trs('passenger_fallback', { id: key });
                       return (
                         <div key={key} className="flex items-center justify-between text-sm">
                           <span className="text-[#0B1E3D] font-medium">{name}</span>
                           <span className="text-xs text-[#5A6A7A] bg-[#F1F3F4] px-2 py-0.5 rounded-full">
-                            {PRIVATE_SEAT_LABELS[seat]}
+                            {tseat(seat)}
                           </span>
                         </div>
                       );
@@ -185,14 +192,14 @@ export default function ReviewModal({
               {/* Per-day stops */}
               {hasAnyDayStop && (
                 <div className="pt-1">
-                  <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide mb-1.5">Stops by day</p>
+                  <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide mb-1.5">{trs('stops_by_day')}</p>
                   <div className="space-y-1.5">
                     {sortedDays.map(day => {
                       const dayStops = slot.day_stops?.[day] ?? [];
                       if (dayStops.length === 0) return null;
                       return (
                         <div key={day}>
-                          <span className="text-xs font-bold text-[#0B1E3D]">{day}:</span>
+                          <span className="text-xs font-bold text-[#0B1E3D]">{td(day.toLowerCase() as 'sun')}:</span>
                           <div className="ml-2 mt-0.5 space-y-0.5">
                             {dayStops.map((s, si) => (
                               <p key={si} className="text-xs text-[#5A6A7A]">📍 {s.address}</p>
@@ -208,16 +215,16 @@ export default function ReviewModal({
               {/* Return (if round trip) */}
               {tripType === 'round_trip' && slot.return_pickup_from && (
                 <div className="border-t border-[#F1F3F4] pt-2 mt-1">
-                  <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide mb-1">Return trip</p>
+                  <p className="text-[10px] font-semibold text-[#9AA0A6] uppercase tracking-wide mb-1">{trs('return_trip')}</p>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <p className="text-[10px] text-[#9AA0A6] mb-0.5">Pickup</p>
+                      <p className="text-[10px] text-[#9AA0A6] mb-0.5">{trs('pickup')}</p>
                       <p className="text-sm font-semibold text-[#0B1E3D]">
                         {tw(slot.return_pickup_from!)} – {tw(slot.return_pickup_to!)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-[#9AA0A6] mb-0.5">Arrival</p>
+                      <p className="text-[10px] text-[#9AA0A6] mb-0.5">{trs('arrival')}</p>
                       <p className="text-sm font-semibold text-[#0B1E3D]">
                         {tw(slot.return_arrival_from!)} – {tw(slot.return_arrival_to!)}
                       </p>
@@ -243,19 +250,19 @@ export default function ReviewModal({
           }}>
             <div style={{ position: 'absolute', top: -28, right: -18, width: 90, height: 90, borderRadius: '50%', background: '#00C2A8', opacity: 0.08, pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', bottom: -20, right: 60, width: 60, height: 60, borderRadius: '50%', background: '#00C2A8', opacity: 0.05, pointerEvents: 'none' }} />
-            <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>💰 Estimated price</p>
+            <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>💰 {trs('estimated_price')}</p>
             <p style={{ fontSize: 24, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px', lineHeight: 1 }}>
               EGP {adjMax}
             </p>
             <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 6 }}>
-              Final price confirmed after match
+              {trs('estimated_price_note')}
             </p>
           </div>
 
           {/* Stepper controls */}
           <div style={{ background: '#fff', padding: '16px 20px 20px' }}>
             <div style={{ minWidth: 0 }}>
-              <p style={{ fontSize: 10, fontWeight: 700, color: '#9AA0A6', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 5 }}>Estimated price (EGP / week)</p>
+              <p style={{ fontSize: 10, fontWeight: 700, color: '#9AA0A6', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 5 }}>{trs('estimated_price_label')}</p>
               <div style={{ display: 'flex', borderRadius: 10, border: '1.5px solid #E2E8F0', overflow: 'hidden', background: '#FAFAFA' }}>
                 <button
                   type="button"
@@ -291,7 +298,7 @@ export default function ReviewModal({
 
         {/* Notes */}
         {notes.trim().length > 0 && (
-          <Section title="Notes for driver">
+          <Section title={trs('notes_for_driver')}>
             <p className="text-sm text-[#0B1E3D] leading-relaxed">{notes}</p>
           </Section>
         )}

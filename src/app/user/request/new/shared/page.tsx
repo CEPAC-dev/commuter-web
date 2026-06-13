@@ -28,7 +28,6 @@ export default function SharedTypePage() {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px 16px',
-        fontFamily: 'Inter, system-ui, sans-serif',
         position: 'relative',
       }}
     >
@@ -37,7 +36,7 @@ export default function SharedTypePage() {
         style={{
           position: 'absolute',
           top: 80,
-          left: 24,
+          insetInlineStart: 24,
           background: 'none',
           border: 'none',
           cursor: 'pointer',
@@ -78,7 +77,7 @@ export default function SharedTypePage() {
             borderRadius: 16,
             padding: '20px 24px',
             cursor: 'pointer',
-            textAlign: 'left',
+            textAlign: 'start',
             transition: 'border-color 0.2s, box-shadow 0.2s',
             fontFamily: 'inherit',
             display: 'flex',
@@ -122,7 +121,7 @@ export default function SharedTypePage() {
             borderRadius: 16,
             padding: '20px 24px',
             cursor: 'pointer',
-            textAlign: 'left',
+            textAlign: 'start',
             transition: 'border-color 0.2s, box-shadow 0.2s',
             fontFamily: 'inherit',
             display: 'flex',

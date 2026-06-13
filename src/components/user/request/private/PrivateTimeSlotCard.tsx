@@ -58,6 +58,7 @@ export default function PrivateTimeSlotCard({
   const tf = useTranslations('request_form');
   const tc = useTranslations('common');
   const td = useTranslations('days');
+  const to = useTranslations('outbound_route');
   const dayLabel = (day: WeekDay) => td(day.toLowerCase() as 'sun');
 
   // ── Pickup-time helpers (window 30..120 min) ────────────────────────────────
@@ -72,6 +73,7 @@ export default function PrivateTimeSlotCard({
 
   // ── Arrival options — route-aware ───────────────────────────────────────────
   const routeDuration = Math.round(slot.route?.duration_minutes ?? 0);
+  const returnRouteDuration = Math.round(slot.return_route?.duration_minutes ?? 0);
   const BUFFER_MIN    = 30;
   const minTotalGap   = routeDuration + BUFFER_MIN;
   const arrivalFromMin = addMinutes(slot.pickup_to, routeDuration > 0 ? routeDuration : BUFFER_MIN);
@@ -111,55 +113,59 @@ export default function PrivateTimeSlotCard({
 
       {/* ── Pickup time ──────────────────────────────────────────────────────── */}
       <div>
-        <label className="block text-sm font-semibold text-[#0B1E3D] mb-2">Pickup time</label>
+        <label className="block text-sm font-semibold text-[#0B1E3D] mb-2">{tsl('pickup_time')}</label>
         <div className="grid grid-cols-2 gap-3">
           <SelectBox
             label={tf('arrival_from')}
             value={slot.pickup_from}
             options={ALL_OPTIONS}
+            pickTimePlaceholder={tsl('pick_time')}
             onChange={(v) => onPickupTimeChange(v, addMinutes(v, 15))}
           />
           <SelectBox
             label={tf('arrival_to')}
             value={slot.pickup_to}
             options={validPickupToOptions}
+            pickTimePlaceholder={tsl('pick_time')}
             onChange={(v) => onPickupTimeChange(slot.pickup_from, v)}
           />
         </div>
         {pickupGap !== null && (
           <p className="text-xs text-[#9AA0A6] mt-1">
-            {pickupGap} min window · Min 30 min, Max 2 hours
+            {tsl('pickup_window_note', { gap: pickupGap })}
           </p>
         )}
       </div>
 
       {/* ── Arrival time ────────────────────────────────────────────────────── */}
       <div>
-        <label className="block text-sm font-semibold text-[#0B1E3D] mb-2">Arrival time</label>
+        <label className="block text-sm font-semibold text-[#0B1E3D] mb-2">{tsl('arrival_time')}</label>
         <div className="grid grid-cols-2 gap-3">
           <SelectBox
             label={tf('arrival_from')}
             value={slot.arrival_from}
             options={validArrivalFromOptions}
+            pickTimePlaceholder={tsl('pick_time')}
           onChange={(v) => onArrivalChange(v, slot.arrival_to || addMinutes(v, 15))}
           />
           <SelectBox
             label={tf('arrival_to')}
             value={slot.arrival_to}
             options={validArrivalToOptions}
+            pickTimePlaceholder={tsl('pick_time')}
             onChange={(v) => onArrivalChange(slot.arrival_from, v)}
           />
         </div>
         <p className="text-xs text-[#9AA0A6] mt-1">
           {routeDuration > 0
-            ? `~${routeDuration} min route + ${BUFFER_MIN} min buffer = ${minTotalGap} min minimum`
+            ? tsl('route_buffer', { route: routeDuration, buffer: BUFFER_MIN, min: minTotalGap })
             : tsl('min_after_pickup')}
         </p>
       </div>
 
       {/* ── Seat layout ──────────────────────────────────────────────────────── */}
       <div>
-        <label className="block text-sm font-semibold text-[#0B1E3D] mb-2">Seat layout</label>
+        <label className="block text-sm font-semibold text-[#0B1E3D] mb-2">{tsl('seat_layout_label')}</label>
         <SeatLayoutPicker
           passengers={passengers}
           assignments={slot.seat_assignments ?? {}}
@@ -202,7 +208,7 @@ export default function PrivateTimeSlotCard({
       {slot.days.length > 0 && (
         <div>
           <label className="block text-sm font-semibold text-[#0B1E3D] mb-2">
-            Stops per day <span className="text-[#9AA0A6] font-normal">(optional · up to 2 each)</span>
+            {tsl('stops_per_day')} <span className="text-[#9AA0A6] font-normal">{tsl('stops_optional')}</span>
           </label>
           <div className="space-y-2">
             {[...slot.days]
@@ -212,7 +218,7 @@ export default function PrivateTimeSlotCard({
                 return (
                   <div key={day} className="rounded-xl border border-[#E2E8F0] bg-[#F8F9FA] p-3">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-semibold text-[#0B1E3D]">{day}</span>
+                      <span className="text-xs font-semibold text-[#0B1E3D]">{dayLabel(day)}</span>
                       {dayStops.length < 2 && (
                         <button
                           type="button"
@@ -220,12 +226,12 @@ export default function PrivateTimeSlotCard({
                           className="text-xs font-medium hover:underline"
                           style={{ color: '#00C2A8', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                         >
-                          + Add stop
+                          {tsl('add_stop')}
                         </button>
                       )}
                     </div>
                     {dayStops.length === 0 ? (
-                      <p className="text-xs text-[#9AA0A6] italic">No stops for this day.</p>
+                      <p className="text-xs text-[#9AA0A6] italic">{tsl('no_stops_day')}</p>
                     ) : (
                       <ul className="space-y-1.5">
                         {dayStops.map((s, i) => (
@@ -243,7 +249,7 @@ export default function PrivateTimeSlotCard({
                                 className="text-[11px] text-[#00C2A8] hover:underline"
                                 style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                               >
-                                Edit
+                                {tc('edit')}
                               </button>
                               <button
                                 type="button"
@@ -251,7 +257,7 @@ export default function PrivateTimeSlotCard({
                                 className="text-[11px] text-[#E74C3C] hover:underline"
                                 style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                               >
-                                Remove
+                                {tc('remove')}
                               </button>
                             </div>
                           </li>
@@ -269,38 +275,41 @@ export default function PrivateTimeSlotCard({
       {tripType === 'round_trip' && (
         <div className="pt-3 border-t border-[#F1F3F4] space-y-4">
           <p className="text-center text-xs font-semibold text-[#00C2A8] uppercase tracking-wide">
-            Return trip
+            {tsl('return_trip')}
           </p>
 
           {/* Return route summary */}
           <div className="border border-[#C8E8E4] rounded-xl bg-[#EFF7F6] p-3 space-y-2.5">
             <div className="flex items-center gap-2">
               <span className="text-[#00C2A8] text-base">⇄</span>
-              <span className="text-sm font-semibold text-[#0B1E3D]">Return route</span>
+              <span className="text-sm font-semibold text-[#0B1E3D]">{tsl('return_route')}</span>
             </div>
             <p className="text-xs text-[#5A6A7A]">
-              From and destination are reversed from your outbound trip. Set the return pickup meeting point only.
+              {tsl('return_route_desc')}
             </p>
 
             <ReturnRow
               index={1}
-              title="From"
-              hint="Auto — outbound destination"
+              title={to('from')}
+              hint={tsl('auto_outbound_destination')}
               value={outboundDestination?.address ?? '—'}
               action={null}
+              notSetLabel={to('not_set')}
             />
             <ReturnRow
               index={2}
-              title="Destination"
-              hint="Auto — outbound origin"
+              title={to('destination')}
+              hint={tsl('auto_outbound_origin')}
               value={outboundOrigin?.address ?? '—'}
               action={null}
+              notSetLabel={to('not_set')}
             />
             <ReturnRow
               index={3}
-              title="Pickup point"
-              hint="Meeting point for return pickup"
+              title={to('pickup')}
+              hint={tsl('return_pickup_hint')}
               value={slot.return_pickup_point?.address ?? null}
+              notSetLabel={to('not_set')}
               action={
                 <div className="flex flex-col items-end gap-1">
                   <button
@@ -309,7 +318,7 @@ export default function PrivateTimeSlotCard({
                     className="px-3 py-1.5 rounded-lg bg-[#0B1E3D] text-white text-xs font-semibold"
                     style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                   >
-                    {slot.return_pickup_point ? 'Edit' : 'Set'}
+                    {slot.return_pickup_point ? tc('edit') : tc('set')}
                   </button>
                   {slot.return_pickup_point && (
                     <button
@@ -318,7 +327,7 @@ export default function PrivateTimeSlotCard({
                       className="text-[11px] text-[#E74C3C] hover:underline"
                       style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                     >
-                      Remove
+                      {tc('remove')}
                     </button>
                   )}
                 </div>
@@ -328,18 +337,27 @@ export default function PrivateTimeSlotCard({
 
           {/* Return pickup time */}
           <ReturnTimeBlock
-            title="Pickup time"
+            title={tsl('pickup_time')}
             from={slot.return_pickup_from ?? ''}
             to={slot.return_pickup_to ?? ''}
+            fromLabel={tf('arrival_from')}
+            toLabel={tf('arrival_to')}
+            pickTimePlaceholder={tsl('pick_time')}
             onChange={onReturnPickupTimeChange}
           />
 
           {/* Return arrival time */}
           <ReturnArrivalBlock
             pickupTo={slot.return_pickup_to ?? ''}
+            returnRouteDuration={returnRouteDuration}
             from={slot.return_arrival_from ?? ''}
             to={slot.return_arrival_to ?? ''}
             onChange={onReturnArrivalChange}
+            arrivalLabel={tsl('arrival_time')}
+            fromLabel={tf('arrival_from')}
+            toLabel={tf('arrival_to')}
+            note={tsl('return_arrival_note')}
+            pickTimePlaceholder={tsl('pick_time')}
           />
         </div>
       )}
@@ -350,8 +368,8 @@ export default function PrivateTimeSlotCard({
 // ── Local helpers ───────────────────────────────────────────────────────────
 
 function SelectBox({
-  label, value, options, onChange,
-}: { label: string; value: string; options: string[]; onChange: (v: string) => void }) {
+  label, value, options, onChange, pickTimePlaceholder,
+}: { label: string; value: string; options: string[]; onChange: (v: string) => void; pickTimePlaceholder: string }) {
   return (
     <div>
       <label className="block text-xs text-[#9AA0A6] mb-1">{label}</label>
@@ -361,7 +379,7 @@ function SelectBox({
           onChange={(e) => onChange(e.target.value)}
           className="w-full h-11 border border-[#E2E8F0] rounded-lg pl-3 pr-9 text-sm text-[#0B1E3D] bg-white focus:outline-none focus:border-[#00C2A8] appearance-none"
         >
-          <option value="" disabled hidden>— Pick time —</option>
+          <option value="" disabled hidden>{pickTimePlaceholder}</option>
           {options.map((o) => (
             <option key={o} value={o}>{formatTime12h(o)}</option>
           ))}
@@ -377,8 +395,8 @@ function SelectBox({
 }
 
 function ReturnRow({
-  index, title, hint, value, action,
-}: { index: number; title: string; hint: string; value: string | null; action: React.ReactNode }) {
+  index, title, hint, value, action, notSetLabel,
+}: { index: number; title: string; hint: string; value: string | null; action: React.ReactNode; notSetLabel: string }) {
   return (
     <div className="flex items-start gap-3 rounded-lg bg-white border border-[#E2E8F0] p-2.5">
       <span className="w-6 h-6 rounded-full bg-[#EFF7F6] text-[#00C2A8] flex items-center justify-center text-[11px] font-bold flex-shrink-0">
@@ -392,7 +410,7 @@ function ReturnRow({
               <span className="text-[#00C2A8] mt-0.5">📍</span>
               <span>{value}</span>
             </p>
-          : <p className="text-[11px] italic text-[#9AA0A6]">Not set</p>}
+          : <p className="text-[11px] italic text-[#9AA0A6]">{notSetLabel}</p>}
       </div>
       {action}
     </div>
@@ -400,8 +418,8 @@ function ReturnRow({
 }
 
 function ReturnTimeBlock({
-  title, from, to, onChange,
-}: { title: string; from: string; to: string; onChange: (from: string, to: string) => void }) {
+  title, from, to, onChange, fromLabel, toLabel, pickTimePlaceholder,
+}: { title: string; from: string; to: string; onChange: (from: string, to: string) => void; fromLabel: string; toLabel: string; pickTimePlaceholder: string }) {
   const validTo = from ? ALL_OPTIONS.filter((opt) => {
     const d = timeDiffMinutes(from, opt);
     return d >= 15 && d <= 120;
@@ -410,18 +428,26 @@ function ReturnTimeBlock({
     <div>
       <label className="block text-sm font-semibold text-[#0B1E3D] mb-2">{title}</label>
       <div className="grid grid-cols-2 gap-3">
-        <SelectBox label="From" value={from} options={ALL_OPTIONS} onChange={(v) => onChange(v, addMinutes(v, 15))} />
-        <SelectBox label="To" value={to} options={validTo} onChange={(v) => onChange(from, v)} />
+        <SelectBox label={fromLabel} value={from} options={ALL_OPTIONS} pickTimePlaceholder={pickTimePlaceholder} onChange={(v) => onChange(v, addMinutes(v, 15))} />
+        <SelectBox label={toLabel} value={to} options={validTo} pickTimePlaceholder={pickTimePlaceholder} onChange={(v) => onChange(from, v)} />
       </div>
     </div>
   );
 }
 
 function ReturnArrivalBlock({
-  pickupTo, from, to, onChange,
-}: { pickupTo: string; from: string; to: string; onChange: (from: string, to: string) => void }) {
+  pickupTo, returnRouteDuration, from, to, onChange, arrivalLabel, fromLabel, toLabel, note, pickTimePlaceholder,
+}: {
+  pickupTo: string;
+  returnRouteDuration: number;
+  from: string; to: string;
+  onChange: (from: string, to: string) => void;
+  arrivalLabel: string; fromLabel: string; toLabel: string; note: string; pickTimePlaceholder: string;
+}) {
+  const BUFFER_MIN = 30;
+  const minBufferTime = returnRouteDuration > 0 ? returnRouteDuration : BUFFER_MIN;
   const fromOptions = pickupTo
-    ? ALL_OPTIONS.filter((opt) => timeDiffMinutes(addMinutes(pickupTo, 30), opt) >= 0)
+    ? ALL_OPTIONS.filter((opt) => timeDiffMinutes(addMinutes(pickupTo, minBufferTime), opt) >= 0)
     : ALL_OPTIONS;
   const validTo = from ? ALL_OPTIONS.filter((opt) => {
     const d = timeDiffMinutes(from, opt);
@@ -429,13 +455,13 @@ function ReturnArrivalBlock({
   }) : [];
   return (
     <div>
-      <label className="block text-sm font-semibold text-[#0B1E3D] mb-2">Arrival time</label>
+      <label className="block text-sm font-semibold text-[#0B1E3D] mb-2">{arrivalLabel}</label>
       <div className="grid grid-cols-2 gap-3">
-        <SelectBox label="From" value={from} options={fromOptions} onChange={(v) => onChange(v, addMinutes(v, 15))} />
-        <SelectBox label="To" value={to} options={validTo} onChange={(v) => onChange(from, v)} />
+        <SelectBox label={fromLabel} value={from} options={fromOptions} pickTimePlaceholder={pickTimePlaceholder} onChange={(v) => onChange(v, addMinutes(v, 15))} />
+        <SelectBox label={toLabel} value={to} options={validTo} pickTimePlaceholder={pickTimePlaceholder} onChange={(v) => onChange(from, v)} />
       </div>
       <p className="text-xs text-[#9AA0A6] mt-1">
-        At least 1 h after pickup ends · 30 min window, max 2 h
+        {note}
       </p>
     </div>
   );

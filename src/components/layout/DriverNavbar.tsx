@@ -70,7 +70,7 @@ export default function DriverNavbar() {
         }
       `}</style>
 
-      <nav style={{
+      <nav dir="ltr" style={{
         position: 'sticky', top: 0, zIndex: 50,
         height: 64, background: '#0B1E3D',
         alignItems: 'center',
@@ -120,7 +120,7 @@ export default function DriverNavbar() {
         </div>
 
         {/* Right slot — language toggle + user dropdown (desktop) */}
-        <div style={{ marginInlineStart: 'auto', display: 'flex', alignItems: 'center', gap: 8, position: 'relative', zIndex: 1 }} className="hidden md:flex">
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, position: 'relative', zIndex: 1 }} className="hidden md:flex">
           <LanguageToggle inverted />
         <div ref={dropdownRef} style={{ position: 'relative' }}>
           <button
@@ -156,7 +156,7 @@ export default function DriverNavbar() {
 
           {dropdownOpen && (
             <div style={{
-              position: 'absolute', insetInlineEnd: 0, top: 'calc(100% + 10px)',
+              position: 'absolute', right: 0, top: 'calc(100% + 10px)',
               background: '#fff', borderRadius: 10,
               border: '1px solid #E2E8F0',
               boxShadow: '0 8px 24px rgba(0,0,0,0.12)',

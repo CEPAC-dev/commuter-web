@@ -297,7 +297,7 @@ export default function TimeSlotCard({
           </p>
         </div>
 
-        {/* Estimated arrival — editable selects */}
+        {/* Estimated arrival — editable with buffer validation */}
         {!routeLocked && (
           <div>
             <label className="block text-xs font-medium text-[#5A6A7A] mb-2">{tsl('arrival_time')}</label>
@@ -403,7 +403,7 @@ export default function TimeSlotCard({
               </div>
             </div>
 
-            {/* Return arrival — editable selects */}
+            {/* Return arrival — editable with buffer validation */}
             <div>
               <label className="block text-xs font-medium text-[#5A6A7A] mb-2">{tsl('return_arrival_time')}</label>
               <div className="grid grid-cols-2 gap-3">

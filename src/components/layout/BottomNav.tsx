@@ -1,8 +1,10 @@
 ﻿'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { getUnreadCount } from '@/lib/api/notifications';
 
 const NAV_ICONS = {
   create: (active: boolean) => (
@@ -37,7 +39,20 @@ const NAV_ICONS = {
 export default function BottomNav() {
   const t = useTranslations('nav');
   const pathname = usePathname();
-  const unreadCount = 0; // TODO: fetch from API when notifications endpoint available
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    async function loadUnreadCount() {
+      try {
+        const count = await getUnreadCount();
+        setUnreadCount(count);
+      } catch (error) {
+        console.error('Failed to fetch unread notification count:', error);
+      }
+    }
+
+    loadUnreadCount();
+  }, []);
 
   const NAV_ITEMS = [
     { key: 'create' as const,        label: t('create'),       href: '/user/request/new' },
@@ -48,6 +63,7 @@ export default function BottomNav() {
 
   return (
     <nav
+      dir="ltr"
       className="flex md:hidden"
       style={{
         position: 'fixed',
@@ -103,7 +119,7 @@ export default function BottomNav() {
                   style={{
                     position: 'absolute',
                     top: -4,
-                    insetInlineEnd: -6,
+                    right: -6,
                     background: '#E74C3C',
                     color: '#fff',
                     fontSize: 10,

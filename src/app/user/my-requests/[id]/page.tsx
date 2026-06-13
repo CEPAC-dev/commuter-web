@@ -99,6 +99,117 @@ function IcRoute() {
   );
 }
 
+function IcMapPin() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00C2A8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  );
+}
+
+function IcFlag() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E74C3C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 15s1-1 5-1 5.5 1 10.5 1" />
+      <path d="M4 22v-7" />
+      <path d="M4 3v15" />
+    </svg>
+  );
+}
+
+// ── ExecutionTimeline component ───────────────────────────────────────────────
+
+interface TimelineEvent {
+  order: number;
+  type: 'pickup' | 'dropoff';
+  user_id: number;
+  passenger_id: number | null;
+  events_logged: unknown[];
+}
+
+function ExecutionTimeline({ events }: { events: TimelineEvent[] }) {
+  const t = useTranslations('trip_detail');
+  const tCommon = useTranslations('common');
+
+  if (!events || events.length === 0) return null;
+
+  const sortedEvents = [...events].sort((a, b) => a.order - b.order);
+
+  return (
+    <div style={{ background: '#F8F9FA', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
+      <p style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: '#9AA0A6', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        {t('execution_timeline')}
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {sortedEvents.map((event, idx) => (
+          <div key={idx} style={{ display: 'flex', gap: 12, marginBottom: idx === sortedEvents.length - 1 ? 0 : 14 }}>
+            {/* Timeline marker */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, paddingTop: 2 }}>
+              <div style={{
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                background: event.type === 'pickup' ? '#E0FAF6' : '#FFF3E0',
+                border: `2px solid ${event.type === 'pickup' ? '#00C2A8' : '#FF9800'}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                {event.type === 'pickup' ? (
+                  <IcMapPin />
+                ) : (
+                  <IcFlag />
+                )}
+              </div>
+              {idx < sortedEvents.length - 1 && (
+                <div style={{
+                  width: '2px',
+                  height: 24,
+                  background: '#B2DDD8',
+                  margin: '6px 0',
+                }} />
+              )}
+            </div>
+
+            {/* Event details */}
+            <div style={{ flex: 1, paddingTop: 4 }}>
+              <p style={{
+                margin: '0 0 6px',
+                fontSize: 13,
+                fontWeight: 700,
+                color: '#0B1E3D',
+                textTransform: 'capitalize',
+              }}>
+                {event.type === 'pickup' ? t('pickup_event') : t('dropoff_event')}
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, color: '#5A6A7A' }}>
+                <div>
+                  <span style={{ fontWeight: 600, color: '#0B1E3D' }}>#{event.order}</span>
+                  <span> · </span>
+                  <span>ID: {event.user_id}</span>
+                  {event.passenger_id && (
+                    <>
+                      <span> · </span>
+                      <span>Passenger: {event.passenger_id}</span>
+                    </>
+                  )}
+                </div>
+                {event.events_logged && Array.isArray(event.events_logged) && event.events_logged.length > 0 && (
+                  <div style={{ color: '#27AE60', fontSize: 11 }}>
+                    ✓ {event.events_logged.length} event(s) logged
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Matching status helpers ───────────────────────────────────────────────────
 
 function useMatchingConfig(): Record<string, { label: string; bg: string; color: string; border: string }> {
@@ -265,8 +376,16 @@ function InstanceDetailSheet({ instance }: { instance: CourseInstance | null }) 
           </div>
         </div>
         <div style={{ display: 'flex', gap: 16, paddingTop: 10, borderTop: '1px solid #E2E8F0', fontSize: 12, color: '#5A6A7A' }}>
-          <span>📏 {instance.route.expected_distance.toFixed(1)} {tCommon('km')}</span>
-          <span>⏱ ~{instance.route.estimated_duration_minutes} {tCommon('min')}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5A6A7A" strokeWidth="2">
+              <path d="M6 9l6-6 6 6M12 3v12" />
+            </svg>
+            {instance.route.expected_distance.toFixed(1)} {tCommon('km')}
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <IcClock />
+            ~{instance.route.estimated_duration_minutes} {tCommon('min')}
+          </span>
         </div>
       </div>
 
@@ -337,6 +456,13 @@ function InstanceDetailSheet({ instance }: { instance: CourseInstance | null }) 
         </div>
       </div>
 
+      {/* Execution Timeline */}
+      {instance.execution_timeline && instance.execution_timeline.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <ExecutionTimeline events={instance.execution_timeline} />
+        </div>
+      )}
+
       {/* Participants */}
       {instance.participants.length > 0 && (
         <div style={{ background: '#F8F9FA', borderRadius: 14, padding: '14px 16px', marginBottom: 16 }}>
@@ -352,7 +478,10 @@ function InstanceDetailSheet({ instance }: { instance: CourseInstance | null }) 
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 14, flexShrink: 0,
                   }}>
-                    {p.type === 'passenger' ? '👤' : '🙋'}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00C2A8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
                   </span>
                   <span style={{ color: '#0B1E3D', fontWeight: 600 }}>
                     {p.type === 'passenger' ? t('passenger_n', { n: p.passenger_id ?? 0 }) : t('user_n', { id: p.user_id ?? 0 })}

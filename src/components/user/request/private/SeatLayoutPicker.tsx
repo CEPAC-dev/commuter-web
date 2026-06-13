@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { PrivateSeatPosition } from '@/types/shared';
-import { PRIVATE_SEAT_LABELS } from '@/types/shared';
+import { useTranslations } from 'next-intl';
 
 export interface SeatPassenger {
   /** Stable key — 'me' for self, or stringified passenger.id */
@@ -16,7 +16,6 @@ interface Props {
   assignments: Record<string, PrivateSeatPosition>;
   onChange:    (next: Record<string, PrivateSeatPosition>) => void;
 }
-
 
 function SeatIcon() {
   return (
@@ -39,22 +38,22 @@ function DriverIcon() {
 }
 
 export default function SeatLayoutPicker({ passengers, assignments, onChange }: Props) {
+  const t = useTranslations('seat_layout');
   const [activeSeat, setActiveSeat] = useState<PrivateSeatPosition | null>(null);
+
+  const seatLabel = (seat: PrivateSeatPosition) => t(seat);
 
   const assignedKeyForSeat = (seat: PrivateSeatPosition): string | null => {
     const entry = Object.entries(assignments).find(([, s]) => s === seat);
     return entry ? entry[0] : null;
   };
 
-  /** Returns the seat a passenger is currently assigned to (or null). */
   const currentSeatOf = (key: string): PrivateSeatPosition | null =>
     assignments[key] ?? null;
 
   function assign(seat: PrivateSeatPosition, key: string | null) {
     const next: Record<string, PrivateSeatPosition> = { ...assignments };
-    // Remove anyone else already on the target seat
     for (const [k, s] of Object.entries(next)) if (s === seat) delete next[k];
-    // Remove the passenger's previous seat assignment (prevents dual-seat state)
     if (key) {
       delete next[key];
       next[key] = seat;
@@ -72,30 +71,29 @@ export default function SeatLayoutPicker({ passengers, assignments, onChange }: 
   const unassigned = passengers.filter(p => !(p.key in assignments));
 
   return (
-    <div>
+    <div dir="ltr">
       <p className="text-xs text-[#5A6A7A] mb-3">
-        Tap a seat to assign each passenger. Driver seat is not selectable.
+        {t('hint')}
       </p>
 
       <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8F9FA] p-3">
-        {/* Front row */}
         <div className="grid grid-cols-2 gap-2 mb-2">
-          {/* Driver */}
           <div className="h-20 rounded-xl border-2 border-[#E2E8F0] bg-[#EEF1F5] flex flex-col items-center justify-center text-[#9AA0A6]">
             <DriverIcon />
-            <span className="text-[11px] font-semibold mt-1">Driver</span>
+            <span className="text-[11px] font-semibold mt-1">{t('driver')}</span>
           </div>
           <SeatButton
             seat="front"
+            label={seatLabel('front')}
             assigneeName={
               passengers.find(p => p.key === assignedKeyForSeat('front'))?.name ?? null
             }
             onClick={() => setActiveSeat('front')}
             onRemove={() => removeSeat('front')}
+            removeAria={(name) => t('remove_aria', { name })}
           />
         </div>
 
-        {/* Back row */}
         <div className="grid grid-cols-3 gap-2">
           {(['back_left', 'back_center', 'back_right'] as const).map(seat => {
             const k = assignedKeyForSeat(seat);
@@ -104,21 +102,22 @@ export default function SeatLayoutPicker({ passengers, assignments, onChange }: 
               <SeatButton
                 key={seat}
                 seat={seat}
+                label={seatLabel(seat)}
                 assigneeName={name}
                 onClick={() => setActiveSeat(seat)}
                 onRemove={() => removeSeat(seat)}
+                removeAria={(n) => t('remove_aria', { name: n })}
               />
             );
           })}
         </div>
       </div>
 
-      {/* Active seat picker */}
       {activeSeat && (
         <div className="mt-3 rounded-xl border border-[#C8E8E4] bg-[#EFF7F6] p-3">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-[#0B1E3D]">
-              Assign · {PRIVATE_SEAT_LABELS[activeSeat]}
+              {t('assign', { seat: seatLabel(activeSeat) })}
             </span>
             <button
               type="button"
@@ -126,7 +125,7 @@ export default function SeatLayoutPicker({ passengers, assignments, onChange }: 
               className="text-xs text-[#5A6A7A] hover:underline"
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
             >
-              Close
+              {t('close')}
             </button>
           </div>
 
@@ -138,7 +137,7 @@ export default function SeatLayoutPicker({ passengers, assignments, onChange }: 
                 className="px-3 py-1.5 rounded-lg bg-white border border-[#E2E8F0] text-xs font-medium text-[#E74C3C]"
                 style={{ cursor: 'pointer', fontFamily: 'inherit' }}
               >
-                Clear seat
+                {t('clear_seat')}
               </button>
             )}
             {[...passengers].map(p => {
@@ -161,16 +160,18 @@ export default function SeatLayoutPicker({ passengers, assignments, onChange }: 
                 >
                   <span>{p.name}</span>
                   {isHere && (
-                    <span className="text-[9px] opacity-80">tap to remove</span>
+                    <span className="text-[9px] opacity-80">{t('tap_to_remove')}</span>
                   )}
                   {isElsewhere && (
-                    <span className="text-[9px]">on {PRIVATE_SEAT_LABELS[elsewhere]} · tap to move</span>
+                    <span className="text-[9px]">
+                      {t('on_seat_tap_move', { seat: seatLabel(elsewhere) })}
+                    </span>
                   )}
                 </button>
               );
             })}
             {passengers.length === 0 && (
-              <p className="text-xs text-[#9AA0A6] italic">Add passengers above first.</p>
+              <p className="text-xs text-[#9AA0A6] italic">{t('add_passengers_first')}</p>
             )}
           </div>
         </div>
@@ -178,7 +179,7 @@ export default function SeatLayoutPicker({ passengers, assignments, onChange }: 
 
       {unassigned.length > 0 && passengers.length > 0 && (
         <p className="text-[11px] text-[#9AA0A6] mt-2">
-          Unassigned: {unassigned.map(p => p.name).join(', ')}
+          {t('unassigned', { names: unassigned.map(p => p.name).join(', ') })}
         </p>
       )}
     </div>
@@ -186,8 +187,15 @@ export default function SeatLayoutPicker({ passengers, assignments, onChange }: 
 }
 
 function SeatButton({
-  seat, assigneeName, onClick, onRemove,
-}: { seat: PrivateSeatPosition; assigneeName: string | null; onClick: () => void; onRemove?: () => void }) {
+  seat, label, assigneeName, onClick, onRemove, removeAria,
+}: {
+  seat: PrivateSeatPosition;
+  label: string;
+  assigneeName: string | null;
+  onClick: () => void;
+  onRemove?: () => void;
+  removeAria: (name: string) => string;
+}) {
   const assigned = !!assigneeName;
   return (
     <div className="relative">
@@ -202,7 +210,7 @@ function SeatButton({
         style={{ cursor: 'pointer', fontFamily: 'inherit' }}
       >
         <SeatIcon />
-        <span className="text-[11px] font-semibold mt-1">{PRIVATE_SEAT_LABELS[seat]}</span>
+        <span className="text-[11px] font-semibold mt-1">{label}</span>
         {assigned && (
           <span className="text-[10px] mt-0.5 truncate max-w-full px-1 text-[#00917D] font-medium">
             {assigneeName}
@@ -213,7 +221,7 @@ function SeatButton({
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onRemove(); }}
-          aria-label={`Remove ${assigneeName}`}
+          aria-label={removeAria(assigneeName!)}
           className="absolute top-1 right-1 w-5 h-5 rounded-full bg-[#E74C3C] text-white flex items-center justify-center text-[11px] font-bold leading-none"
           style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
         >

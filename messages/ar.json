@@ -12,6 +12,8 @@
     "submit": "إرسال",
     "edit": "تعديل",
     "delete": "حذف",
+    "set": "تحديد",
+    "remove": "إزالة",
     "view_details": "عرض التفاصيل",
     "loading": "بيتحمّل...",
     "error_generic": "حصل خطأ. حاول تاني.",
@@ -255,6 +257,18 @@
     "next_cycle": "أقرب دورة متاحة",
     "price_estimate": "التكلفة التقريبية",
     "price_note": "السعر النهائي بيتأكد بعد اختيار السائق",
+    "pickup_window": "نافذة الركوب",
+    "arrival_window": "نافذة الوصول",
+    "passengers": "الركاب",
+    "stops_by_day": "توقفات حسب اليوم",
+    "return_trip": "رحلة العودة",
+    "pickup": "الركوب",
+    "arrival": "الوصول",
+    "estimated_price": "السعر التقريبي",
+    "estimated_price_note": "السعر النهائي بيتأكد بعد التطابق",
+    "estimated_price_label": "السعر التقريبي (EGP / أسبوع)",
+    "notes_for_driver": "ملاحظات للسائق",
+    "passenger_fallback": "راكب {id}",
     "edit_btn": "تعديل التفاصيل",
     "submit_btn": "إرسال الطلب",
     "schedule_title": "جدول المواعيد",
@@ -689,14 +703,19 @@
     "older_label": "الأقدم",
     "new_label": "جديد",
     "empty": "مفيش إشعارات لسه",
+    "loading": "جاري تحميل الإشعارات...",
     "just_now": "دلوقتي",
     "minutes_ago": "من {count} دقيقة",
     "hours_ago": "من {count} ساعة",
     "yesterday": "امبارح",
     "unread_count": "{count} غير مقروء",
+    "total_count": "{count} إشعار إجمالي",
     "action_review": "راجع العرض ←",
     "action_rate": "قيّم السائق ←",
     "action_view": "عرض الطلب ←",
+    "action_topup": "أضف رصيد الآن ←",
+    "previous": "السابق",
+    "next": "التالي",
     "type_request_matched": "لقينالك سائق!",
     "type_price_raised": "السعر اتحدّث لرحلتك",
     "type_confirmed": "الرحلة مؤكدة",
@@ -1029,7 +1048,7 @@
   },
 
   "request_shared": {
-    "back": "← رجوع",
+    "back": "رجوع →",
     "shared_ride": "رحلة مشتركة",
     "who_travel": "عايز تسافر مع مين؟",
     "friends_group": "جروب أصحاب",
@@ -1047,11 +1066,11 @@
     "expires_48h": "الكود بينتهي بعد 48 ساعة",
     "copied": "✓ اتنسخ!",
     "copy_code": "📋 نسخ الكود",
-    "continue_route": "كمّل للمسار ←",
+    "continue_route": "كمّل للمسار →",
     "join_title": "انضم لجروب",
     "join_desc": "أدخل كود الجروب اللي صاحبك شاركه معاك.",
     "code_error": "أدخل كود صحيح من 6 أحرف (مثال: XK9-4BT)",
-    "join_btn": "انضم للجروب ←"
+    "join_btn": "انضم للجروب →"
   },
 
   "request_schedule": {
@@ -1082,7 +1101,7 @@
     "set_arrival_time": "حدد وقت الوصول للموعد {n}",
     "set_return_times": "حدد أوقات العودة للموعد {n}",
     "invalid_pickup": "نافذة ركوب غير صالحة للموعد {n} (لازم من 15 دقيقة لساعتين)",
-    "who_riding_desc": "اختار لحد 4 ركاب. ممكن تشمل نفسك أو تحجز لغيرك بس.",
+    "who_riding_desc": "اختار لحد {max} ركاب. ممكن تشمل نفسك أو تحجز لغيرك بس.",
     "selected_label": "{count}/4 مختار",
     "me_with_name": "أنا ({name})",
     "days_label": "{count}/7 أيام",
@@ -1174,7 +1193,21 @@
     "set_route_for_days": "حدد مسار فوق عشان تختار أيام للموعد ده.",
     "select_one_day": "اختار يوم واحد على الأقل للموعد ده",
     "return_confirm_edit": "اضغط \"تعديل\" لتأكيد مسار العودة",
-    "edited_tag": "(معدّل)"
+    "edited_tag": "(معدّل)",
+    "seat_layout_label": "توزيع المقاعد",
+    "return_trip": "رحلة العودة",
+    "return_route_desc": "نقطة البداية والوجهة معكوسة من رحلة الذهاب. حدد نقطة التقاء ركوب العودة فقط.",
+    "stops_per_day": "توقفات يومية",
+    "stops_optional": "(اختياري · حتى 2 لكل يوم)",
+    "add_stop": "+ إضافة توقف",
+    "no_stops_day": "مفيش توقفات لليوم ده.",
+    "pick_time": "— اختار الوقت —",
+    "return_arrival_note": "على الأقل ساعة بعد انتهاء الركوب · نافذة 30 د · أقصى ساعتين",
+    "auto_outbound_destination": "تلقائي — وجهة الذهاب",
+    "auto_outbound_origin": "تلقائي — نقطة بداية الذهاب",
+    "return_pickup_hint": "نقطة التقاء ركوب العودة",
+    "pickup_window": "نافذة الركوب",
+    "arrival_window": "نافذة الوصول"
   },
 
   "route_picker": {
@@ -1217,7 +1250,29 @@
     "one_way": "ذهاب بس",
     "round_trip": "ذهاب وعودة",
     "notes": "ملاحظات",
-    "notes_placeholder": "أضف ملاحظات للسائق…"
+    "notes_placeholder": "أضف ملاحظات للسائق…",
+    "route_locked_title": "حدد المسار الأول",
+    "route_locked_desc": "اختار نقطة البداية والوجهة فوق عشان تفتح القسم ده.",
+    "outbound_pickup_title": "حدد نقطة ركوب الذهاب",
+    "return_pickup_title": "حدد نقطة ركوب العودة",
+    "stop_title": "توقف {n} · {day}"
+  },
+
+  "seat_layout": {
+    "hint": "اضغط على مقعد لتعيين كل راكب. مقعد السائق مش قابل للاختيار.",
+    "driver": "السائق",
+    "front": "أمامي",
+    "back_left": "خلفي يسار",
+    "back_center": "خلفي وسط",
+    "back_right": "خلفي يمين",
+    "assign": "تعيين · {seat}",
+    "close": "إغلاق",
+    "clear_seat": "مسح المقعد",
+    "tap_to_remove": "اضغط للإزالة",
+    "on_seat_tap_move": "في {seat} · اضغط للنقل",
+    "add_passengers_first": "أضف ركاب فوق الأول.",
+    "unassigned": "غير معيّن: {names}",
+    "remove_aria": "إزالة {name}"
   },
 
   "outbound_route": {
@@ -1241,7 +1296,10 @@
   },
 
   "passenger_picker": {
-    "search": "ابحث عن ركاب…"
+    "search": "ابحث عن ركاب…",
+    "no_matches": "مفيش نتائج.",
+    "age_yrs": "{relation} · {age} سنة",
+    "your_account": "حسابك"
   },
 
   "stop_map_picker": {
@@ -1355,7 +1413,10 @@
     "user_n": "مستخدم #{id}",
     "passengers_count": "الركاب ({count})",
     "actual_start": "البداية الفعلية",
-    "actual_end": "النهاية الفعلية"
+    "actual_end": "النهاية الفعلية",
+    "execution_timeline": "جدول الرحلة",
+    "pickup_event": "الركوب",
+    "dropoff_event": "الإنزال"
   },
 
   "trip_live": {
