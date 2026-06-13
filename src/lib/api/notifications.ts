@@ -12,7 +12,7 @@ export async function getNotifications(page: number = 1): Promise<NotificationPa
     if (error instanceof ApiError) {
       throw error;
     }
-    throw new ApiError('Failed to fetch notifications', 500);
+    throw new ApiError(500, 'Failed to fetch notifications');
   }
 }
 
@@ -28,7 +28,7 @@ export async function getUnreadCount(): Promise<number> {
     if (error instanceof ApiError) {
       throw error;
     }
-    throw new ApiError('Failed to fetch unread count', 500);
+    throw new ApiError(500, 'Failed to fetch unread count');
   }
 }
 
@@ -42,7 +42,7 @@ export async function markNotificationRead(notificationId: string | number): Pro
     if (error instanceof ApiError) {
       throw error;
     }
-    throw new ApiError('Failed to mark notification as read', 500);
+    throw new ApiError(500, 'Failed to mark notification as read');
   }
 }
 
@@ -56,7 +56,7 @@ export async function markAllNotificationsRead(): Promise<void> {
     if (error instanceof ApiError) {
       throw error;
     }
-    throw new ApiError('Failed to mark all notifications as read', 500);
+    throw new ApiError(500, 'Failed to mark all notifications as read');
   }
 }
 
@@ -70,6 +70,6 @@ export async function deleteNotification(notificationId: string | number): Promi
     if (error instanceof ApiError) {
       throw error;
     }
-    throw new ApiError('Failed to delete notification', 500);
+    throw new ApiError(500, 'Failed to delete notification');
   }
 }
