@@ -130,7 +130,6 @@ interface TimelineEvent {
 
 function ExecutionTimeline({ events }: { events: TimelineEvent[] }) {
   const t = useTranslations('trip_detail');
-  const tCommon = useTranslations('common');
 
   if (!events || events.length === 0) return null;
 

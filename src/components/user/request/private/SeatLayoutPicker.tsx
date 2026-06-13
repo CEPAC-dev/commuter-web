@@ -187,9 +187,9 @@ export default function SeatLayoutPicker({ passengers, assignments, onChange }: 
 }
 
 function SeatButton({
-  seat, label, assigneeName, onClick, onRemove, removeAria,
+  _seat, label, assigneeName, onClick, onRemove, removeAria,
 }: {
-  seat: PrivateSeatPosition;
+  _seat: PrivateSeatPosition;
   label: string;
   assigneeName: string | null;
   onClick: () => void;

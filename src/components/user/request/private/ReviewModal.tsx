@@ -53,7 +53,7 @@ function Row({ icon, label, value }: { icon: string; label: string; value: strin
   );
 }
 
-function DayChip({ day, label }: { day: WeekDay; label: string }) {
+function DayChip({ _day, label }: { _day: WeekDay; label: string }) {
   return (
     <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-[#EFF7F6] text-[#00C2A8] text-xs font-bold border border-[#C8E8E4]">
       {label}

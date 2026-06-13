@@ -1,5 +1,5 @@
 import { call, ApiError } from './client';
-import type { Notification, NotificationPaginatedResponse, UnreadCountResponse } from '@/types/user';
+import type { NotificationPaginatedResponse, UnreadCountResponse } from '@/types/user';
 
 /**
  * Get paginated list of notifications
