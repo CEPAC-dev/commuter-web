@@ -132,7 +132,6 @@ const userApi = {
     throw err;
   }),
   updateProfile:     (data: Record<string, unknown>)      => call('profile', { method: 'PATCH', body: data }),
-  updateProfileImage: (base64: string)                     => call('profile', { method: 'PATCH', body: { profile_image: base64 } }),
 
   // Requests
   getRequests:       ()                                   => call('user/requests'),

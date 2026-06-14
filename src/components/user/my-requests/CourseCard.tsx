@@ -9,10 +9,11 @@ import { useTranslations } from 'next-intl';
 // ── Status config ─────────────────────────────────────────────────────────────
 
 const STATUS_STYLE: Record<CourseStatus, { bg: string; color: string; border: string }> = {
-  draft:     { bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
-  active:    { bg: '#E8F5E9', color: '#27AE60', border: '#A8D5B5' },
-  completed: { bg: '#F1F3F4', color: '#5A6A7A', border: '#E2E8F0' },
-  cancelled: { bg: '#FFEBEE', color: '#E74C3C', border: '#FFCDD2' },
+  draft:           { bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
+  active:          { bg: '#E8F5E9', color: '#27AE60', border: '#A8D5B5' },
+  completed:       { bg: '#F1F3F4', color: '#5A6A7A', border: '#E2E8F0' },
+  cancelled:       { bg: '#FFEBEE', color: '#E74C3C', border: '#FFCDD2' },
+  pending_payment: { bg: '#FFF3CD', color: '#856404', border: '#FFDA6A' },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -54,9 +55,14 @@ export default function CourseCard({ course, onPaid, onRepeatSuccess }: Props) {
   const [repeating, setRepeating] = useState(false);
   const [repeatError, setRepeatError] = useState<string | null>(null);
   const [showPayConfirm, setShowPayConfirm] = useState(false);
+  const [showRepeatConfirm, setShowRepeatConfirm] = useState(false);
 
   const style = STATUS_STYLE[course.status] ?? STATUS_STYLE.draft;
-  const statusLabel = t(`status_${course.status}` as 'status_draft');
+  // Avoid showing raw translation key for unknown statuses
+  const knownStatuses: CourseStatus[] = ['draft', 'active', 'completed', 'cancelled', 'pending_payment'];
+  const statusLabel = knownStatuses.includes(course.status)
+    ? t(`status_${course.status}` as 'status_draft')
+    : course.status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
   async function handleConfirmPayment() {
     setPaying(true);
@@ -72,11 +78,15 @@ export default function CourseCard({ course, onPaid, onRepeatSuccess }: Props) {
         (fallback['url'] as string | undefined);
       if (url) {
         setPaymentUrl(url);
-        // Open payment in new tab
-        window.open(url, '_blank');
+        // Open payment link in new tab immediately
+        window.open(url, '_blank', 'noopener,noreferrer');
+        // Close dialog after opening window
+        setShowPayConfirm(false);
+        setPaying(false);
         return;
       }
       // no payment URL → treat as already paid, refresh
+      setShowPayConfirm(false);
       onPaid?.();
       setPaying(false);
     } catch (e) {
@@ -110,9 +120,11 @@ export default function CourseCard({ course, onPaid, onRepeatSuccess }: Props) {
 
   const estimatedTotalPrice = Math.round(parseFloat(course.estimated_total_price));
 
-  const needsPayment = course.wallet_status === 'waiting' && course.status === 'draft';
+  // Show pay button whenever wallet is waiting (any status)
+  const needsPayment = course.wallet_status === 'waiting';
 
   return (
+    <>
     <div
       style={{
         background: '#fff',
@@ -239,124 +251,6 @@ export default function CourseCard({ course, onPaid, onRepeatSuccess }: Props) {
         </div>
       </div>
 
-      {/* ── Pay CTA (show for all statuses except completed/cancelled, if not paid) ── */}
-      {course.status !== 'completed' && course.status !== 'cancelled' && course.wallet_status !== 'paid' && (
-        <div style={{ padding: '0 16px 16px' }}>
-          {payError && (
-            <p style={{ margin: '0 0 8px', fontSize: 12, color: '#E74C3C', textAlign: 'center' }}>
-              {payError}
-            </p>
-          )}
-          <button
-            type="button"
-            disabled={paying}
-            onClick={() => setShowPayConfirm(true)}
-            style={{
-              width: '100%',
-              padding: '12px 14px',
-              borderRadius: 12,
-              background: paying ? '#C5CDD6' : '#00C2A8',
-              color: paying ? '#9AA0A6' : '#fff',
-              fontSize: 14,
-              fontWeight: 700,
-              border: 'none',
-              cursor: paying ? 'not-allowed' : 'pointer',
-              fontFamily: 'inherit',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-              opacity: paying ? 0.6 : 1,
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="1" y="5" width="23" height="14" rx="2" ry="2" />
-              <line x1="1" y1="10" x2="24" y2="10" />
-            </svg>
-            {paying ? 'Processing...' : 'Pay now'}
-          </button>
-        </div>
-      )}
-
-      {/* ── Payment Confirmation Modal ── */}
-      {showPayConfirm && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '16px',
-        }}>
-          <div style={{
-            background: '#fff',
-            borderRadius: 16,
-            padding: '24px',
-            maxWidth: 400,
-            width: '100%',
-            boxShadow: '0 10px 40px rgba(11, 30, 61, 0.2)',
-          }}>
-            <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0B1E3D', margin: '0 0 12px' }}>
-              Confirm Payment
-            </h2>
-            <p style={{ fontSize: 14, color: '#5A6A7A', margin: '0 0 8px', lineHeight: 1.5 }}>
-              You are about to pay <strong style={{ color: '#0B1E3D', fontWeight: 700 }}>EGP {estimatedTotalPrice.toLocaleString()}</strong> for this cycle from <strong>{first?.pickup_point}</strong> to <strong>{first?.destination}</strong>.
-            </p>
-            <p style={{ fontSize: 13, color: '#9AA0A6', margin: '0 0 24px' }}>
-              {course.start_date} - {course.end_date}
-            </p>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button
-                type="button"
-                onClick={() => setShowPayConfirm(false)}
-                style={{
-                  flex: 1,
-                  padding: '12px 14px',
-                  borderRadius: 12,
-                  background: '#F8F9FA',
-                  color: '#0B1E3D',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  border: '1px solid #E2E8F0',
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={paying}
-                onClick={() => {
-                  handleConfirmPayment();
-                  setShowPayConfirm(false);
-                }}
-                style={{
-                  flex: 1,
-                  padding: '12px 14px',
-                  borderRadius: 12,
-                  background: paying ? '#C5CDD6' : '#0B1E3D',
-                  color: '#fff',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  border: 'none',
-                  cursor: paying ? 'not-allowed' : 'pointer',
-                  fontFamily: 'inherit',
-                  opacity: paying ? 0.6 : 1,
-                }}
-              >
-                {paying ? 'Processing...' : 'Confirm'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ── Repeat CTA (active or completed courses) ── */}
       {(course.status === 'active' || course.status === 'completed') && (
         <div style={{ padding: '0 16px 16px' }}>
@@ -368,7 +262,7 @@ export default function CourseCard({ course, onPaid, onRepeatSuccess }: Props) {
           <button
             type="button"
             disabled={repeating}
-            onClick={handleRepeat}
+            onClick={() => setShowRepeatConfirm(true)}
             style={{
               width: '100%',
               padding: '12px 14px',
@@ -430,7 +324,7 @@ export default function CourseCard({ course, onPaid, onRepeatSuccess }: Props) {
                 <rect x="1" y="5" width="23" height="14" rx="2" ry="2" />
                 <line x1="1" y1="10" x2="24" y2="10" />
               </svg>
-              Tap here to complete payment
+              Tap here to complete payment ↗
             </a>
           ) : (
             <button
@@ -486,5 +380,51 @@ export default function CourseCard({ course, onPaid, onRepeatSuccess }: Props) {
         {t('view_details')} →
       </button>
     </div>
+
+      {/* ── Pay Confirmation Dialog ── */}
+      {showPayConfirm && (
+        <>
+          <div onClick={() => setShowPayConfirm(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 400 }} />
+          <div style={{
+            position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
+            width: 'min(88vw,340px)', background: '#fff', borderRadius: 20,
+            padding: '28px 24px 22px', zIndex: 401, display: 'flex', flexDirection: 'column', gap: 12,
+            boxShadow: '0 8px 40px rgba(0,0,0,0.18)', fontFamily: 'Inter, system-ui, sans-serif',
+          }}>
+            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#0B1E3D' }}>Confirm Payment</h3>
+            <p style={{ margin: 0, fontSize: 14, color: '#5A6A7A', lineHeight: 1.6 }}>
+              Pay <strong>EGP {estimatedTotalPrice.toLocaleString()}</strong> from your wallet for this course?
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 24, marginTop: 8 }}>
+              <button onClick={() => setShowPayConfirm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: 700, color: '#9AA0A6', fontFamily: 'inherit' }}>Cancel</button>
+              <button onClick={handleConfirmPayment} disabled={paying} style={{ background: 'none', border: 'none', cursor: paying ? 'not-allowed' : 'pointer', fontSize: 15, fontWeight: 700, color: paying ? '#B0BEC5' : '#0B1E3D', fontFamily: 'inherit', opacity: paying ? 0.6 : 1 }}>{paying ? 'Processing...' : 'Confirm'}</button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Repeat Confirmation Dialog ── */}
+      {showRepeatConfirm && (
+        <>
+          <div onClick={() => setShowRepeatConfirm(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 400 }} />
+          <div style={{
+            position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
+            width: 'min(88vw,340px)', background: '#fff', borderRadius: 20,
+            padding: '28px 24px 22px', zIndex: 401, display: 'flex', flexDirection: 'column', gap: 12,
+            boxShadow: '0 8px 40px rgba(0,0,0,0.18)', fontFamily: 'Inter, system-ui, sans-serif',
+          }}>
+            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#0B1E3D' }}>Repeat Course?</h3>
+            <p style={{ margin: 0, fontSize: 14, color: '#5A6A7A', lineHeight: 1.6 }}>
+              Create the same course starting from <strong>{getNextWeekDate(course.start_date)}</strong> (next week)?
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 24, marginTop: 8 }}>
+              <button onClick={() => setShowRepeatConfirm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: 700, color: '#9AA0A6', fontFamily: 'inherit' }}>Cancel</button>
+              <button onClick={() => { setShowRepeatConfirm(false); handleRepeat(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: 700, color: '#00C2A8', fontFamily: 'inherit' }}>Repeat</button>
+            </div>
+          </div>
+        </>
+      )}
+    </>
+
   );
 }

@@ -33,6 +33,13 @@ body {
 
 /* ── Map page ───────────────────────────────────────────── */
 .map-container { width: 100%; height: 100%; position: absolute; inset: 0; }
+
+/* Override Google Maps canvas cursor when picking a location */
+.map-picking .map-container div,
+.map-picking .map-container canvas,
+.map-picking .map-container [style*="cursor"] {
+  cursor: inherit !important;
+}
 .leaflet-container { z-index: 0 !important; }
 .leaflet-right { right: 0 !important; }
 .leaflet-bottom { bottom: 0 !important; }

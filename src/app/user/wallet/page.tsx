@@ -157,7 +157,9 @@ function TransactionCard({
       const base = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.commuter.site/api';
       const paymentUrl = `${base}/kashier/payment/${tx.id}`;
       onConfirm(tx.id, tx);
-      window.location.href = paymentUrl;
+      // Open payment link in new tab
+      window.open(paymentUrl, '_blank', 'noopener,noreferrer');
+      setConfirming(false);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t('redirect_failed'));
       setConfirming(false);

@@ -194,8 +194,30 @@ export default function UserMap({
   const destW  = Math.round(36 * zf);   // teardrop 36×50 base
   const destH  = Math.round(50 * zf);
 
+  // Custom pin cursor SVG — 32×44px teardrop, hotspot at tip (16, 44)
+  const PIN_CURSOR = `url("data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="44">'
+    + '<path d="M16 0C7.16 0 0 7.16 0 16c0 11.6 16 28 16 28S32 27.6 32 16C32 7.16 24.84 0 16 0z" fill="%2300C2A8"/>'
+    + '<circle cx="16" cy="16" r="7" fill="white"/>'
+    + '<circle cx="16" cy="16" r="4" fill="%230B1E3D"/>'
+    + '</svg>'
+  )}") 16 44, crosshair`;
+
   return (
-    <div className="map-container" style={{ cursor: pickingField ? 'crosshair' : undefined }}>
+    <div
+      className="map-container"
+      style={{ cursor: pickingField ? PIN_CURSOR : undefined }}
+      data-picking={pickingField ? 'true' : undefined}
+    >
+      {/* Inject a style override so Google Maps' inner divs/canvas inherit our cursor */}
+      {pickingField && (
+        <style>{`
+          .map-container[data-picking] div,
+          .map-container[data-picking] canvas {
+            cursor: inherit !important;
+          }
+        `}</style>
+      )}
       <GoogleMap
         mapContainerStyle={{ width: '100%', height: '100%' }}
         center={CAIRO}

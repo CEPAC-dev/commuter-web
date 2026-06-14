@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
-  getCourse, confirmCoursePayment, updateCourseStatus,
+  getCourse, confirmCoursePayment, updateCourseStatus, repeatCourse,
   getCourseInstances, getCourseInstance,
   type ApiCourse, type CourseStatus,
   type CourseInstance,
@@ -18,10 +18,11 @@ import { useLocale, useTranslations } from 'next-intl';
 function useStatusConfig() {
   const t = useTranslations('course_card');
   return {
-    draft:     { label: t('status_draft'),     bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
-    active:    { label: t('status_active'),    bg: '#E8F5E9', color: '#27AE60', border: '#A8D5B5' },
-    completed: { label: t('status_completed'), bg: '#F1F3F4', color: '#5A6A7A', border: '#E2E8F0' },
-    cancelled: { label: t('status_cancelled'), bg: '#FFEBEE', color: '#E74C3C', border: '#FFCDD2' },
+    draft:           { label: t('status_draft'),           bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
+    active:          { label: t('status_active'),          bg: '#E8F5E9', color: '#27AE60', border: '#A8D5B5' },
+    completed:       { label: t('status_completed'),       bg: '#F1F3F4', color: '#5A6A7A', border: '#E2E8F0' },
+    cancelled:       { label: t('status_cancelled'),       bg: '#FFEBEE', color: '#E74C3C', border: '#FFCDD2' },
+    pending_payment: { label: t('status_pending_payment'), bg: '#FFF3CD', color: '#856404', border: '#FFDA6A' },
   } satisfies Record<CourseStatus, { label: string; bg: string; color: string; border: string }>;
 }
 
@@ -39,6 +40,12 @@ function fmtCreatedAt(raw: string, locale: string) {
   return d.toLocaleDateString(locale, {
     day: 'numeric', month: 'long', year: 'numeric',
   }) + ' · ' + d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+}
+
+function getNextWeekDate(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + 7);
+  return d.toISOString().split('T')[0];
 }
 
 // ── SVG Icons ─────────────────────────────────────────────────────────────────
@@ -535,6 +542,11 @@ export default function CourseDetailPage() {
   const [paying, setPaying]     = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
   const [payDone, setPayDone]   = useState(false);
+  const [repeating, setRepeating]   = useState(false);
+  const [repeatError, setRepeatError] = useState<string | null>(null);
+  const [repeatDone, setRepeatDone]   = useState(false);
+  const [showPayConfirm, setShowPayConfirm]       = useState(false);
+  const [showRepeatConfirm, setShowRepeatConfirm] = useState(false);
 
   // Instances
   const [instances, setInstances]           = useState<CourseInstance[]>([]);
@@ -579,21 +591,54 @@ export default function CourseDetailPage() {
     if (!course) return;
     setPayError(null);
     const cost = Math.round(parseFloat(course.estimated_total_price));
-    if (balance !== null && balance < cost) {
-      setPayError(t('insufficient_balance', { balance: balance.toLocaleString(), cost: cost.toLocaleString() }));
-      return;
-    }
     setPaying(true);
     try {
-      await confirmCoursePayment(course.id);
+      const res = await confirmCoursePayment(course.id);
+      // If the API returns a Kashier payment URL, open it in a new tab
+      const fallback = res as unknown as Record<string, unknown>;
+      const nested = fallback['data'] as Record<string, unknown> | undefined;
+      const url: string | undefined =
+        res.payment_url ||
+        (nested?.['payment_url'] as string | undefined) ||
+        (fallback['url'] as string | undefined);
+      if (url) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+        // Close dialog after opening payment link
+        setShowPayConfirm(false);
+        setPaying(false);
+        return;
+      }
+      // No URL — direct wallet deduction
+      if (balance !== null && balance < cost) {
+        setPayError(t('insufficient_balance', { balance: balance.toLocaleString(), cost: cost.toLocaleString() }));
+        setPaying(false);
+        return;
+      }
       await updateCourseStatus(course.id, { status: 'active', wallet_status: 'success' });
       setCourse(c => c ? { ...c, status: 'active', wallet_status: 'paid' } : c);
       setBalance(b => b !== null ? b - cost : b);
       setPayDone(true);
+      // Close dialog after successful payment
+      setShowPayConfirm(false);
     } catch (e: unknown) {
       setPayError(e instanceof Error ? e.message : t('payment_failed'));
     } finally {
       setPaying(false);
+    }
+  }
+
+  async function handleRepeat() {
+    if (!course) return;
+    setRepeatError(null);
+    setRepeating(true);
+    try {
+      const nextWeekDate = getNextWeekDate(course.start_date);
+      await repeatCourse(course.id, { start_date: nextWeekDate });
+      setRepeatDone(true);
+    } catch (e: unknown) {
+      setRepeatError(e instanceof Error ? e.message : 'Failed to repeat course');
+    } finally {
+      setRepeating(false);
     }
   }
 
@@ -619,7 +664,10 @@ export default function CourseDetailPage() {
     );
   }
 
-  const cfg = STATUS_CONFIG[course.status] ?? STATUS_CONFIG.draft;
+  const cfg = STATUS_CONFIG[course.status] ?? {
+    label: course.status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+    bg: '#F1F3F4', color: '#5A6A7A', border: '#E2E8F0',
+  };
 
   const estimatedTotalPrice = Math.round(parseFloat(course.estimated_total_price));
 
@@ -715,8 +763,8 @@ export default function CourseDetailPage() {
           </div>
         )}
 
-        {/* ── Payment card (only for draft + waiting) ── */}
-        {course.status === 'draft' && course.wallet_status === 'waiting' && (
+        {/* ── Payment card (show whenever wallet is waiting) ── */}
+        {course.wallet_status === 'waiting' && (
           <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 16, padding: '16px', boxShadow: '0 1px 4px rgba(11,30,61,0.06)' }}>
             <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 800, color: '#0B1E3D' }}>{t('payment')}</p>
 
@@ -764,7 +812,7 @@ export default function CourseDetailPage() {
             ) : (
               <button
                 type="button"
-                onClick={handleConfirmPay}
+                onClick={() => setShowPayConfirm(true)}
                 disabled={paying}
                 style={{
                   width: '100%',
@@ -780,6 +828,55 @@ export default function CourseDetailPage() {
                 }}
               >
                 {paying ? t('processing') : t('confirm_pay')}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* ── Repeat button (active or completed) ── */}
+        {(course.status === 'active' || course.status === 'completed') && (
+          <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 16, padding: '16px', boxShadow: '0 1px 4px rgba(11,30,61,0.06)' }}>
+            <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 800, color: '#0B1E3D' }}>Repeat This Course</p>
+            <p style={{ margin: '0 0 14px', fontSize: 12, color: '#9AA0A6' }}>
+              Next week from {getNextWeekDate(course.start_date)}
+            </p>
+            {repeatError && (
+              <p style={{ margin: '0 0 10px', fontSize: 13, color: '#E74C3C', background: '#FFEBEE', border: '1px solid #FFCDD2', borderRadius: 8, padding: '10px 12px' }}>
+                {repeatError}
+              </p>
+            )}
+            {repeatDone ? (
+              <div style={{ background: '#E8F5E9', border: '1px solid #A8D5B5', borderRadius: 10, padding: '14px', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#27AE60' }}>✓ Course repeated!</p>
+                <p style={{ margin: '4px 0 0', fontSize: 13, color: '#5A6A7A' }}>Check My Requests for the new course.</p>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowRepeatConfirm(true)}
+                disabled={repeating}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: 12,
+                  border: '1.5px solid #00C2A8',
+                  background: repeating ? '#C5CDD6' : '#F0FFFE',
+                  color: repeating ? '#9AA0A6' : '#00C2A8',
+                  fontSize: 15,
+                  fontWeight: 700,
+                  cursor: repeating ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="23 4 23 10 17 10" />
+                  <path d="M20.49 15a9 9 0 1 1-2-8.83" />
+                </svg>
+                {repeating ? 'Creating...' : 'Repeat Next Week'}
               </button>
             )}
           </div>
@@ -804,6 +901,55 @@ export default function CourseDetailPage() {
         />
       )}
     </BottomSheet>
+
+    {/* ── Pay Confirmation Dialog ── */}
+    {showPayConfirm && (
+      <>
+        <div onClick={() => setShowPayConfirm(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 400 }} />
+        <div style={{
+          position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
+          width: 'min(88vw,340px)', background: '#fff', borderRadius: 20,
+          padding: '28px 24px 22px', zIndex: 401, display: 'flex', flexDirection: 'column', gap: 12,
+          boxShadow: '0 8px 40px rgba(0,0,0,0.18)', fontFamily: 'Inter, system-ui, sans-serif',
+        }}>
+          <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#0B1E3D' }}>Confirm Payment</h3>
+          <p style={{ margin: 0, fontSize: 14, color: '#5A6A7A', lineHeight: 1.6 }}>
+            Pay <strong>EGP {estimatedTotalPrice.toLocaleString()}</strong> from your wallet for this course?
+          </p>
+          {balance !== null && balance < estimatedTotalPrice && (
+            <p style={{ margin: 0, fontSize: 13, color: '#BF360C', background: '#FFF3E0', border: '1px solid #FFCCBC', borderRadius: 8, padding: '8px 12px' }}>
+              Insufficient balance (EGP {balance.toLocaleString()}). <button type="button" onClick={() => { setShowPayConfirm(false); router.push('/user/wallet'); }} style={{ background: 'none', border: 'none', color: '#00C2A8', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Top up →</button>
+            </p>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 24, marginTop: 8 }}>
+            <button onClick={() => setShowPayConfirm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: 700, color: '#9AA0A6', fontFamily: 'inherit' }}>Cancel</button>
+            <button onClick={handleConfirmPay} disabled={paying} style={{ background: 'none', border: 'none', cursor: paying ? 'not-allowed' : 'pointer', fontSize: 15, fontWeight: 700, color: paying ? '#B0BEC5' : '#0B1E3D', fontFamily: 'inherit', opacity: paying ? 0.6 : 1 }}>{paying ? 'Processing...' : 'Pay Now'}</button>
+          </div>
+        </div>
+      </>
+    )}
+
+    {/* ── Repeat Confirmation Dialog ── */}
+    {showRepeatConfirm && (
+      <>
+        <div onClick={() => setShowRepeatConfirm(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 400 }} />
+        <div style={{
+          position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
+          width: 'min(88vw,340px)', background: '#fff', borderRadius: 20,
+          padding: '28px 24px 22px', zIndex: 401, display: 'flex', flexDirection: 'column', gap: 12,
+          boxShadow: '0 8px 40px rgba(0,0,0,0.18)', fontFamily: 'Inter, system-ui, sans-serif',
+        }}>
+          <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#0B1E3D' }}>Repeat Course?</h3>
+          <p style={{ margin: 0, fontSize: 14, color: '#5A6A7A', lineHeight: 1.6 }}>
+            Create the same course starting from <strong>{getNextWeekDate(course.start_date)}</strong> (next week)?
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 24, marginTop: 8 }}>
+            <button onClick={() => setShowRepeatConfirm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: 700, color: '#9AA0A6', fontFamily: 'inherit' }}>Cancel</button>
+            <button onClick={() => { setShowRepeatConfirm(false); handleRepeat(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: 700, color: '#00C2A8', fontFamily: 'inherit' }}>Repeat</button>
+          </div>
+        </div>
+      </>
+    )}
     </>
   );
 }

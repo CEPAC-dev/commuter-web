@@ -227,6 +227,13 @@ export default function LocationPickerMap({ lat, lng, name, onChange, error }: L
         border: `1.5px solid ${error ? '#E74C3C' : '#E2E8F0'}`,
         height: 280, position: 'relative',
         boxShadow: '0 2px 12px rgba(11,30,61,0.08)',
+        cursor: `url("data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="44">'
+          + '<path d="M16 0C7.16 0 0 7.16 0 16c0 11.6 16 28 16 28S32 27.6 32 16C32 7.16 24.84 0 16 0z" fill="%2300C2A8"/>'
+          + '<circle cx="16" cy="16" r="7" fill="white"/>'
+          + '<circle cx="16" cy="16" r="4" fill="%230B1E3D"/>'
+          + '</svg>'
+        )}") 16 44, crosshair`,
       }}>
         {!isLoaded ? (
           <div style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F0EDE6', color: '#5A6A7A', fontSize: 13, gap: 8 }}>
