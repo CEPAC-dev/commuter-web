@@ -111,7 +111,21 @@
     "walk_10": "10 دقائق مشياً",
     "walk_10_desc": "~800 متر",
     "walk_save_8": "وفّر 8%",
-    "walk_save_15": "وفّر 15%"
+    "walk_save_15": "وفّر 15%",
+    "driver_signin_mobile_label": "رقم الهاتف المحمول",
+    "driver_signin_mobile_placeholder": "01xxxxxxxxx",
+    "driver_signin_mobile_error": "أدخل رقم هاتف مصري صحيح (010/011/012/015 + 8 أرقام).",
+    "driver_signin_password_error": "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
+    "driver_signin_failed": "فشل تسجيل الدخول. يرجى المحاولة مجدداً.",
+    "driver_signin_not_registered": "لم تقم بالتسجيل بعد؟",
+    "driver_signin_apply_link": "قدّم طلبك لتصبح سائقاً →",
+    "driver_signup_title": "أصبح سائقاً",
+    "driver_signup_subtitle": "انضم إلى Commuter كشريك سائق",
+    "driver_signup_have_account": "هل لديك حساب بالفعل؟",
+    "driver_signup_signin_link": "تسجيل الدخول →",
+    "driver_signup_failed": "فشل التسجيل. يرجى المحاولة مجدداً.",
+    "driver_signup_welcome": "مرحباً بك في Commuter، {name}! 🎉",
+    "driver_signin_welcome": "أهلاً وسهلاً بك، {name}! 👋"
   },
 
   "driver_signup": {

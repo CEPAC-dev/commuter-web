@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Phone, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { toast } from 'react-hot-toast';
 import PasswordInput from '@/components/shared/PasswordInput';
 import authApi, { extractToken, extractRole, extractName, extractId } from '@/lib/api/auth';
@@ -14,6 +15,7 @@ import { useRedirectIfAuth } from '@/lib/auth/useRedirectIfAuth';
 const EGYPT_PHONE = /^01[0125][0-9]{8}$/;
 
 export default function DriverSignInForm() {
+  const t = useTranslations('auth');
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get('next');
@@ -31,8 +33,8 @@ export default function DriverSignInForm() {
     let ok = true;
     setPhoneErr('');
     setPwErr('');
-    if (!EGYPT_PHONE.test(phone)) { setPhoneErr('Enter a valid Egyptian mobile number (010/011/012/015 + 8 digits).'); ok = false; }
-    if (password.length < 8) { setPwErr('Password must be at least 8 characters.'); ok = false; }
+    if (!EGYPT_PHONE.test(phone)) { setPhoneErr(t('driver_signin_mobile_error')); ok = false; }
+    if (password.length < 8) { setPwErr(t('driver_signin_password_error')); ok = false; }
     return ok;
   }
 
@@ -53,7 +55,7 @@ export default function DriverSignInForm() {
         id:   extractId(res),
       });
 
-      toast.success(`Welcome back, ${name}! 👋`);
+      toast.success(t('driver_signin_welcome', { name }));
 
       let destination: string;
       try {
@@ -72,7 +74,7 @@ export default function DriverSignInForm() {
       }
       router.replace(destination);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Sign in failed. Please try again.');
+      toast.error(err instanceof Error ? err.message : t('driver_signin_failed'));
     } finally {
       setLoading(false);
     }
@@ -83,12 +85,12 @@ export default function DriverSignInForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-      <h1 style={{ fontSize: 28, fontWeight: 700, color: '#0B1E3D', margin: '0 0 6px' }}>Driver sign in</h1>
-      <p style={{ fontSize: 14, color: '#5A6A7A', margin: '0 0 24px' }}>Enter your mobile number and password to continue</p>
+      <h1 style={{ fontSize: 28, fontWeight: 700, color: '#0B1E3D', margin: '0 0 6px' }}>{t('driver_signin_title')}</h1>
+      <p style={{ fontSize: 14, color: '#5A6A7A', margin: '0 0 24px' }}>{t('driver_signin_subtitle')}</p>
 
       {/* Mobile number */}
       <div style={{ marginBottom: 16 }}>
-        <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#0B1E3D', marginBottom: 6 }}>Mobile number</label>
+        <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#0B1E3D', marginBottom: 6 }}>{t('driver_signin_mobile_label')}</label>
         <div style={{ position: 'relative' }}>
           <Phone size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} aria-hidden />
           <input
@@ -97,7 +99,7 @@ export default function DriverSignInForm() {
             onChange={(e) => setPhone(e.target.value)}
             onFocus={() => setPhoneFocused(true)}
             onBlur={() => setPhoneFocused(false)}
-            placeholder="01xxxxxxxxx"
+            placeholder={t('driver_signin_mobile_placeholder')}
             autoComplete="tel"
             style={{
               width: '100%', height: 52,
@@ -117,14 +119,14 @@ export default function DriverSignInForm() {
       {/* Password */}
       <div style={{ marginBottom: 24 }}>
         <PasswordInput
-          label="Password"
+          label={t('auth:password_label')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Min. 8 characters"
+          placeholder={t('auth:password_placeholder')}
           error={pwErr}
           autoComplete="current-password"
           rightLabel={
-            <Link href="/forgot-password" style={{ fontSize: 13, color: '#00C2A8', textDecoration: 'none' }}>Forgot password?</Link>
+            <Link href="/forgot-password" style={{ fontSize: 13, color: '#00C2A8', textDecoration: 'none' }}>{t('auth:forgot_password')}</Link>
           }
         />
       </div>
@@ -142,12 +144,12 @@ export default function DriverSignInForm() {
         }}
       >
         {loading && <Loader2 size={16} className="spin" />}
-        Sign in
+        {t('auth:signin_btn')}
       </button>
 
       <p style={{ marginTop: 20, textAlign: 'center', fontSize: 14, color: '#5A6A7A' }}>
-        Not registered yet?{' '}
-        <Link href="/driver/sign-up" style={{ color: '#00C2A8', fontWeight: 500, textDecoration: 'none' }}>Apply to become a driver →</Link>
+        {t('driver_signin_not_registered')}{' '}
+        <Link href="/driver/sign-up" style={{ color: '#00C2A8', fontWeight: 500, textDecoration: 'none' }}>{t('driver_signin_apply_link')}</Link>
       </p>
     </form>
   );

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { toast } from 'react-hot-toast';
 import authApi, {
   extractToken, extractRole, extractName, extractId,
@@ -46,6 +47,7 @@ function StepBar({ current }: { current: 1 | 2 }) {
 }
 
 export default function DriverSignUpWizard() {
+  const t = useTranslations('auth');
   const router = useRouter();
   const { login } = useAuth();
   const [step,      setStep]      = useState<1 | 2>(1);
@@ -84,13 +86,13 @@ export default function DriverSignUpWizard() {
         login({ token, role: extractRole(result) || 'driver', name: extractName(result) || step1Data.name!.trim(), id: extractId(result) });
         const registeredUser = (result as AuthApiResponse & { user?: Record<string, unknown> }).user ?? {};
         saveUserData({ ...registeredUser, name: step1Data.name!.trim(), email: step1Data.email?.trim() ?? '', phone_number: step1Data.phone_number ?? '', whatsapp_number: step1Data.whatsapp_same_as_phone ? step1Data.phone_number : (step1Data.whatsapp_number ?? ''), gender: step1Data.gender ?? 'male', date_of_birth: step1Data.birthdate ?? '', role: 'driver' });
-        toast.success(`Welcome to Commuter, ${step1Data.name!.trim()}! 🎉`);
+        toast.success(t('driver_signup_welcome', { name: step1Data.name!.trim() }));
         router.replace('/driver/onboarding');
       } else {
         router.replace('/driver/sign-in?registered=true');
       }
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Sign up failed. Please try again.');
+      toast.error(err instanceof Error ? err.message : t('driver_signup_failed'));
     } finally {
       setLoading(false);
     }
@@ -98,14 +100,14 @@ export default function DriverSignUpWizard() {
 
   return (
     <div>
-      <h1 className="text-[28px] font-bold text-[#0B1E3D] mb-1">Become a driver</h1>
-      <p className="text-sm text-[#5A6A7A] mb-6">Join Commuter as a driver partner</p>
+      <h1 className="text-[28px] font-bold text-[#0B1E3D] mb-1">{t('driver_signup_title')}</h1>
+      <p className="text-sm text-[#5A6A7A] mb-6">{t('driver_signup_subtitle')}</p>
       <StepBar current={step} />
       {step === 1 && (<Step1Info initial={step1Data} onNext={handleStep1} emailOptional />)}
       {step === 2 && (<Step2Address initial={step2Data} loading={loading} onBack={() => setStep(1)} onSubmit={handleStep2} />)}
       <p className="mt-5 text-center text-sm text-[#5A6A7A]">
-        Already have an account?{' '}
-        <a href="/driver/sign-in" className="text-[#00C2A8] font-medium hover:underline">Sign in →</a>
+        {t('driver_signup_have_account')}{' '}
+        <a href="/driver/sign-in" className="text-[#00C2A8] font-medium hover:underline">{t('driver_signup_signin_link')}</a>
       </p>
     </div>
   );

@@ -111,7 +111,21 @@
     "walk_10": "10 min walk",
     "walk_10_desc": "~800 meters",
     "walk_save_8": "Save 8%",
-    "walk_save_15": "Save 15%"
+    "walk_save_15": "Save 15%",
+    "driver_signin_mobile_label": "Mobile number",
+    "driver_signin_mobile_placeholder": "01xxxxxxxxx",
+    "driver_signin_mobile_error": "Enter a valid Egyptian mobile number (010/011/012/015 + 8 digits).",
+    "driver_signin_password_error": "Password must be at least 8 characters",
+    "driver_signin_failed": "Sign in failed. Please try again.",
+    "driver_signin_not_registered": "Not registered yet?",
+    "driver_signin_apply_link": "Apply to become a driver →",
+    "driver_signup_title": "Become a driver",
+    "driver_signup_subtitle": "Join Commuter as a driver partner",
+    "driver_signup_have_account": "Already have an account?",
+    "driver_signup_signin_link": "Sign in →",
+    "driver_signup_failed": "Sign up failed. Please try again.",
+    "driver_signup_welcome": "Welcome to Commuter, {name}! 🎉",
+    "driver_signin_welcome": "Welcome back, {name}! 👋"
   },
 
   "driver_signup": {
