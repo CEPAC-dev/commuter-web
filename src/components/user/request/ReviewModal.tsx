@@ -273,7 +273,16 @@ export default function ReviewModal({
                   type="button"
                   disabled={adjMax <= priceMax}
                   onClick={() => { const v = Math.max(priceMax, adjMax - 1); setAdjMax(v); setRawMax(String(v)); }}
-                  style={{ width: 48, height: 48, background: 'none', border: 'none', borderRight: '1px solid #E2E8F0', cursor: adjMax <= priceMax ? 'not-allowed' : 'pointer', fontSize: 22, color: adjMax <= priceMax ? '#D1D5DB' : '#94A3B8', fontWeight: 500, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: adjMax <= priceMax ? 0.4 : 1 }}
+                  style={{
+                    width: 48, height: 48, border: 'none', borderRight: '1px solid #E2E8F0',
+                    flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 22, fontWeight: 700,
+                    background: adjMax > priceMax ? '#00C2A8' : 'none',
+                    color: adjMax > priceMax ? '#fff' : '#D1D5DB',
+                    cursor: adjMax <= priceMax ? 'not-allowed' : 'pointer',
+                    opacity: adjMax <= priceMax ? 0.4 : 1,
+                    transition: 'background 0.2s, color 0.2s',
+                  }}
                 >−</button>
                 <input
                   type="text"
