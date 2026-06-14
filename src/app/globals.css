@@ -94,6 +94,20 @@ html[dir="rtl"] th {
   border-bottom: 1px solid rgba(255,255,255,0.3) !important;
 }
 
+/* ── Keep navbar LTR even in RTL mode ──────────────────── */
+html[dir="rtl"] .navbar-glass,
+html[dir="rtl"] nav,
+html[dir="rtl"] [class*="Navbar"],
+html[dir="rtl"] [class*="navbar"] {
+  direction: ltr;
+  text-align: left;
+}
+
+html[dir="rtl"] nav * {
+  direction: ltr;
+  text-align: left;
+}
+
 /* ── Nearby commuters chip animation ───────────────────── */
 @keyframes slideInLeft {
   from { transform: translateX(-120%); opacity: 0; }
