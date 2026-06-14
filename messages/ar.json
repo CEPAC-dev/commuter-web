@@ -1248,7 +1248,21 @@
     "private_passengers": "رحلة خاصة · {count} ركاب",
     "submit": "إرسال الطلب ✓",
     "submitting": "جارٍ الإرسال…",
-    "confirm_submit": "تأكيد وإرسال ✓"
+    "confirm_submit": "تأكيد وإرسال ✓",
+    "ride_details": "تفاصيل الرحلة",
+    "type_label": "النوع",
+    "outbound_label": "ذهاب ↗",
+    "route_label": "المسار",
+    "return_label": "عودة ↩",
+    "same_as_outbound": "نفس مسار الذهاب (معكوس)",
+    "pickup_label": "الركوب",
+    "arrival_label": "الوصول",
+    "cycle_section": "الدورة",
+    "starts_label": "تبدأ في",
+    "estimated_price_section": "السعر التقديري",
+    "price_label": "السعر التقديري (جنيه / أسبوع)",
+    "price_final_note": "يُحدَّد السعر النهائي بعد التطابق",
+    "edit_btn": "تعديل →"
   },
 
   "request_summary_card": {
@@ -1284,6 +1298,7 @@
 
   "seat_layout": {
     "hint": "انقر على مقعد لتعيين كل راكب. مقعد السائق غير قابل للاختيار.",
+    "select_passenger_hint": "اختر الآن أحد الركاب من القائمة أدناه لتعيينه في هذا المقعد.",
     "driver": "السائق",
     "front": "أمامي",
     "back_left": "خلفي أيسر",

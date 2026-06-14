@@ -100,7 +100,7 @@ const defaultState: WizardState = {
   group_action:     null,
   group_code:       null,
   passenger_count:  1,
-  include_self:     false,
+  include_self:     true,
   selected_passenger_ids: [],
   origin:           null,
   stops:            [],

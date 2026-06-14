@@ -97,7 +97,7 @@ export default function MyRequestsPage() {
   ];
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto', fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div style={{ maxWidth: 640, margin: '0 auto' }}>
 
       {/* Header */}
       <div style={{ marginBottom: 16 }}>

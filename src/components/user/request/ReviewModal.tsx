@@ -129,8 +129,8 @@ export default function ReviewModal({
         <div className="px-5 py-4">
 
           {/* Ride details */}
-          <ReviewSection title="Ride details">
-            <ReviewRow label="Type" value={rideLabel} />
+          <ReviewSection title={trm('ride_details')}>
+            <ReviewRow label={trm('type_label')} value={rideLabel} />
             <ReviewRow label={trs('seat')} value={seatLabel} />
           </ReviewSection>
 
@@ -161,7 +161,7 @@ export default function ReviewModal({
                   {/* Outbound route */}
                   <div className="mb-2">
                     <p className="text-[10px] font-semibold text-[#00C2A8] uppercase tracking-wide mb-1">
-                      {slot.trip_type === 'round_trip' ? '↗ Outbound' : 'Route'}
+                      {slot.trip_type === 'round_trip' ? trm('outbound_label') : trm('route_label')}
                     </p>
                     <div className="flex items-start gap-2 mb-1">
                       <div className="mt-0.5 flex flex-col items-center flex-shrink-0" style={{ gap: 2 }}>
@@ -185,15 +185,15 @@ export default function ReviewModal({
                       </p>
                     )}
                     <div className="mt-1.5 text-xs text-[#5A6A7A] space-y-0.5">
-                      <p>Pickup: {formatTime12h(slot.pickup_from)} – {formatTime12h(slot.pickup_to)}</p>
-                      <p>Arrival: {formatTime12h(slot.arrival_from)} – {formatTime12h(slot.arrival_to)}</p>
+                      <p>{trm('pickup_label')}: {formatTime12h(slot.pickup_from)} – {formatTime12h(slot.pickup_to)}</p>
+                      <p>{trm('arrival_label')}: {formatTime12h(slot.arrival_from)} – {formatTime12h(slot.arrival_to)}</p>
                     </div>
                   </div>
 
                   {/* Return route */}
                   {slot.trip_type === 'round_trip' && (
                     <div className="mt-2 pt-2 border-t border-[#E2E8F0]">
-                      <p className="text-[10px] font-semibold text-[#00C2A8] uppercase tracking-wide mb-1">↩ Return</p>
+                      <p className="text-[10px] font-semibold text-[#00C2A8] uppercase tracking-wide mb-1">{trm('return_label')}</p>
                       {returnOrigin && returnDestination ? (
                         <>
                           <div className="flex items-start gap-2 mb-1">
@@ -213,13 +213,13 @@ export default function ReviewModal({
                           )}
                         </>
                       ) : (
-                        <p className="text-xs text-[#9AA0A6] italic">Same as outbound (reversed)</p>
+                        <p className="text-xs text-[#9AA0A6] italic">{trm('same_as_outbound')}</p>
                       )}
                       {slot.return_pickup_from && (
                         <div className="mt-1.5 text-xs text-[#5A6A7A] space-y-0.5">
-                          <p>Pickup: {formatTime12h(slot.return_pickup_from)} – {formatTime12h(slot.return_pickup_to ?? '')}</p>
+                          <p>{trm('pickup_label')}: {formatTime12h(slot.return_pickup_from)} – {formatTime12h(slot.return_pickup_to ?? '')}</p>
                           {slot.return_arrival_from && (
-                            <p>Arrival: {formatTime12h(slot.return_arrival_from)} – {formatTime12h(slot.return_arrival_to ?? '')}</p>
+                            <p>{trm('arrival_label')}: {formatTime12h(slot.return_arrival_from)} – {formatTime12h(slot.return_arrival_to ?? '')}</p>
                           )}
                         </div>
                       )}
@@ -243,12 +243,12 @@ export default function ReviewModal({
           </ReviewSection>
 
           {/* Cycle */}
-          <ReviewSection title="Cycle">
-            <ReviewRow label="Starts" value={cycleStartDate} />
+          <ReviewSection title={trm('cycle_section')}>
+            <ReviewRow label={trm('starts_label')} value={cycleStartDate} />
           </ReviewSection>
 
           {/* Cost */}
-          <ReviewSection title="Estimated price">
+          <ReviewSection title={trm('estimated_price_section')}>
             {/* Live price display */}
             <div style={{
               background: '#0B1E3D', borderRadius: 14, padding: '18px 20px 14px',
@@ -256,23 +256,24 @@ export default function ReviewModal({
             }}>
               <div style={{ position: 'absolute', top: -28, right: -18, width: 90, height: 90, borderRadius: '50%', background: '#00C2A8', opacity: 0.08, pointerEvents: 'none' }} />
               <div style={{ position: 'absolute', bottom: -20, right: 60, width: 60, height: 60, borderRadius: '50%', background: '#00C2A8', opacity: 0.05, pointerEvents: 'none' }} />
-              <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>💰 Estimated price</p>
+              <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>💰 {trm('estimated_price_section')}</p>
               <p style={{ fontSize: 24, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px', lineHeight: 1 }}>
                 EGP {adjMax}
               </p>
               <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 6 }}>
-                Final price confirmed after match
+                {trm('price_final_note')}
               </p>
             </div>
 
             {/* Stepper controls */}
             <div style={{ minWidth: 0 }}>
-              <p style={{ fontSize: 10, fontWeight: 700, color: '#9AA0A6', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 5 }}>Estimated price (EGP / week)</p>
+              <p style={{ fontSize: 10, fontWeight: 700, color: '#9AA0A6', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 5 }}>{trm('price_label')}</p>
               <div style={{ display: 'flex', borderRadius: 10, border: '1.5px solid #E2E8F0', overflow: 'hidden', background: '#FAFAFA' }}>
                 <button
                   type="button"
+                  disabled={adjMax <= priceMax}
                   onClick={() => { const v = Math.max(priceMax, adjMax - 1); setAdjMax(v); setRawMax(String(v)); }}
-                  style={{ width: 48, height: 48, background: 'none', border: 'none', borderRight: '1px solid #E2E8F0', cursor: 'pointer', fontSize: 22, color: '#94A3B8', fontWeight: 500, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  style={{ width: 48, height: 48, background: 'none', border: 'none', borderRight: '1px solid #E2E8F0', cursor: adjMax <= priceMax ? 'not-allowed' : 'pointer', fontSize: 22, color: adjMax <= priceMax ? '#D1D5DB' : '#94A3B8', fontWeight: 500, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: adjMax <= priceMax ? 0.4 : 1 }}
                 >−</button>
                 <input
                   type="text"
@@ -298,7 +299,7 @@ export default function ReviewModal({
             onClick={onClose}
             style={{ flex: 1, height: 46, background: '#F1F3F4', border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 600, color: '#5A6A7A', cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            ← Edit
+            {trm('edit_btn')}
           </button>
           <button
             onClick={() => onSubmit(adjMax)}

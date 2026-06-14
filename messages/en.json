@@ -1249,7 +1249,21 @@
     "private_passengers": "Private ride · {count} passengers",
     "submit": "Submit request ✓",
     "submitting": "Submitting…",
-    "confirm_submit": "Confirm & Submit ✓"
+    "confirm_submit": "Confirm & Submit ✓",
+    "ride_details": "Ride details",
+    "type_label": "Type",
+    "outbound_label": "↗ Outbound",
+    "route_label": "Route",
+    "return_label": "↩ Return",
+    "same_as_outbound": "Same as outbound (reversed)",
+    "pickup_label": "Pickup",
+    "arrival_label": "Arrival",
+    "cycle_section": "Cycle",
+    "starts_label": "Starts",
+    "estimated_price_section": "Estimated price",
+    "price_label": "Estimated price (EGP / week)",
+    "price_final_note": "Final price confirmed after match",
+    "edit_btn": "← Edit"
   },
 
   "request_summary_card": {
@@ -1285,6 +1299,7 @@
 
   "seat_layout": {
     "hint": "Tap a seat to assign each passenger. Driver seat is not selectable.",
+    "select_passenger_hint": "Now select a passenger from the list below to assign them to this seat.",
     "driver": "Driver",
     "front": "Front",
     "back_left": "Back left",

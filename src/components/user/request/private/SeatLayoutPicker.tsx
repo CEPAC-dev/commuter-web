@@ -129,6 +129,8 @@ export default function SeatLayoutPicker({ passengers, assignments, onChange }: 
             </button>
           </div>
 
+          <p className="text-xs text-[#5A6A7A] mb-2">{t('select_passenger_hint')}</p>
+
           <div className="flex flex-wrap gap-2">
             {assignedKeyForSeat(activeSeat) && (
               <button
