@@ -39,10 +39,36 @@ body {
 /* Font for Arabic (RTL) */
 html[dir="rtl"] {
   font-family: var(--font-ar);
+  direction: rtl;
 }
 
 html[dir="rtl"] body {
   font-family: var(--font-ar);
+  direction: rtl;
+  text-align: right;
+}
+
+/* Ensure all text elements align right in RTL */
+html[dir="rtl"] * {
+  direction: rtl;
+}
+
+html[dir="rtl"] p,
+html[dir="rtl"] h1,
+html[dir="rtl"] h2,
+html[dir="rtl"] h3,
+html[dir="rtl"] h4,
+html[dir="rtl"] h5,
+html[dir="rtl"] h6,
+html[dir="rtl"] span,
+html[dir="rtl"] div,
+html[dir="rtl"] label,
+html[dir="rtl"] button,
+html[dir="rtl"] a,
+html[dir="rtl"] li,
+html[dir="rtl"] td,
+html[dir="rtl"] th {
+  text-align: right;
 }
 
 /* ── Map page ───────────────────────────────────────────── */
@@ -100,6 +126,16 @@ html[dir="rtl"] body {
   100% { transform: scale(1); }
 }
 .seat-pop { animation: seatPop 0.2s ease-out; }
+
+/* ── RTL Flexbox Support ────────────────────────────────── */
+html[dir="rtl"] .flex-row {
+  flex-direction: row-reverse;
+}
+
+html[dir="rtl"] .flex-row-reverse {
+  flex-direction: row;
+}
+
 /* ── Auth split layout — responsive ─────────────────────── */
 .auth-left-panel { display: flex; }
 .auth-mobile-bar  { display: none; }
@@ -121,6 +157,19 @@ html[dir="rtl"] body {
 .auth-form-scroll {
   padding: 48px 24px 72px;
 }
+
+/* ── RTL Margin & Padding Utilities ─────────────────────── */
+/* For LTR elements within RTL pages (e.g., icons, numbers) */
+html[dir="rtl"] .ltr {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Swap left/right in RTL */
+html[dir="rtl"] .ml-4 { margin-right: 1rem; margin-left: auto; }
+html[dir="rtl"] .mr-4 { margin-left: 1rem; margin-right: auto; }
+html[dir="rtl"] .pl-4 { padding-right: 1rem; padding-left: 0; }
+html[dir="rtl"] .pr-4 { padding-left: 1rem; padding-right: 0; }
 
 @media (max-width: 1023px) {
   .auth-left-panel { display: none !important; }
