@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Mail, ArrowLeft, CheckCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import toast from 'react-hot-toast';
 import Step3Otp from '@/components/auth/user/steps/Step3Otp';
 import PasswordInput from '@/components/shared/PasswordInput';
@@ -12,6 +13,7 @@ import { forgotPassword, verifyForgotOtp, resetPassword } from '@/lib/api/auth';
 type Step = 'email' | 'otp' | 'newpass' | 'done';
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations('common');
   const router = useRouter();
   const [step, setStep] = useState<Step>('email');
 
@@ -112,7 +114,7 @@ export default function ForgotPasswordPage() {
   if (step === 'email') return card(
     <>
       <Link href="/sign-in" className="flex items-center gap-1.5 text-text-muted hover:text-primary text-sm mb-6 transition-colors w-fit">
-        <ArrowLeft size={14} /> Back to sign in
+        <ArrowLeft size={14} /> {t('back_to_signin')}
       </Link>
 
       <div className="flex items-center gap-2 mb-1">

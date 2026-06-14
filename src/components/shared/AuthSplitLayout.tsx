@@ -1,6 +1,7 @@
 'use client';
 
 import { ArrowLeft } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface AuthSplitLayoutProps {
   leftContent: React.ReactNode;
@@ -28,6 +29,7 @@ function Logo() {
 }
 
 function BackLink() {
+  const t = useTranslations('common');
   return (
     <a
       href="/"
@@ -39,7 +41,7 @@ function BackLink() {
       }}
     >
       <ArrowLeft size={13} />
-      Back to home
+      {t('back_to_home')}
     </a>
   );
 }
