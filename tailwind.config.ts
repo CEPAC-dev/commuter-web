@@ -8,6 +8,10 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        en: ["'Poppins'", "system-ui", "-apple-system", "sans-serif"],
+        ar: ["'Cairo'", "system-ui", "-apple-system", "sans-serif"],
+      },
       colors: {
         primary: {
           DEFAULT: "#0B1E3D",

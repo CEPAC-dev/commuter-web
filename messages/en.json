@@ -1097,7 +1097,7 @@
     "share_friends": "Share with friends · expires after 48 hours",
     "copied": "✓ Copied",
     "copy": "📋 Copy",
-    "add_slot": "Add at least one time slot",
+    "add_slot": "Add another time slot",
     "set_route": "Set a route for Time slot {n}",
     "schedule_title": "Schedule your ride",
     "private": "Private",
@@ -1484,7 +1484,7 @@
   },
 
   "request_form_errors": {
-    "add_slot": "Add at least one time slot",
+    "add_slot": "Add another time slot",
     "no_days": "Time slot {n} has no days assigned",
     "pickup_min": "Pickup window must be at least 30 minutes",
     "pickup_max": "Pickup window cannot exceed 2 hours",
