@@ -9,11 +9,19 @@ import { useTranslations } from 'next-intl';
 // ── Status config ─────────────────────────────────────────────────────────────
 
 const STATUS_STYLE: Record<CourseStatus, { bg: string; color: string; border: string }> = {
-  draft:           { bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
-  active:          { bg: '#E8F5E9', color: '#27AE60', border: '#A8D5B5' },
-  completed:       { bg: '#F1F3F4', color: '#5A6A7A', border: '#E2E8F0' },
-  cancelled:       { bg: '#FFEBEE', color: '#E74C3C', border: '#FFCDD2' },
-  pending_payment: { bg: '#FFF3CD', color: '#856404', border: '#FFDA6A' },
+  draft:              { bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
+  pending_payment:    { bg: '#FFF3CD', color: '#856404', border: '#FFDA6A' },
+  matching:           { bg: '#E3F2FD', color: '#1976D2', border: '#90CAF9' },
+  matching_failed:    { bg: '#FFEBEE', color: '#E74C3C', border: '#FFCDD2' },
+  partially_matched:  { bg: '#FCE4EC', color: '#C2185B', border: '#F8BBD0' },
+  matched:            { bg: '#F3E5F5', color: '#7B1FA2', border: '#E1BEE7' },
+  payment_required:   { bg: '#FFF3CD', color: '#856404', border: '#FFDA6A' },
+  active:             { bg: '#E8F5E9', color: '#27AE60', border: '#A8D5B5' },
+  completed:          { bg: '#F1F3F4', color: '#5A6A7A', border: '#E2E8F0' },
+  cancelled:          { bg: '#FFEBEE', color: '#E74C3C', border: '#FFCDD2' },
+  pending:            { bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
+  ongoing:            { bg: '#E8F5E9', color: '#27AE60', border: '#A8D5B5' },
+  confirmed:          { bg: '#E8F5E9', color: '#27AE60', border: '#A8D5B5' },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -41,11 +49,12 @@ function getNextWeekDate(dateStr: string): string {
 
 interface Props {
   course: ApiCourse;
+  balance?: number;
   onPaid?: () => void;
   onRepeatSuccess?: () => void;
 }
 
-export default function CourseCard({ course, onPaid, onRepeatSuccess }: Props) {
+export default function CourseCard({ course, balance, onPaid: _onPaid, onRepeatSuccess }: Props) {
   const t = useTranslations('course_card');
   const tc = useTranslations('common');
   const router = useRouter();
@@ -59,7 +68,10 @@ export default function CourseCard({ course, onPaid, onRepeatSuccess }: Props) {
 
   const style = STATUS_STYLE[course.status] ?? STATUS_STYLE.draft;
   // Avoid showing raw translation key for unknown statuses
-  const knownStatuses: CourseStatus[] = ['draft', 'active', 'completed', 'cancelled', 'pending_payment'];
+  const knownStatuses: CourseStatus[] = [
+    'draft', 'pending_payment', 'matching', 'matching_failed', 'partially_matched',
+    'matched', 'payment_required', 'active', 'completed', 'cancelled', 'pending', 'ongoing', 'confirmed'
+  ];
   const statusLabel = knownStatuses.includes(course.status)
     ? t(`status_${course.status}` as 'status_draft')
     : course.status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -85,9 +97,8 @@ export default function CourseCard({ course, onPaid, onRepeatSuccess }: Props) {
         setPaying(false);
         return;
       }
-      // no payment URL → treat as already paid, refresh
-      setShowPayConfirm(false);
-      onPaid?.();
+      // No payment URL returned — show error, do not auto-pay
+      setPayError(t('payment_failed'));
       setPaying(false);
     } catch (e) {
       setPayError(e instanceof Error ? e.message : t('payment_failed'));
@@ -120,8 +131,10 @@ export default function CourseCard({ course, onPaid, onRepeatSuccess }: Props) {
 
   const estimatedTotalPrice = Math.round(parseFloat(course.estimated_total_price));
 
-  // Show pay button whenever wallet is waiting (any status)
-  const needsPayment = course.wallet_status === 'waiting';
+  // Show balance warning for pending_payment
+  const showBalanceWarning = course.status === 'pending_payment';
+  // Show confirm pay button for payment_required
+  const showConfirmPay = course.status === 'payment_required';
 
   return (
     <>
@@ -290,8 +303,37 @@ export default function CourseCard({ course, onPaid, onRepeatSuccess }: Props) {
         </div>
       )}
 
-      {/* ── Confirm payment CTA (wallet_status === 'waiting') ── */}
-      {needsPayment && (
+      {/* ── Balance warning for pending_payment ── */}
+      {showBalanceWarning && (
+        <div style={{ padding: '0 16px 16px' }}>
+          {/* Balance row */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, fontSize: 13, color: '#5A6A7A' }}>
+            <span>Wallet balance</span>
+            <span style={{ fontWeight: 700, color: '#0B1E3D' }}>EGP {balance !== undefined ? balance.toLocaleString() : '…'}</span>
+          </div>
+          {/* Cost row */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 12, borderBottom: '1px solid #F1F3F4', marginBottom: 12, fontSize: 13, color: '#5A6A7A' }}>
+            <span>Trip cost</span>
+            <span style={{ fontWeight: 700, color: '#0B1E3D' }}>EGP {estimatedTotalPrice.toLocaleString()}</span>
+          </div>
+          {/* Top-up needed message */}
+          {balance !== undefined && balance < estimatedTotalPrice && (
+            <div style={{ background: '#FFF3E0', border: '1px solid #FFCCBC', borderRadius: 10, padding: '10px 12px', marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 12, color: '#BF360C', fontWeight: 600 }}>You should top up EGP {(estimatedTotalPrice - balance).toLocaleString()}</span>
+              <button
+                type="button"
+                onClick={() => router.push('/user/wallet')}
+                style={{ fontSize: 12, fontWeight: 700, color: '#00C2A8', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                Top up →
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Confirm payment for payment_required ── */}
+      {showConfirmPay && (
         <div style={{ padding: '0 16px 16px' }}>
           {payError && (
             <p style={{ margin: '0 0 8px', fontSize: 12, color: '#E74C3C', textAlign: 'center' }}>

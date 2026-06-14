@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 interface AuthSplitLayoutProps {
@@ -11,7 +10,10 @@ interface AuthSplitLayoutProps {
 
 function Logo() {
   return (
-    <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+    <a
+      href="/"
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
+    >
       <div style={{
         width: 32, height: 32, borderRadius: 8,
         background: '#00C2A8',
@@ -21,21 +23,24 @@ function Logo() {
         <span style={{ color: '#0B1E3D', fontWeight: 900, fontSize: 14, lineHeight: 1 }}>C</span>
       </div>
       <span style={{ color: '#ffffff', fontWeight: 700, fontSize: 18, letterSpacing: '0.02em' }}>commuter</span>
-    </Link>
+    </a>
   );
 }
 
 function BackLink() {
   return (
-    <Link href="/" style={{
-      display: 'inline-flex', alignItems: 'center', gap: 5,
-      color: 'rgba(255,255,255,0.45)',
-      fontSize: 13, textDecoration: 'none',
-      marginTop: 10,
-    }}>
+    <a
+      href="/"
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 5,
+        color: 'rgba(255,255,255,0.45)',
+        fontSize: 13, textDecoration: 'none',
+        marginTop: 10,
+      }}
+    >
       <ArrowLeft size={13} />
       Back to home
-    </Link>
+    </a>
   );
 }
 

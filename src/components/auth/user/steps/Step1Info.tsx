@@ -22,6 +22,7 @@ export interface Step1Data {
 interface Step1Props {
   initial: Partial<Step1Data>;
   onNext:  (data: Step1Data) => void;
+  emailOptional?: boolean;
 }
 
 const NAME_RE     = /^[^\d]{3,}$/;
@@ -46,7 +47,7 @@ function iconFieldCls(err?: string) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function Step1Info({ initial, onNext }: Step1Props) {
+export default function Step1Info({ initial, onNext, emailOptional }: Step1Props) {
   const t = useTranslations('signup_step1');
   const [form, setForm] = useState<Step1Data>({
     name:                   initial.name                   ?? '',
@@ -82,7 +83,9 @@ export default function Step1Info({ initial, onNext }: Step1Props) {
       e.name = t('name_error');
     if (!form.birthdate)
       e.birthdate = t('dob_error');
-    if (!EMAIL_RE.test(form.email))
+    if (!emailOptional && !EMAIL_RE.test(form.email))
+      e.email = t('email_error');
+    if (emailOptional && form.email && !EMAIL_RE.test(form.email))
       e.email = t('email_error');
     if (!EGYPT_PHONE.test(form.phone_number))
       e.phone_number = t('mobile_error');
@@ -121,6 +124,7 @@ export default function Step1Info({ initial, onNext }: Step1Props) {
       <div>
         <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">{t('dob_label')}</label>
         <AgeGateInput
+          value={form.birthdate}
           onChange={(val) => setForm((f) => ({ ...f, birthdate: val }))}
           error={errors.birthdate}
         />
@@ -151,7 +155,10 @@ export default function Step1Info({ initial, onNext }: Step1Props) {
 
       {/* Email */}
       <div>
-        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">{t('email_label')}</label>
+        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">
+          {t('email_label')}
+          {emailOptional && <span className="text-[#9CA3AF] font-normal ml-1">(optional)</span>}
+        </label>
         <div className="relative">
           <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9CA3AF] pointer-events-none" aria-hidden />
           <input

@@ -158,7 +158,7 @@ export default function MyRequestsPage() {
             description={t('empty_active_desc')}
           />
         ) : (
-          displayed.map(c => <CourseCard key={c.id} course={c} onPaid={loadData} />)
+          displayed.map(c => <CourseCard key={c.id} course={c} balance={balance} onPaid={loadData} />)
         )}
       </div>
     </div>

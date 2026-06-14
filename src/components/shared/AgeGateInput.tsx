@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { CheckCircle } from 'lucide-react';
 
 interface AgeGateInputProps {
+  value: string; // ISO "YYYY-MM-DD" or ""
   onChange: (dateString: string) => void; // "YYYY-MM-DD" or "" if invalid
   error?: string;
 }
@@ -21,10 +22,12 @@ function daysInMonth(month: number, year: number): number {
   return new Date(year, month, 0).getDate();
 }
 
-export default function AgeGateInput({ onChange, error }: AgeGateInputProps) {
-  const [day, setDay]     = useState('');
-  const [month, setMonth] = useState('');
-  const [year, setYear]   = useState('');
+export default function AgeGateInput({ value, onChange, error }: AgeGateInputProps) {
+  // Parse initial value (format: YYYY-MM-DD)
+  const parts = value ? value.split('-') : ['', '', ''];
+  const [day, setDay]     = useState(parts[2] ?? '');
+  const [month, setMonth] = useState(parts[1] ?? '');
+  const [year, setYear]   = useState(parts[0] ?? '');
   const [ageError, setAgeError] = useState('');
   const [valid, setValid] = useState(false);
 

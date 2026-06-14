@@ -7,7 +7,8 @@ import {
   getFavouritePlaces, createFavouritePlace, deleteFavouritePlace,
   type FavouritePlace,
 } from '@/lib/api/savedLocations';
-import { reverseGeocode } from '@/lib/nominatim';
+import { reverseGeocode, searchAddress, getPlaceDetails, formatDisplayName } from '@/lib/nominatim';
+import { MAP_STYLE } from '@/lib/googleMapsStyle';
 import { useTranslations } from 'next-intl';
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
@@ -39,13 +40,47 @@ function LocationPickerMap({ initial, onConfirm, onClose }: MapPickerProps) {
   const tc = useTranslations('common');
   const ts = useTranslations('saved_locations');
   const { isLoaded } = useJsApiLoader({ id: 'google-map-script', googleMapsApiKey: API_KEY });
-  const mapRef    = useRef<google.maps.Map | null>(null);
-  const [marker,  setMarker]  = useState<{ lat: number; lng: number } | null>(initial ?? null);
-  const [address, setAddress] = useState('');
+  const mapRef      = useRef<google.maps.Map | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [marker,    setMarker]    = useState<{ lat: number; lng: number } | null>(initial ?? null);
+  const [address,   setAddress]   = useState('');
   const [resolving, setResolving] = useState(false);
   const [outOfBounds, setOutOfBounds] = useState(false);
+  const [query,     setQuery]     = useState('');
+  const [results,   setResults]   = useState<{ place_id: string; display_name: string }[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showDrop,  setShowDrop]  = useState(false);
 
   const onLoad = useCallback((map: google.maps.Map) => { mapRef.current = map; }, []);
+
+  function handleSearchInput(value: string) {
+    setQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!value || value.length < 2) { setResults([]); setShowDrop(false); return; }
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      const r = await searchAddress(value);
+      setResults(r);
+      setShowDrop(r.length > 0);
+      setSearching(false);
+    }, 380);
+  }
+
+  async function pickSearchResult(placeId: string, displayName: string) {
+    setShowDrop(false);
+    setResults([]);
+    const formatted = formatDisplayName(displayName);
+    setQuery(formatted);
+    try {
+      const { lat: newLat, lng: newLng } = await getPlaceDetails(placeId);
+      if (!isInCairo(newLat, newLng)) { setOutOfBounds(true); return; }
+      setOutOfBounds(false);
+      setMarker({ lat: newLat, lng: newLng });
+      setAddress(formatted);
+      mapRef.current?.panTo({ lat: newLat, lng: newLng });
+      mapRef.current?.setZoom(15);
+    } catch { /* coords unavailable */ }
+  }
 
   async function handleMapClick(e: google.maps.MapMouseEvent) {
     const lat = e.latLng?.lat();
@@ -55,15 +90,25 @@ function LocationPickerMap({ initial, onConfirm, onClose }: MapPickerProps) {
     setOutOfBounds(false);
     setMarker({ lat, lng });
     setResolving(true);
+    setShowDrop(false);
     try {
       const addr = await reverseGeocode(lat, lng);
       setAddress(addr);
+      setQuery(formatDisplayName(addr));
     } catch {
       setAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
     } finally {
       setResolving(false);
     }
   }
+
+  const PIN_CURSOR = `url("data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="44">'
+    + '<path d="M16 0C7.16 0 0 7.16 0 16c0 11.6 16 28 16 28S32 27.6 32 16C32 7.16 24.84 0 16 0z" fill="%2300C2A8"/>'
+    + '<circle cx="16" cy="16" r="7" fill="white"/>'
+    + '<circle cx="16" cy="16" r="4" fill="%230B1E3D"/>'
+    + '</svg>'
+  )}") 16 44, crosshair`;
 
   const pinIcon = typeof window !== 'undefined' && isLoaded
     ? {
@@ -82,90 +127,118 @@ function LocationPickerMap({ initial, onConfirm, onClose }: MapPickerProps) {
   return (
     <div className="fixed inset-0 z-[900] flex flex-col bg-white" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-[#E2E8F0] flex-shrink-0 bg-white">
-        <button
-          onClick={onClose}
-          className="text-sm text-[#5A6A7A] hover:text-[#0B1E3D]"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-        >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid #E2E8F0', background: '#fff', flexShrink: 0 }}>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, color: '#5A6A7A' }}>
           ← {tc('back')}
         </button>
-        <h2 className="text-sm font-semibold text-[#0B1E3D] flex-1">{ts('open_map')}</h2>
+        <h2 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#0B1E3D', flex: 1 }}>{ts('open_map')}</h2>
+      </div>
+
+      {/* Search bar */}
+      <div style={{ position: 'relative', padding: '10px 12px', background: '#fff', borderBottom: '1px solid #E2E8F0', flexShrink: 0, zIndex: 50 }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          background: '#F8F9FA', border: '1.5px solid #D1D5DB',
+          borderRadius: 12, padding: '0 12px', height: 44,
+        }}>
+          {searching
+            ? <span style={{ width: 16, height: 16, border: '2px solid #00C2A8', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'fsb-spin 0.7s linear infinite', flexShrink: 0 }} />
+            : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          }
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => handleSearchInput(e.target.value)}
+            onFocus={() => { if (results.length > 0) setShowDrop(true); }}
+            placeholder="Search for a place…"
+            autoComplete="off"
+            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: '#0B1E3D', fontFamily: 'inherit' }}
+          />
+          {query && (
+            <button type="button" onClick={() => { setQuery(''); setResults([]); setShowDrop(false); }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: '#9CA3AF', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          )}
+        </div>
+        {showDrop && results.length > 0 && (
+          <div style={{
+            position: 'absolute', top: '100%', left: 12, right: 12, zIndex: 200,
+            background: '#fff', border: '1.5px solid #E2E8F0', borderRadius: 12,
+            marginTop: 4, boxShadow: '0 8px 24px rgba(11,30,61,0.12)',
+            overflow: 'hidden', maxHeight: 260, overflowY: 'auto',
+          }}>
+            {results.map((r) => (
+              <button key={r.place_id} type="button"
+                onMouseDown={() => pickSearchResult(r.place_id, r.display_name)}
+                style={{ width: '100%', padding: '10px 14px', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid #F1F5F9', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'inherit' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#F8F9FA'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00C2A8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span style={{ fontSize: 13, color: '#0B1E3D', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {formatDisplayName(r.display_name)}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Map */}
-      <div className="flex-1 relative" style={{ cursor: `url("data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="44">'
-        + '<path d="M16 0C7.16 0 0 7.16 0 16c0 11.6 16 28 16 28S32 27.6 32 16C32 7.16 24.84 0 16 0z" fill="%2300C2A8"/>'
-        + '<circle cx="16" cy="16" r="7" fill="white"/>'
-        + '<circle cx="16" cy="16" r="4" fill="%230B1E3D"/>'
-        + '</svg>'
-      )}") 16 44, crosshair` }}>
+      <div className="flex-1 relative" style={{ cursor: PIN_CURSOR }}>
+        <style>{`.saved-loc-map div, .saved-loc-map canvas { cursor: inherit !important; }`}</style>
         {!isLoaded ? (
           <div className="absolute inset-0 flex items-center justify-center text-sm text-[#5A6A7A]">{tc('loading')}</div>
         ) : (
           <GoogleMap
+            mapContainerClassName="saved-loc-map"
             mapContainerStyle={{ width: '100%', height: '100%' }}
             center={marker ?? initial ?? CAIRO}
             zoom={marker ? 15 : 12}
             options={{
+              styles: MAP_STYLE,
               disableDefaultUI: true,
               zoomControl: true,
               clickableIcons: false,
-              restriction: {
-                latLngBounds: CAIRO_BOUNDS,
-                strictBounds: false,
-              },
+              restriction: { latLngBounds: CAIRO_BOUNDS, strictBounds: false },
               minZoom: 9,
             }}
             onLoad={onLoad}
             onClick={handleMapClick}
           >
-            {marker && (
-              <Marker position={marker} icon={pinIcon} />
-            )}
+            {marker && <Marker position={marker} icon={pinIcon} />}
           </GoogleMap>
         )}
-
-        {/* Out-of-bounds warning */}
         {outOfBounds && (
-          <div style={{
-            position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
-            background: 'rgba(231,76,60,0.92)', color: '#fff',
-            fontSize: 12, fontWeight: 600, padding: '7px 16px',
-            borderRadius: 20, whiteSpace: 'nowrap', pointerEvents: 'none',
-            backdropFilter: 'blur(4px)', zIndex: 20,
-          }}>
+          <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', background: 'rgba(231,76,60,0.92)', color: '#fff', fontSize: 12, fontWeight: 600, padding: '7px 16px', borderRadius: 20, whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 20 }}>
             Only locations within Greater Cairo are allowed
           </div>
         )}
-
-        {/* Hint overlay */}
         {!marker && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-[#0B1E3D]/90 text-white text-xs font-medium px-4 py-2.5 rounded-full pointer-events-none">
+          <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', background: 'rgba(11,30,61,0.9)', color: '#fff', fontSize: 12, fontWeight: 500, padding: '8px 16px', borderRadius: 20, whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 10 }}>
             Tap anywhere on the map
           </div>
         )}
       </div>
 
       {/* Bottom bar */}
-      <div className="flex-shrink-0 px-4 py-4 bg-white border-t border-[#E2E8F0]">
+      <div style={{ flexShrink: 0, padding: '16px', background: '#fff', borderTop: '1px solid #E2E8F0' }}>
         {marker ? (
           <>
-            <p className="text-xs text-[#5A6A7A] mb-3 line-clamp-2">
+            <p style={{ margin: '0 0 10px', fontSize: 12, color: '#5A6A7A', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
               {resolving ? ts('resolving') : (address || `${marker.lat.toFixed(6)}, ${marker.lng.toFixed(6)}`)}
             </p>
             <button
               onClick={() => onConfirm(marker.lat, marker.lng, address)}
               disabled={resolving}
-              className="w-full h-12 bg-[#00C2A8] text-[#0B1E3D] font-semibold rounded-xl text-sm disabled:opacity-50"
-              style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ width: '100%', height: 48, background: '#00C2A8', color: '#0B1E3D', fontWeight: 700, borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 15, opacity: resolving ? 0.5 : 1 }}
             >
               {tc('confirm')}
             </button>
           </>
         ) : (
-          <p className="text-sm text-[#8A9AB0] text-center">{ts('open_map')}</p>
+          <p style={{ margin: 0, fontSize: 14, color: '#8A9AB0', textAlign: 'center' }}>{ts('open_map')}</p>
         )}
       </div>
     </div>

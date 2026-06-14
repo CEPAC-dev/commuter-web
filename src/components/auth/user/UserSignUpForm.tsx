@@ -1,7 +1,6 @@
 ﻿'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { useTranslations } from 'next-intl';
@@ -207,9 +206,9 @@ export default function UserSignUpForm() {
 
       <p className="mt-5 text-center text-sm text-[#5A6A7A]">
         {t('have_account')}{' '}
-        <Link href="/sign-in" className="text-[#00C2A8] font-medium hover:underline">
+        <a href="/sign-in" className="text-[#00C2A8] font-medium hover:underline">
           {t('sign_in_link')}
-        </Link>
+        </a>
       </p>
     </div>
   );

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
-  getCourse, confirmCoursePayment, updateCourseStatus, repeatCourse,
+  getCourse, confirmCoursePayment, repeatCourse,
   getCourseInstances, getCourseInstance,
   type ApiCourse, type CourseStatus,
   type CourseInstance,
@@ -18,11 +18,19 @@ import { useLocale, useTranslations } from 'next-intl';
 function useStatusConfig() {
   const t = useTranslations('course_card');
   return {
-    draft:           { label: t('status_draft'),           bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
-    active:          { label: t('status_active'),          bg: '#E8F5E9', color: '#27AE60', border: '#A8D5B5' },
-    completed:       { label: t('status_completed'),       bg: '#F1F3F4', color: '#5A6A7A', border: '#E2E8F0' },
-    cancelled:       { label: t('status_cancelled'),       bg: '#FFEBEE', color: '#E74C3C', border: '#FFCDD2' },
-    pending_payment: { label: t('status_pending_payment'), bg: '#FFF3CD', color: '#856404', border: '#FFDA6A' },
+    draft:              { label: t('status_draft'),              bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
+    pending_payment:    { label: t('status_pending_payment'),    bg: '#FFF3CD', color: '#856404', border: '#FFDA6A' },
+    matching:           { label: t('status_matching'),           bg: '#E3F2FD', color: '#1976D2', border: '#90CAF9' },
+    matching_failed:    { label: t('status_matching_failed'),    bg: '#FFEBEE', color: '#E74C3C', border: '#FFCDD2' },
+    partially_matched:  { label: t('status_partially_matched'),  bg: '#FCE4EC', color: '#C2185B', border: '#F8BBD0' },
+    matched:            { label: t('status_matched'),            bg: '#F3E5F5', color: '#7B1FA2', border: '#E1BEE7' },
+    payment_required:   { label: t('status_payment_required'),   bg: '#FFF3CD', color: '#856404', border: '#FFDA6A' },
+    active:             { label: t('status_active'),             bg: '#E8F5E9', color: '#27AE60', border: '#A8D5B5' },
+    completed:          { label: t('status_completed'),          bg: '#F1F3F4', color: '#5A6A7A', border: '#E2E8F0' },
+    cancelled:          { label: t('status_cancelled'),          bg: '#FFEBEE', color: '#E74C3C', border: '#FFCDD2' },
+    pending:            { label: t('status_pending'),            bg: '#FFF8E1', color: '#F57F17', border: '#F9C74F' },
+    ongoing:            { label: t('status_ongoing'),            bg: '#E8F5E9', color: '#27AE60', border: '#A8D5B5' },
+    confirmed:          { label: t('status_confirmed'),          bg: '#E8F5E9', color: '#27AE60', border: '#A8D5B5' },
   } satisfies Record<CourseStatus, { label: string; bg: string; color: string; border: string }>;
 }
 
@@ -541,7 +549,6 @@ export default function CourseDetailPage() {
   const [balance, setBalance]   = useState<number | null>(null);
   const [paying, setPaying]     = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
-  const [payDone, setPayDone]   = useState(false);
   const [repeating, setRepeating]   = useState(false);
   const [repeatError, setRepeatError] = useState<string | null>(null);
   const [repeatDone, setRepeatDone]   = useState(false);
@@ -590,7 +597,6 @@ export default function CourseDetailPage() {
   async function handleConfirmPay() {
     if (!course) return;
     setPayError(null);
-    const cost = Math.round(parseFloat(course.estimated_total_price));
     setPaying(true);
     try {
       const res = await confirmCoursePayment(course.id);
@@ -608,18 +614,9 @@ export default function CourseDetailPage() {
         setPaying(false);
         return;
       }
-      // No URL — direct wallet deduction
-      if (balance !== null && balance < cost) {
-        setPayError(t('insufficient_balance', { balance: balance.toLocaleString(), cost: cost.toLocaleString() }));
-        setPaying(false);
-        return;
-      }
-      await updateCourseStatus(course.id, { status: 'active', wallet_status: 'success' });
-      setCourse(c => c ? { ...c, status: 'active', wallet_status: 'paid' } : c);
-      setBalance(b => b !== null ? b - cost : b);
-      setPayDone(true);
-      // Close dialog after successful payment
-      setShowPayConfirm(false);
+      // No payment URL returned — show error, do not auto-pay
+      setPayError(t('payment_failed'));
+      setPaying(false);
     } catch (e: unknown) {
       setPayError(e instanceof Error ? e.message : t('payment_failed'));
     } finally {
@@ -763,8 +760,44 @@ export default function CourseDetailPage() {
           </div>
         )}
 
-        {/* ── Payment card (show whenever wallet is waiting) ── */}
-        {course.wallet_status === 'waiting' && (
+        {/* ── Payment card (show unless already paid) ── */}
+        {/* ── Balance warning for pending_payment ── */}
+        {course.status === 'pending_payment' && (
+          <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 16, padding: '16px', boxShadow: '0 1px 4px rgba(11,30,61,0.06)' }}>
+            <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 800, color: '#0B1E3D' }}>{t('payment')}</p>
+
+            {/* Balance row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <span style={{ fontSize: 13, color: '#5A6A7A' }}>{t('wallet_balance')}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: balance !== null && balance < estimatedTotalPrice ? '#E74C3C' : '#27AE60' }}>
+                {balance !== null ? `EGP ${balance.toLocaleString()}` : '…'}
+              </span>
+            </div>
+
+            {/* Cost row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 14, borderBottom: '1px solid #F1F3F4', marginBottom: 14 }}>
+              <span style={{ fontSize: 13, color: '#5A6A7A' }}>{t('trip_cost')}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#0B1E3D' }}>EGP {estimatedTotalPrice.toLocaleString()}</span>
+            </div>
+
+            {/* Top-up needed message */}
+            {balance !== null && balance < estimatedTotalPrice && (
+              <div style={{ background: '#FFF3E0', border: '1px solid #FFCCBC', borderRadius: 10, padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 12, color: '#BF360C', fontWeight: 600 }}>You should top up EGP {(estimatedTotalPrice - balance).toLocaleString()}</span>
+                <button
+                  type="button"
+                  onClick={() => router.push('/user/wallet')}
+                  style={{ fontSize: 12, fontWeight: 700, color: '#00C2A8', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  {t('top_up')}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Confirm pay button for payment_required ── */}
+        {course.status === 'payment_required' && (
           <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 16, padding: '16px', boxShadow: '0 1px 4px rgba(11,30,61,0.06)' }}>
             <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 800, color: '#0B1E3D' }}>{t('payment')}</p>
 
@@ -803,33 +836,26 @@ export default function CourseDetailPage() {
               </p>
             )}
 
-            {/* Success / Pay button */}
-            {payDone ? (
-              <div style={{ background: '#E8F5E9', border: '1px solid #A8D5B5', borderRadius: 10, padding: '14px', textAlign: 'center' }}>
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#27AE60' }}>✓ {t('payment_success')}</p>
-                <p style={{ margin: '4px 0 0', fontSize: 13, color: '#5A6A7A' }}>{t('trip_active')}</p>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowPayConfirm(true)}
-                disabled={paying}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  borderRadius: 12,
-                  border: 'none',
-                  background: paying ? '#B0BEC5' : '#0B1E3D',
-                  color: '#fff',
-                  fontSize: 15,
-                  fontWeight: 700,
-                  cursor: paying ? 'not-allowed' : 'pointer',
-                  fontFamily: 'inherit',
-                }}
-              >
-                {paying ? t('processing') : t('confirm_pay')}
-              </button>
-            )}
+            {/* Pay button */}
+            <button
+              type="button"
+              onClick={() => setShowPayConfirm(true)}
+              disabled={paying}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: 12,
+                border: 'none',
+                background: paying ? '#B0BEC5' : '#0B1E3D',
+                color: '#fff',
+                fontSize: 15,
+                fontWeight: 700,
+                cursor: paying ? 'not-allowed' : 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              {paying ? t('processing') : t('confirm_pay')}
+            </button>
           </div>
         )}
 

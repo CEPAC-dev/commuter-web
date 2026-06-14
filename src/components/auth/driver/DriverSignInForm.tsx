@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, Loader2 } from 'lucide-react';
+import { Phone, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
@@ -11,26 +11,27 @@ import driverApi from '@/lib/api/driver';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useRedirectIfAuth } from '@/lib/auth/useRedirectIfAuth';
 
+const EGYPT_PHONE = /^01[0125][0-9]{8}$/;
+
 export default function DriverSignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get('next');
   const { login } = useAuth();
 
-  // If already logged in, bounce to dashboard (also handles bfcache).
   useRedirectIfAuth();
-  const [email, setEmail]       = useState('');
+  const [phone,    setPhone]    = useState('');
   const [password, setPassword] = useState('');
-  const [emailErr, setEmailErr] = useState('');
-  const [pwErr, setPwErr]       = useState('');
-  const [loading, setLoading]   = useState(false);
-  const [emailFocused, setEmailFocused] = useState(false);
+  const [phoneErr, setPhoneErr] = useState('');
+  const [pwErr,    setPwErr]    = useState('');
+  const [loading,  setLoading]  = useState(false);
+  const [phoneFocused, setPhoneFocused] = useState(false);
 
   function validate(): boolean {
     let ok = true;
-    setEmailErr('');
+    setPhoneErr('');
     setPwErr('');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setEmailErr('Enter a valid email address.'); ok = false; }
+    if (!EGYPT_PHONE.test(phone)) { setPhoneErr('Enter a valid Egyptian mobile number (010/011/012/015 + 8 digits).'); ok = false; }
     if (password.length < 8) { setPwErr('Password must be at least 8 characters.'); ok = false; }
     return ok;
   }
@@ -40,10 +41,10 @@ export default function DriverSignInForm() {
     if (!validate()) return;
     setLoading(true);
     try {
-      const res = await authApi.login({ email, password });
+      const res = await authApi.login({ phone_number: phone, password });
       const token = extractToken(res);
       if (!token) throw new Error('No token received from server');
-      const name = extractName(res) || email;
+      const name = extractName(res) || phone;
 
       login({
         token,
@@ -54,7 +55,6 @@ export default function DriverSignInForm() {
 
       toast.success(`Welcome back, ${name}! 👋`);
 
-      // Check driver status to determine if profile setup is needed.
       let destination: string;
       try {
         const status = await driverApi.getStatus() as { has_profile: boolean; is_verified: boolean };
@@ -66,7 +66,6 @@ export default function DriverSignInForm() {
             : '/driver/my-requests';
         }
       } catch {
-        // Network error or unexpected issue — default to dashboard.
         destination = nextPath && !nextPath.startsWith('/driver/sign') && !nextPath.startsWith('/sign')
           ? nextPath
           : '/driver/my-requests';
@@ -79,40 +78,40 @@ export default function DriverSignInForm() {
     }
   }
 
-  const emailBorder = emailErr ? '#E74C3C' : emailFocused ? '#00C2A8' : '#D1D5DB';
-  const emailShadow = emailFocused ? `0 0 0 3px ${emailErr ? '#E74C3C33' : '#00C2A833'}` : 'none';
+  const phoneBorder = phoneErr ? '#E74C3C' : phoneFocused ? '#00C2A8' : '#D1D5DB';
+  const phoneShadow = phoneFocused ? `0 0 0 3px ${phoneErr ? '#E74C3C33' : '#00C2A833'}` : 'none';
 
   return (
     <form onSubmit={handleSubmit} noValidate style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
       <h1 style={{ fontSize: 28, fontWeight: 700, color: '#0B1E3D', margin: '0 0 6px' }}>Driver sign in</h1>
-      <p style={{ fontSize: 14, color: '#5A6A7A', margin: '0 0 24px' }}>Enter your credentials to access the driver portal</p>
+      <p style={{ fontSize: 14, color: '#5A6A7A', margin: '0 0 24px' }}>Enter your mobile number and password to continue</p>
 
-      {/* Email */}
+      {/* Mobile number */}
       <div style={{ marginBottom: 16 }}>
-        <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#0B1E3D', marginBottom: 6 }}>Email address</label>
+        <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#0B1E3D', marginBottom: 6 }}>Mobile number</label>
         <div style={{ position: 'relative' }}>
-          <Mail size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} aria-hidden />
+          <Phone size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} aria-hidden />
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onFocus={() => setEmailFocused(true)}
-            onBlur={() => setEmailFocused(false)}
-            placeholder="you@commuter.eg"
-            autoComplete="email"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            onFocus={() => setPhoneFocused(true)}
+            onBlur={() => setPhoneFocused(false)}
+            placeholder="01xxxxxxxxx"
+            autoComplete="tel"
             style={{
               width: '100%', height: 52,
               paddingLeft: 42, paddingRight: 16,
-              border: `1.5px solid ${emailBorder}`,
+              border: `1.5px solid ${phoneBorder}`,
               borderRadius: 10, fontSize: 14, color: '#0B1E3D',
               background: '#fff', outline: 'none',
-              boxShadow: emailShadow,
+              boxShadow: phoneShadow,
               transition: 'border-color 0.15s, box-shadow 0.15s',
               boxSizing: 'border-box', fontFamily: 'inherit',
             }}
           />
         </div>
-        {emailErr && <p style={{ marginTop: 5, fontSize: 12, color: '#E74C3C' }}>{emailErr}</p>}
+        {phoneErr && <p style={{ marginTop: 5, fontSize: 12, color: '#E74C3C' }}>{phoneErr}</p>}
       </div>
 
       {/* Password */}

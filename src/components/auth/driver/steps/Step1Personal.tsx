@@ -129,7 +129,7 @@ export default function Step1Personal({ initial, onNext }: Step1Props) {
         {/* Date of birth */}
         <div>
           <label className="block text-sm font-medium text-primary mb-1.5">Date of birth</label>
-          <AgeGateInput onChange={handleDob} error={errors.dateOfBirth} />
+          <AgeGateInput value={form.dateOfBirth} onChange={handleDob} error={errors.dateOfBirth} />
         </div>
 
         {/* Address */}

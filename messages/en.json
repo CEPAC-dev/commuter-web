@@ -686,7 +686,7 @@
     "transaction_deleted": "Transaction deleted",
     "delete_failed": "Delete failed",
     "redirecting": "Redirecting…",
-    "confirm_payment": "Confirm payment",
+    "confirm_payment": "Add to wallet",
     "edit_amount": "Edit amount",
     "delete_transaction": "Delete transaction",
     "enter_valid_amount_short": "Enter a valid amount",
@@ -852,9 +852,9 @@
   },
 
   "signup_step2": {
-    "province_label": "Province",
+    "province_label": "State/City",
     "province_placeholder": "Cairo",
-    "province_error": "Province is required.",
+    "province_error": "State/City is required.",
     "district_label": "District",
     "district_placeholder": "Nasr City",
     "district_error": "District is required.",
@@ -1130,6 +1130,7 @@
 
   "course_card": {
     "confirm_payment": "Confirm payment",
+    "confirm_pay": "Confirm pay",
     "redirecting": "Redirecting to payment…",
     "payment_failed": "Payment failed. Try again.",
     "view_details": "View details",
@@ -1139,7 +1140,11 @@
     "status_cancelled": "Cancelled",
     "status_pending_payment": "Pending Payment",
     "status_pending": "Pending",
+    "status_matching": "Matching…",
+    "status_matching_failed": "Matching Failed",
+    "status_partially_matched": "Partially Matched",
     "status_matched": "Matched",
+    "status_payment_required": "Payment Required",
     "status_ongoing": "Ongoing",
     "status_confirmed": "Confirmed"
   },
@@ -1388,7 +1393,6 @@
     "trip_cost": "Trip cost",
     "not_enough": "Not enough balance",
     "top_up": "Top up →",
-    "confirm_pay": "Confirm Pay",
     "processing": "Processing…",
     "payment_success": "Payment successful",
     "trip_active": "Your trip is now active.",

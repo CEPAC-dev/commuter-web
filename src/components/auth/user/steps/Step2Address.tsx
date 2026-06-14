@@ -55,7 +55,6 @@ export default function Step2Address({ initial, loading, onBack, onSubmit }: Ste
     const e: Partial<Record<keyof Step2Data, string>> = {};
     if (!form.province.trim())    e.province    = t('province_error');
     if (!form.district.trim())    e.district    = t('district_error');
-    if (!form.sub_district.trim()) e.sub_district = t('subdistrict_error');
     if (!form.building.trim())    e.building    = t('building_error');
     if (!form.street.trim())      e.street      = t('street_error');
     setErrors(e);
@@ -98,7 +97,9 @@ export default function Step2Address({ initial, loading, onBack, onSubmit }: Ste
 
       {/* Sub-district */}
       <div>
-        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">{t('subdistrict_label')}</label>
+        <label className="block text-sm font-medium text-[#0B1E3D] mb-1.5">
+          {t('subdistrict_label')} <span className="text-[#9CA3AF] font-normal">{t('landmark_optional')}</span>
+        </label>
         <input
           value={form.sub_district}
           onChange={set('sub_district')}

@@ -86,7 +86,7 @@ export function createCourse(payload: CoursePayload): Promise<CourseResponse> {
 
 // ── Response types for GET /courses ──────────────────────────────────────────
 
-export type CourseStatus  = 'draft' | 'active' | 'completed' | 'cancelled' | 'pending_payment';
+export type CourseStatus  = 'draft' | 'pending_payment' | 'matching' | 'matching_failed' | 'partially_matched' | 'matched' | 'payment_required' | 'active' | 'completed' | 'cancelled' | 'pending' | 'ongoing' | 'confirmed';
 export type WalletStatus  = 'waiting' | 'paid' | 'refunded' | 'success';
 
 export interface ApiStop {

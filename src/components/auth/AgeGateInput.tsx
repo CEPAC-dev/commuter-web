@@ -31,23 +31,24 @@ export default function AgeGateInput({ value, onChange, error }: AgeGateInputPro
   const [ageError, setAgeError] = useState('');
 
   useEffect(() => {
-    if (year && month && day) {
-      const y = parseInt(year), m = parseInt(month), d = parseInt(day);
-      const iso = `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
-      const age = calcAge(y, m, d);
-      if (age < 18) {
-        setAgeError('You must be at least 18 years old to register');
-        onChange(''); // signal invalid
-      } else {
-        setAgeError('');
-        onChange(iso);
-      }
-    } else {
-      onChange('');
+    // Only proceed if we have all three date fields
+    if (!year || !month || !day) {
       setAgeError('');
+      return;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [year, month, day]);
+
+    const y = parseInt(year), m = parseInt(month), d = parseInt(day);
+    const iso = `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
+    const age = calcAge(y, m, d);
+
+    if (age < 18) {
+      setAgeError('You must be at least 18 years old to register');
+      onChange(''); // signal invalid
+    } else {
+      setAgeError('');
+      onChange(iso);
+    }
+  }, [year, month, day, onChange]);
 
   const isValid = !ageError && !!value;
   const showInline = ageError || error;

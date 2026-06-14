@@ -219,7 +219,7 @@ import { call } from './client';
 export interface RegisterPayload {
   role:                  'driver' | 'user';
   name:                  string;
-  email:                 string;
+  email?:                string;
   phone_number:          string;
   whatsapp_number?:      string;
   province:              string;
@@ -235,8 +235,9 @@ export interface RegisterPayload {
 }
 
 export interface LoginPayload {
-  email:    string;
-  password: string;
+  email?:        string;
+  phone_number?: string;
+  password:      string;
 }
 
 // Response shapes are intentionally loose — adjust as backend confirms schema.
