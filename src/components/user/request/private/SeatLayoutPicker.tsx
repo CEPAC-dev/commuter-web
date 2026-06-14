@@ -71,7 +71,7 @@ export default function SeatLayoutPicker({ passengers, assignments, onChange }: 
   const unassigned = passengers.filter(p => !(p.key in assignments));
 
   return (
-    <div dir="ltr">
+    <div dir="ltr" className="seat-layout-ltr">
       <p className="text-xs text-[#5A6A7A] mb-3">
         {t('hint')}
       </p>

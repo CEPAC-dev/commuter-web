@@ -197,7 +197,7 @@ export default function SeatSelector({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+    <div dir="ltr" className="seat-layout-ltr" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
 
       {/* SVG Car diagram */}
       {/* SVG Car diagram */}
