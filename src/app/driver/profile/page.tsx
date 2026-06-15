@@ -606,7 +606,7 @@ export default function ProfilePage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('doc_upload_failed'));
     }
-  }, [updateProfilePhoto]);
+  }, [updateProfilePhoto, t]);
 
   async function handleLogout() {
     try { await authApi.logout(); } catch { /* ignore */ }

@@ -9,6 +9,8 @@ import type { TimeSlot, WeekDay, GeoLocation, PrivateSeatPosition } from '@/type
 import {
   addMinutes,
   WEEKDAY_INDEX,
+  timeDiffMinutes,
+  computePickupToMax,
 } from '@/lib/timeUtils';
 import { getNextAvailableCycleStart, formatCycleStartDate, cycleDateForDayOfWeek, toApiDate } from '@/lib/cycleUtils';
 import { calculatePriceRange } from '@/lib/pricing';
@@ -42,10 +44,10 @@ function makeSlot(): TimeSlot {
     return_destination: null,
     return_route:       null,
     return_customized:  false,
-    pickup_from:        '',
-    pickup_to:          '',
-    arrival_from:       '',
-    arrival_to:         '',
+    pickup_from:        '07:45',
+    pickup_to:          '08:00',
+    arrival_from:       '09:00',
+    arrival_to:         '09:00',
     days:               [],
     seat_assignments:   {},
     return_pickup_point: null,
@@ -144,19 +146,22 @@ export default function PrivateSchedulePage() {
   }
 
   function handlePickupChange(slotId: string, from: string, to: string) {
-    persistSlots(slots.map(s => {
-      if (s.id !== slotId) return s;
-      // Only adjust arrival if the user has already explicitly set it
-      if (!s.arrival_from) return { ...s, pickup_from: from, pickup_to: to };
-      const minArrivalFrom = addMinutes(to, 30);
-      const arrival_from = s.arrival_from >= minArrivalFrom ? s.arrival_from : minArrivalFrom;
-      const arrival_to = s.arrival_to && s.arrival_to >= addMinutes(arrival_from, 30) ? s.arrival_to : addMinutes(arrival_from, 30);
-      return { ...s, pickup_from: from, pickup_to: to, arrival_from, arrival_to };
-    }));
+    // Pickup-only update — arrival_to stays intact (it is user-driven)
+    persistSlots(slots.map(s =>
+      s.id !== slotId ? s : { ...s, pickup_from: from, pickup_to: to }
+    ));
   }
 
-  function handleArrivalChange(slotId: string, from: string, to: string) {
-    patchSlot(slotId, { arrival_from: from, arrival_to: to });
+  function handleArrivalChange(slotId: string, _from: string, to: string) {
+    // arrival_to drives pickup_to_max; cap existing pickup_to if needed
+    persistSlots(slots.map(s => {
+      if (s.id !== slotId) return s;
+      const dur = Math.round(s.route?.duration_minutes ?? 0);
+      const pickupToMax   = dur > 0 ? computePickupToMax(to, dur) : s.pickup_to;
+      const newPickupTo   = s.pickup_to && timeDiffMinutes(s.pickup_to, pickupToMax) > 0 ? pickupToMax : (s.pickup_to || pickupToMax);
+      const newPickupFrom = s.pickup_from && timeDiffMinutes(s.pickup_from, newPickupTo) > 0 ? newPickupTo : (s.pickup_from || newPickupTo);
+      return { ...s, arrival_from: to, arrival_to: to, pickup_to: newPickupTo, pickup_from: newPickupFrom };
+    }));
   }
 
   function handleReturnPickupChange(slotId: string, from: string, to: string) {

@@ -12,7 +12,8 @@ import PageHeader from '@/components/shared/PageHeader';
 import Section from '@/components/shared/Section';
 import { getNextAvailableCycleStart, formatCycleStartDate } from '@/lib/cycleUtils';
 import { calculatePriceRange } from '@/lib/pricing';
-import { computeArrivalFrom, computeArrivalTo } from '@/lib/timeUtils';
+import { computeArrivalFrom, computeArrivalTo, timeDiffMinutes } from '@/lib/timeUtils';
+import { computePickupToMax } from '@/lib/timeUtils';
 import { WEEKDAY_INDEX } from '@/lib/timeUtils';
 import { cycleDateForDayOfWeek, toApiDate } from '@/lib/cycleUtils';
 import { createCourse, type WeeklyTripSchedule } from '@/lib/api/courses';
@@ -71,10 +72,10 @@ function makeDefaultSlot(usedDays: WeekDay[], inheritFrom?: WizardTimeSlot): Wiz
     return_destination: inheritFrom?.origin ?? null,
     return_route:       null,
     return_customized:  false,
-    pickup_from:        '07:00',
-    pickup_to:          '07:30',
-    arrival_from:       '',
-    arrival_to:         '',
+    arrival_to:         '09:00',
+    arrival_from:       '09:00',
+    pickup_from:        '07:45',
+    pickup_to:          '08:00',
     days:               [],
   };
 }
@@ -92,11 +93,11 @@ function validateSchedule(slots: WizardTimeSlot[], t: ReturnType<typeof useTrans
       errors.push(t('set_route', { n }));
     if (slot.days.length === 0)
       errors.push(t('select_days', { n }));
-    const gap = parseInt(slot.pickup_to.split(':')[0]) * 60 +
-      parseInt(slot.pickup_to.split(':')[1]) -
-      (parseInt(slot.pickup_from.split(':')[0]) * 60 + parseInt(slot.pickup_from.split(':')[1]));
-    if (gap < 15 || gap > 120)
+    const gap = timeDiffMinutes(slot.pickup_from, slot.pickup_to);
+    if (gap < 0 || gap > 120)
       errors.push(t('invalid_pickup', { n }));
+    if (!slot.arrival_to)
+      errors.push(t('set_route', { n })); // arrival must be set
   }
   return errors;
 }
@@ -177,8 +178,15 @@ export default function SchedulePage() {
     };
     const slot = slots.find(s => s.id === routePickerSlotId);
     if (slot) {
-      patch.arrival_from = computeArrivalFrom(slot.pickup_to, result.route.duration_minutes);
-      patch.arrival_to   = computeArrivalTo(slot.pickup_from, slot.pickup_to, result.route.duration_minutes);
+      const arrivalTo = slot.arrival_to || '09:00';
+      const dur = Math.round(result.route.duration_minutes);
+      const pickupToMax   = computePickupToMax(arrivalTo, dur);
+      const newPickupTo   = timeDiffMinutes(slot.pickup_to, pickupToMax) > 0 ? pickupToMax : slot.pickup_to;
+      const newPickupFrom = timeDiffMinutes(slot.pickup_from, newPickupTo) > 0 ? newPickupTo : slot.pickup_from;
+      patch.arrival_from  = arrivalTo;
+      patch.arrival_to    = arrivalTo;
+      patch.pickup_to     = newPickupTo;
+      patch.pickup_from   = newPickupFrom;
     }
     // When slot 1's outbound route changes, propagate it to all other slots.
     const isFirstSlot = slots[0]?.id === routePickerSlotId;
@@ -259,21 +267,24 @@ export default function SchedulePage() {
   }
 
   function handlePickupChange(slotId: string, from: string, to: string) {
-    persist(slots.map(s => {
-      if (s.id !== slotId) return s;
-      const dur = s.route?.duration_minutes ?? 45;
-      return {
-        ...s,
-        pickup_from:  from,
-        pickup_to:    to,
-        arrival_from: computeArrivalFrom(to, dur),
-        arrival_to:   computeArrivalTo(from, to, dur),
-      };
-    }));
+    // Only update the pickup window — arrival_to is user-driven and stays intact
+    persist(slots.map(s =>
+      s.id !== slotId ? s : { ...s, pickup_from: from, pickup_to: to }
+    ));
   }
 
-  function handleArrivalChange(slotId: string, from: string, to: string) {
-    persist(slots.map(s => s.id === slotId ? { ...s, arrival_from: from, arrival_to: to } : s));
+  function handleArrivalChange(slotId: string, _from: string, to: string) {
+    // arrival_to drives pickup_to_max = to − routeDuration − PICKUP_BUFFER_MIN
+    persist(slots.map(s => {
+      if (s.id !== slotId) return s;
+      const dur = Math.round(s.route?.duration_minutes ?? 0);
+      const pickupToMax   = dur > 0 ? computePickupToMax(to, dur) : s.pickup_to;
+      // Cap existing pickup_to at the computed max
+      const newPickupTo   = timeDiffMinutes(s.pickup_to, pickupToMax) > 0 ? pickupToMax : s.pickup_to;
+      // Ensure pickup_from ≤ pickup_to
+      const newPickupFrom = timeDiffMinutes(s.pickup_from, newPickupTo) > 0 ? newPickupTo : s.pickup_from;
+      return { ...s, arrival_from: to, arrival_to: to, pickup_to: newPickupTo, pickup_from: newPickupFrom };
+    }));
   }
 
   function handleReturnChange(slotId: string, from: string, to: string) {

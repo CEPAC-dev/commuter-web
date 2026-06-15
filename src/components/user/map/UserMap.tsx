@@ -172,7 +172,7 @@ export default function UserMap({
       }
       onMapPick(lat, lng);
     }
-  }, [pickingField, onMapPick]);
+  }, [pickingField, onMapPick, t]);
 
   // Midpoint of primary route for the distance/time badge
   const midCoord = primaryRoute && primaryRoute.coordinates.length > 0

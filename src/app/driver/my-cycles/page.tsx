@@ -81,7 +81,7 @@ export default function MyCyclesPage() {
                   </span>
                 </div>
                 <span className="text-xs font-semibold px-2.5 py-1 rounded-full capitalize" style={{ background: ss.bg, color: ss.text }}>
-                  {t(`status_${trip.status}` as any)}
+                  {t(`status_${trip.status}` as const)}
                 </span>
               </div>
 

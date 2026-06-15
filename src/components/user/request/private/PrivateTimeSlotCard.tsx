@@ -8,6 +8,8 @@ import {
   getQuarterHourOptions,
   timeDiffMinutes,
   ALL_DAYS_SUN_FIRST,
+  computePickupToMax,
+  PICKUP_BUFFER_MIN,
 } from '@/lib/timeUtils';
 import SeatLayoutPicker, { type SeatPassenger } from './SeatLayoutPicker';
 import { useTranslations } from 'next-intl';
@@ -62,8 +64,8 @@ export default function PrivateTimeSlotCard({
   const dayLabel = (day: WeekDay) => td(day.toLowerCase() as 'sun');
 
   // ── Pickup-time helpers (window 30..120 min) ────────────────────────────────
-  const pickupGap = timeDiffMinutes(slot.pickup_from, slot.pickup_to);
-  const validPickupToOptions = useMemo(
+  const _pickupGap = timeDiffMinutes(slot.pickup_from, slot.pickup_to);
+  const _validPickupToOptions = useMemo(
     () => ALL_OPTIONS.filter(opt => {
       const d = timeDiffMinutes(slot.pickup_from, opt);
       return d >= 15 && d <= 120;
@@ -77,17 +79,38 @@ export default function PrivateTimeSlotCard({
   const BUFFER_MIN    = 30;
   const minTotalGap   = routeDuration + BUFFER_MIN;
   const arrivalFromMin = addMinutes(slot.pickup_to, routeDuration > 0 ? routeDuration : BUFFER_MIN);
-  const validArrivalFromOptions = useMemo(
+  const _validArrivalFromOptions = useMemo(
     () => ALL_OPTIONS.filter(opt => timeDiffMinutes(arrivalFromMin, opt) >= 0),
     [arrivalFromMin],
   );
-  const validArrivalToOptions = useMemo(
+  const _validArrivalToOptions = useMemo(
     () => ALL_OPTIONS.filter(opt => {
       const dWindow     = timeDiffMinutes(slot.arrival_from || arrivalFromMin, opt);
       const dFromPickup = timeDiffMinutes(slot.pickup_from, opt);
       return dWindow >= 15 && dWindow <= 120 && dFromPickup >= minTotalGap;
     }),
     [slot.arrival_from, arrivalFromMin, slot.pickup_from, minTotalGap],
+  );
+
+  // Arrival-driven pickup: pickup_to_max = arrival_to − routeDuration − PICKUP_BUFFER_MIN
+  const pickupToMax = (slot.arrival_to && routeDuration > 0)
+    ? computePickupToMax(slot.arrival_to, routeDuration)
+    : null;
+
+  const validPickupToOptions2 = useMemo(
+    () => ALL_OPTIONS.filter(opt => {
+      if (pickupToMax && timeDiffMinutes(opt, pickupToMax) > 0) return false;
+      return true;
+    }),
+    [pickupToMax],
+  );
+
+  const validPickupFromOptions = useMemo(
+    () => ALL_OPTIONS.filter(opt => {
+      const diff = timeDiffMinutes(opt, slot.pickup_to);
+      return diff >= 0 && diff <= 120;
+    }),
+    [slot.pickup_to],
   );
 
   // Days for slot includes current selection (so user can deselect).
@@ -111,56 +134,48 @@ export default function PrivateTimeSlotCard({
         )}
       </div>
 
-      {/* ── Pickup time ──────────────────────────────────────────────────────── */}
+      {/* ── Arrival time (single "to" = desired deadline) ── */}
       <div>
-        <label className="block text-sm font-semibold text-[#0B1E3D] mb-2">{tsl('pickup_time')}</label>
+        <label className="block text-sm font-semibold text-[#0B1E3D] mb-1">{tsl('arrival_time')}</label>
+        <p className="text-xs text-[#9AA0A6] mb-2">{tsl('arrival_time_hint')}</p>
+        <SelectBox
+          label={tsl('arrival_time')}
+          value={slot.arrival_to || '09:00'}
+          options={ALL_OPTIONS}
+          pickTimePlaceholder={tsl('pick_time')}
+          onChange={(v) => onArrivalChange(v, v)}
+        />
+      </div>
+
+      {/* ── Pickup time (from & to, capped by arrival) ── */}
+      <div>
+        <label className="block text-sm font-semibold text-[#0B1E3D] mb-1">{tsl('pickup_time')}</label>
+        {pickupToMax && (
+          <p className="text-xs text-[#9AA0A6] mb-2">
+            {tsl('pickup_max_note', { max: formatTime12h(pickupToMax), buffer: PICKUP_BUFFER_MIN, route: routeDuration })}
+          </p>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <SelectBox
-            label={tf('arrival_from')}
+            label={tsl('pickup_from_label')}
             value={slot.pickup_from}
-            options={ALL_OPTIONS}
+            options={validPickupFromOptions}
             pickTimePlaceholder={tsl('pick_time')}
-            onChange={(v) => onPickupTimeChange(v, addMinutes(v, 15))}
+            onChange={(v) => onPickupTimeChange(v, slot.pickup_to)}
           />
           <SelectBox
-            label={tf('arrival_to')}
+            label={tsl('pickup_to_label')}
             value={slot.pickup_to}
-            options={validPickupToOptions}
+            options={validPickupToOptions2}
             pickTimePlaceholder={tsl('pick_time')}
             onChange={(v) => onPickupTimeChange(slot.pickup_from, v)}
           />
         </div>
-        {pickupGap !== null && (
-          <p className="text-xs text-[#9AA0A6] mt-1">
-            {tsl('pickup_window_note', { gap: pickupGap })}
+        {pickupToMax && (
+          <p className="text-xs mt-1" style={{ color: slot.pickup_to && timeDiffMinutes(slot.pickup_to, pickupToMax) > 0 ? '#E74C3C' : '#9AA0A6' }}>
+            ⏱ {tsl('latest_pickup_label')}: <strong>{formatTime12h(pickupToMax)}</strong>
           </p>
         )}
-      </div>
-
-      {/* ── Arrival time ────────────────────────────────────────────────────── */}
-      <div>
-        <label className="block text-sm font-semibold text-[#0B1E3D] mb-2">{tsl('arrival_time')}</label>
-        <div className="grid grid-cols-2 gap-3">
-          <SelectBox
-            label={tf('arrival_from')}
-            value={slot.arrival_from}
-            options={validArrivalFromOptions}
-            pickTimePlaceholder={tsl('pick_time')}
-          onChange={(v) => onArrivalChange(v, slot.arrival_to || addMinutes(v, 15))}
-          />
-          <SelectBox
-            label={tf('arrival_to')}
-            value={slot.arrival_to}
-            options={validArrivalToOptions}
-            pickTimePlaceholder={tsl('pick_time')}
-            onChange={(v) => onArrivalChange(slot.arrival_from, v)}
-          />
-        </div>
-        <p className="text-xs text-[#9AA0A6] mt-1">
-          {routeDuration > 0
-            ? tsl('route_buffer', { route: routeDuration, buffer: BUFFER_MIN, min: minTotalGap })
-            : tsl('min_after_pickup')}
-        </p>
       </div>
 
       {/* ── Seat layout ──────────────────────────────────────────────────────── */}

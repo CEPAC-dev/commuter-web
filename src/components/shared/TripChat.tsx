@@ -8,7 +8,7 @@ interface TripChatProps {
   tripInstanceId: number;
   /** 'user' view shows "chat with driver", 'driver' view shows "chat with passenger" */
   role: 'user' | 'driver';
-  currentUserId?: number;
+  _currentUserId?: number;
 }
 
 function formatTime(raw: string) {
@@ -33,7 +33,7 @@ function MessageIcon() {
   );
 }
 
-export default function TripChat({ tripInstanceId, role, currentUserId }: TripChatProps) {
+export default function TripChat({ tripInstanceId, role, _currentUserId }: TripChatProps) {
   const t = useTranslations('trip_chat');
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);

@@ -40,7 +40,7 @@ const DAY_I18N: Record<Day, 'day_mon' | 'day_tue' | 'day_wed' | 'day_thu' | 'day
   thursday: 'day_thu', friday: 'day_fri', saturday: 'day_sat', sunday: 'day_sun',
 };
 
-function dayPills(days: Day[], dayLabel: (d: Day) => string) {
+function _dayPills(days: Day[], dayLabel: (d: Day) => string) {
   return days.map((d) => (
     <span
       key={d}

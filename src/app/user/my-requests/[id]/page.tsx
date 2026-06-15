@@ -596,7 +596,7 @@ export default function CourseDetailPage() {
       .then(res => setInstances(res.data))
       .catch(() => {})
       .finally(() => setInstancesLoading(false));
-  }, [id]);
+  }, [id, t]);
 
   useEffect(() => {
     getLastBalance().then(res => setBalance(res.data.last_balance)).catch(() => {});

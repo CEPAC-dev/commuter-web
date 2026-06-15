@@ -6,6 +6,8 @@ import {
   formatTime12h,
   getQuarterHourOptions,
   timeDiffMinutes,
+  computePickupToMax,
+  PICKUP_BUFFER_MIN,
 } from '@/lib/timeUtils';
 import { useTranslations } from 'next-intl';
 
@@ -73,27 +75,27 @@ export default function TimeSlotCard({
     slot.origin?.address !== slot1Origin ||
     slot.destination?.address !== slot1Destination;
 
-  const pickupGap = timeDiffMinutes(slot.pickup_from, slot.pickup_to);
+  const _pickupGap = timeDiffMinutes(slot.pickup_from, slot.pickup_to);
 
   // Route-aware arrival constraints:
   //   arrival_from ≥ pickup_to + routeDuration
   //   arrival_to   ≥ pickup_from + routeDuration + 30  (the hard minimum gap)
   const routeDuration = Math.round(slot.route?.duration_minutes ?? 0);
-  const BUFFER_MIN    = 30;
-  const minTotalGap   = routeDuration + BUFFER_MIN; // e.g. 45+30 = 75 min
+
+  // Arrival-driven pickup: pickup_to_max = arrival_to − routeDuration − PICKUP_BUFFER_MIN
+  // pickup_from can be anything ≤ pickup_to (window up to 120 min)
+  const pickupToMax = (slot.arrival_to && routeDuration > 0)
+    ? computePickupToMax(slot.arrival_to, routeDuration)
+    : null;
 
   const validPickupToOptions = ALL_OPTIONS.filter((opt) => {
-    const diff = timeDiffMinutes(slot.pickup_from, opt);
-    return diff >= 15 && diff <= 120;
+    if (pickupToMax && timeDiffMinutes(opt, pickupToMax) > 0) return false; // must not exceed max
+    return true;
   });
 
-  // Arrival options — arrival_from must start ≥ pickup_to + routeDuration
-  const arrivalFromMin = addMinutes(slot.pickup_to, routeDuration > 0 ? routeDuration : BUFFER_MIN);
-  const validArrivalFromOptions = ALL_OPTIONS.filter(opt => timeDiffMinutes(arrivalFromMin, opt) >= 0);
-  const validArrivalToOptions = ALL_OPTIONS.filter(opt => {
-    const dWindow      = timeDiffMinutes(slot.arrival_from || arrivalFromMin, opt);
-    const dFromPickup  = timeDiffMinutes(slot.pickup_from, opt);
-    return dWindow >= 15 && dWindow <= 120 && dFromPickup >= minTotalGap;
+  const validPickupFromOptions = ALL_OPTIONS.filter((opt) => {
+    const diff = timeDiffMinutes(opt, slot.pickup_to);
+    return diff >= 0 && diff <= 120; // from ≤ to, up to 2 h window
   });
 
   const returnFrom = slot.return_pickup_from ?? '17:00';
@@ -111,20 +113,9 @@ export default function TimeSlotCard({
     return d >= 15 && d <= 120;
   });
 
-  function handleFromChange(newFrom: string) {
-    const newTo = addMinutes(newFrom, 15);
-    onPickupChange(newFrom, newTo);
-
-    // Auto-correct arrival times if they'd violate the new minimum gap
-    const newArrivalFromMin = addMinutes(newTo, routeDuration > 0 ? routeDuration : BUFFER_MIN);
-    const newArrivalToMin   = addMinutes(newFrom, minTotalGap);
-    const curFrom = slot.arrival_from || newArrivalFromMin;
-    const curTo   = slot.arrival_to   || addMinutes(curFrom, 15);
-    if (timeDiffMinutes(newArrivalFromMin, curFrom) < 0 || timeDiffMinutes(newArrivalToMin, curTo) < 0) {
-      const corrFrom = timeDiffMinutes(newArrivalFromMin, curFrom) < 0 ? newArrivalFromMin : curFrom;
-      const corrTo   = timeDiffMinutes(addMinutes(corrFrom, 15), curTo) < 0 ? addMinutes(corrFrom, 15) : curTo;
-      onArrivalChange(corrFrom, corrTo);
-    }
+  function handleArrivalToChange(arrivalTo: string) {
+    // Pass arrival_to as both from & to — the page handler will reverse-compute pickup
+    onArrivalChange(arrivalTo, arrivalTo);
   }
 
   function handleReturnFromChange(newFrom: string) {
@@ -238,6 +229,25 @@ export default function TimeSlotCard({
       {/* ── Rest of card — disabled until route is set ── */}
       <div className={`space-y-4 ${disabledSection}`}>
 
+        {/* ── Arrival time (single "to" = desired arrival deadline) ── */}
+        <div>
+          <label className="block text-xs font-medium text-[#5A6A7A] mb-1">{tsl('arrival_time')}</label>
+          <p className="text-xs text-[#9AA0A6] mb-2">
+            {tsl('arrival_time_hint')}
+          </p>
+          <select
+            value={slot.arrival_to || '09:00'}
+            disabled={routeLocked}
+            onChange={(e) => handleArrivalToChange(e.target.value)}
+            className="w-full h-11 border border-[#E2E8F0] rounded-lg px-3 text-sm text-[#0B1E3D] bg-white focus:outline-none"
+            style={{ outlineColor: palette.accent }}
+          >
+            {ALL_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>{formatTime12h(opt)}</option>
+            ))}
+          </select>
+        </div>
+
         {/* Trip type */}
         <div>
           <label className="block text-xs font-medium text-[#5A6A7A] mb-2">{tf('trip_type_label')}</label>
@@ -259,81 +269,48 @@ export default function TimeSlotCard({
           </div>
         </div>
 
-        {/* Pickup time */}
-        <div>
-          <label className="block text-xs font-medium text-[#5A6A7A] mb-2">{tsl('pickup_time')}</label>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-[#9AA0A6] mb-1">{tf('arrival_from')}</label>
-              <select
-                value={slot.pickup_from}
-                disabled={routeLocked}
-                onChange={(e) => handleFromChange(e.target.value)}
-                className="w-full h-11 border border-[#E2E8F0] rounded-lg px-3 text-sm text-[#0B1E3D] bg-white focus:outline-none"
-                style={{ outlineColor: palette.accent }}
-              >
-                {ALL_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>{formatTime12h(opt)}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-[#9AA0A6] mb-1">{tf('arrival_to')}</label>
-              <select
-                value={slot.pickup_to}
-                disabled={routeLocked}
-                onChange={(e) => onPickupChange(slot.pickup_from, e.target.value)}
-                className="w-full h-11 border border-[#E2E8F0] rounded-lg px-3 text-sm text-[#0B1E3D] bg-white focus:outline-none"
-                style={{ outlineColor: palette.accent }}
-              >
-                {validPickupToOptions.map((opt) => (
-                  <option key={opt} value={opt}>{formatTime12h(opt)}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <p className="text-xs text-[#9AA0A6] mt-1">
-            {tsl('pickup_window_note', { gap: pickupGap })}
-          </p>
-        </div>
-
-        {/* Estimated arrival — editable with buffer validation */}
+        {/* ── Pickup time (from & to, derived from arrival) ── */}
         {!routeLocked && (
           <div>
-            <label className="block text-xs font-medium text-[#5A6A7A] mb-2">{tsl('arrival_time')}</label>
+            <label className="block text-xs font-medium text-[#5A6A7A] mb-1">{tsl('pickup_time')}</label>
+            {pickupToMax && (
+              <p className="text-xs text-[#9AA0A6] mb-2">
+                {tsl('pickup_max_note', { max: formatTime12h(pickupToMax), buffer: PICKUP_BUFFER_MIN, route: routeDuration })}
+              </p>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-[#9AA0A6] mb-1">{tf('arrival_from')}</label>
+                <label className="block text-xs text-[#9AA0A6] mb-1">{tsl('pickup_from_label')}</label>
                 <select
-                  value={slot.arrival_from || arrivalFromMin}
-                  onChange={(e) => onArrivalChange(e.target.value, addMinutes(e.target.value, 15))}
+                  value={slot.pickup_from}
+                  onChange={(e) => onPickupChange(e.target.value, slot.pickup_to)}
                   className="w-full h-11 border border-[#E2E8F0] rounded-lg px-3 text-sm text-[#0B1E3D] bg-white focus:outline-none"
                   style={{ outlineColor: palette.accent }}
                 >
-                  {validArrivalFromOptions.map((opt) => (
+                  {validPickupFromOptions.map((opt) => (
                     <option key={opt} value={opt}>{formatTime12h(opt)}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-[#9AA0A6] mb-1">{tf('arrival_to')}</label>
+                <label className="block text-xs text-[#9AA0A6] mb-1">{tsl('pickup_to_label')}</label>
                 <select
-                  value={slot.arrival_to || addMinutes(slot.arrival_from || arrivalFromMin, 30)}
-                  onChange={(e) => onArrivalChange(slot.arrival_from || arrivalFromMin, e.target.value)}
+                  value={slot.pickup_to}
+                  onChange={(e) => onPickupChange(slot.pickup_from, e.target.value)}
                   className="w-full h-11 border border-[#E2E8F0] rounded-lg px-3 text-sm text-[#0B1E3D] bg-white focus:outline-none"
-                  style={{ outlineColor: palette.accent }}
+                  style={{ outlineColor: palette.accent, borderColor: pickupToMax && timeDiffMinutes(slot.pickup_to, pickupToMax) > 0 ? '#E74C3C' : undefined }}
                 >
-                  {validArrivalToOptions.map((opt) => (
+                  {validPickupToOptions.map((opt) => (
                     <option key={opt} value={opt}>{formatTime12h(opt)}</option>
                   ))}
                 </select>
               </div>
             </div>
-            <p className="text-xs text-[#9AA0A6] mt-1">
-              {routeDuration > 0
-                ? tsl('route_buffer', { route: routeDuration, buffer: BUFFER_MIN, min: minTotalGap })
-                : tsl('min_after_pickup')}
-            </p>
+            {pickupToMax && (
+              <p className="text-xs mt-1" style={{ color: timeDiffMinutes(slot.pickup_to, pickupToMax) > 0 ? '#E74C3C' : '#9AA0A6' }}>
+                ⏱ {tsl('latest_pickup_label')}: <strong>{formatTime12h(pickupToMax)}</strong>
+              </p>
+            )}
           </div>
         )}
 

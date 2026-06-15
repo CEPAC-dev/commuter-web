@@ -79,6 +79,31 @@ export function computeArrivalFrom(
   return addMinutes(pickupTo, durationMinutes);
 }
 
+/**
+ * Floor a "HH:MM" time string to the nearest :00, :15, :30, or :45 boundary.
+ * e.g. "06:01" → "06:00", "06:14" → "06:00", "06:16" → "06:15"
+ */
+export function floorToQuarterHour(time24: string): string {
+  const [h, m] = time24.split(':').map(Number);
+  const floored = Math.floor(m / 15) * 15;
+  return `${String(h).padStart(2, '0')}:${String(floored).padStart(2, '0')}`;
+}
+
+/**
+ * The latest possible pickup time given a desired arrival deadline.
+ * pickup_to_max = floor15( arrivalTo − routeDuration − PICKUP_BUFFER )
+ *
+ * Example: arrive 09:00, route 30 min → 09:00 − 45 = 08:15 → floor → 08:15
+ * Example: arrive 09:00, route 59 min → 09:00 − 74 = 06:46 ... wait, route 59:
+ *   arrive 09:00, route 59 → 09:00 − 74 = 07:46 → floor → 07:45
+ *   (raw 6:01 example: route=59 min, arrive=07:15 → 07:15-74=06:01 → floor → 06:00)
+ */
+export const PICKUP_BUFFER_MIN = 15;
+export function computePickupToMax(arrivalTo: string, routeDurationMinutes: number): string {
+  const raw = addMinutes(arrivalTo, -(Math.round(routeDurationMinutes) + PICKUP_BUFFER_MIN));
+  return floorToQuarterHour(raw);
+}
+
 export function computeArrivalTo(
   pickupFrom: string,
   pickupTo: string,
@@ -140,7 +165,7 @@ export function getHalfHourOptions(): string[] {
  */
 export function getQuarterHourOptions(): string[] {
   const opts: string[] = [];
-  for (let h = 6; h < 24; h++) {
+  for (let h = 5; h < 24; h++) {
     opts.push(`${String(h).padStart(2, '0')}:00`);
     opts.push(`${String(h).padStart(2, '0')}:15`);
     opts.push(`${String(h).padStart(2, '0')}:30`);

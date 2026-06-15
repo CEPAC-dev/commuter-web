@@ -83,12 +83,13 @@ export default function DriverTripDetailPage() {
 
   const pickupPoint = trip.route?.from_latitude && trip.route?.from_longitude
     ? [{
-        id: 'pickup',
+        passenger_id: 'unknown',
+        passenger_name: 'Passenger',
+        passenger_gender: 'male' as const,
         lat: trip.route.from_latitude,
         lng: trip.route.from_longitude,
-        label: trip.route.pickup_point ?? 'Pickup',
         address: trip.route.pickup_point ?? '',
-        scheduled_time: fmt(trip.start_time_from),
+        pickup_time_offset: 0,
       }]
     : [];
 
@@ -110,7 +111,7 @@ export default function DriverTripDetailPage() {
         </div>
         <span className="text-xs font-semibold px-3 py-1.5 rounded-full capitalize"
           style={{ background: ss.bg, color: ss.text }}>
-          {t(`status_${trip.status}` as any)}
+          {t(`status_${trip.status}` as const)}
         </span>
       </div>
 
