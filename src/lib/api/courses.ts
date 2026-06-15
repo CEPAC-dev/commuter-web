@@ -226,6 +226,7 @@ export interface InstanceParticipant {
   user_id:       number | null;
   passenger_id:  number | null;
   seat_position: SeatPosition;
+  name?:         string;         // Optional: passenger or user name from API
 }
 
 export interface ExecutionTimelineEvent {

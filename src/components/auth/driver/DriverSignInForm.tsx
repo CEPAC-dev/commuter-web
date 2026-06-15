@@ -65,12 +65,12 @@ export default function DriverSignInForm() {
         } else {
           destination = nextPath && !nextPath.startsWith('/driver/sign') && !nextPath.startsWith('/sign')
             ? nextPath
-            : '/driver/my-requests';
+            : '/driver/my-cycles';
         }
       } catch {
         destination = nextPath && !nextPath.startsWith('/driver/sign') && !nextPath.startsWith('/sign')
           ? nextPath
-          : '/driver/my-requests';
+          : '/driver/my-cycles';
       }
       router.replace(destination);
     } catch (err: unknown) {
@@ -119,14 +119,14 @@ export default function DriverSignInForm() {
       {/* Password */}
       <div style={{ marginBottom: 24 }}>
         <PasswordInput
-          label={t('auth:password_label')}
+          label={t('password_label')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder={t('auth:password_placeholder')}
+          placeholder={t('password_placeholder')}
           error={pwErr}
           autoComplete="current-password"
           rightLabel={
-            <Link href="/forgot-password" style={{ fontSize: 13, color: '#00C2A8', textDecoration: 'none' }}>{t('auth:forgot_password')}</Link>
+            <Link href="/forgot-password" style={{ fontSize: 13, color: '#00C2A8', textDecoration: 'none' }}>{t('forgot_password')}</Link>
           }
         />
       </div>
@@ -144,7 +144,7 @@ export default function DriverSignInForm() {
         }}
       >
         {loading && <Loader2 size={16} className="spin" />}
-        {t('auth:signin_btn')}
+        {t('signin_btn')}
       </button>
 
       <p style={{ marginTop: 20, textAlign: 'center', fontSize: 14, color: '#5A6A7A' }}>

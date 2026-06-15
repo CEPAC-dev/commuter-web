@@ -38,7 +38,7 @@ function GroupCodeCard({ code }: { code: string }) {
   }
 
   return (
-    <div className="bg-[#EFF7F6] border border-[#C8E8E4] rounded-xl p-4 flex items-center justify-between">
+    <div className="bg-[#EFF7F6] border border-[#C8E8E4] rounded-xl p-4 flex items-center justify-between schedule-header-flex">
       <div>
         <p className="text-xs font-semibold text-[#5A6A7A] mb-0.5">{t('group_code')}</p>
         <p className="text-xl font-bold tracking-[0.18em] text-[#00C2A8]">{display}</p>
@@ -647,7 +647,7 @@ export default function SchedulePage() {
           {/* Submit */}
           <button
             onClick={handleReviewClick}
-            className="w-full py-4 bg-[#0B1E3D] text-white font-bold text-sm rounded-xl hover:bg-[#132D52] transition-colors disabled:opacity-40"
+            className="w-full py-4 bg-[#0B1E3D] text-white font-bold text-sm rounded-xl hover:bg-[#132D52] transition-colors disabled:opacity-40 review-submit-btn"
             style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
           >
             {t('review_submit')}

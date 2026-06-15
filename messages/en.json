@@ -21,6 +21,8 @@
     "loading": "Loading...",
     "error_generic": "Something went wrong. Please try again.",
     "required_field": "This field is required",
+    "optional": "(optional)",
+    "full_name": "Full name",
     "egp": "EGP",
     "km": "km",
     "min": "min",
@@ -161,7 +163,16 @@
     "success_title": "Application submitted!",
     "success_body": "We've received your documents. Our team will review your application within 24–48 hours.",
     "success_email_note": "We'll email you once your account is approved.",
-    "go_to_signin": "Go to sign in"
+    "go_to_signin": "Go to sign in",
+    "left_panel": {
+      "headline1": "Drive smarter.", "headline2": "Earn better.",
+      "desc": "Join Egypt's leading ride-pooling platform and grow your income on your schedule.",
+      "signin_desc": "Join Egypt's leading ride-pooling platform. Connect with weekly cycle passengers and grow your income on your own schedule.",
+      "stat_drivers": "Active drivers", "stat_earnings": "Avg. monthly earn",
+      "steps_label": "Registration steps:",
+      "step1": "Create your driver account", "step2": "Add your car details", "step3": "Set your weekly availability", "step4": "Configure your pricing",
+      "footer": "Demo portal — commuter.site"
+    }
   },
 
   "map": {
@@ -204,8 +215,7 @@
     "stops_force_private": "Multi-stop routes are only available for Private rides. Remove all stop points to enable Shared ride.",
     "max_stops_reached": "Maximum 3 stop points",
     "cairo_only": "Only locations within Greater Cairo are allowed",
-    "set_origin_dest": "Please set origin and destination.",
-    "request_submitted": "Ride request submitted!"
+    "set_origin_dest": "Please set origin and destination."
   },
 
   "request_form": {
@@ -489,7 +499,50 @@
     "empty_upcoming": "No upcoming days",
     "empty_upcoming_desc": "All remaining days in this cycle have been completed.",
     "empty_completed_days": "No completed days yet",
-    "empty_completed_days_desc": "Completed days will appear here."
+    "empty_completed_days_desc": "Completed days will appear here.",
+    "trip": "trip",
+    "trips": "trips",
+    "direction_go": "Go",
+    "direction_return": "Return",
+    "status_assigned": "Assigned",
+    "status_completed": "Completed",
+    "status_cancelled": "Cancelled",
+    "status_pending": "Pending",
+    "group": "Group",
+    "route": "Route",
+    "from": "From",
+    "to": "To",
+    "distance": "Distance",
+    "est_duration": "Est. duration",
+    "direction": "Direction",
+    "schedule": "Schedule",
+    "date": "Date",
+    "departure_window": "Departure window",
+    "arrival_window": "Arrival window",
+    "actual_start": "Actual start",
+    "actual_end": "Actual end",
+    "matching": "Matching",
+    "status": "Status",
+    "group_code": "Group code",
+    "price": "Price",
+    "driver_price": "Driver price",
+    "participants": "Participants",
+    "user": "User",
+    "passenger": "Passenger",
+    "execution_timeline": "Execution Timeline",
+    "coordinates": "Coordinates",
+    "pickup_latlng": "Pickup lat/lng",
+    "destination_latlng": "Destination lat/lng",
+    "trip_details": "Trip #{id}"
+  },
+
+  "trip_chat": {
+    "chat_with_driver": "Chat with driver",
+    "chat_with_passenger": "Chat with passengers",
+    "trip_ref": "Trip #{id}",
+    "type_message": "Type a message…",
+    "no_messages": "No messages yet. Start the conversation!",
+    "load_error": "Failed to load messages."
   },
 
   "driver_availability": {
@@ -502,6 +555,7 @@
     "modal_subtitle": "Set your working area, days and hours",
     "available_days": "Available days",
     "pickup_area": "Pickup area",
+    "end_location": "End location",
     "start_time": "Start time",
     "end_time": "End time",
     "save_btn": "Save availability",
@@ -677,6 +731,8 @@
     "topup_coming_soon": "Payment gateway coming soon. This UI is for preview only.",
     "topup_confirm_btn": "Confirm top-up",
     "transaction_topup": "Wallet top-up",
+    "transaction_deposit": "Deposit",
+    "transaction_withdraw": "Withdrawal",
     "transaction_payment": "Cycle payment",
     "transaction_refund": "Refund",
     "balance_after": "Balance",
@@ -710,9 +766,10 @@
     "transaction_updated": "Transaction updated",
     "update_failed": "Update failed",
     "redirect_failed": "Redirect failed",
-    "status_pending": "PENDING",
-    "status_completed": "COMPLETED",
-    "status_failed": "FAILED",
+    "status_pending": "Pending",
+    "status_completed": "Completed",
+    "status_success": "Success",
+    "status_failed": "Failed",
     "add_funds": "Add funds"
   },
 
@@ -1163,7 +1220,11 @@
     "status_matched": "Matched",
     "status_payment_required": "Payment Required",
     "status_ongoing": "Ongoing",
-    "status_confirmed": "Confirmed"
+    "status_confirmed": "Confirmed",
+    "trip_type_individual": "Individual",
+    "trip_type_group": "Group",
+    "group_type_friends": "Friends",
+    "group_type_public": "Public"
   },
 
   "cycle_days": {
@@ -1367,6 +1428,11 @@
   "saved_locations": {
     "home": "Home",
     "work": "Work",
+    "nickname": "Nickname",
+    "nickname_custom": "Or type a custom nickname…",
+    "location_name": "Location name",
+    "location_example": "e.g. Dad's house, Main office",
+    "location_address": "Location address",
     "resolving": "Resolving address…",
     "save_place": "Save place",
     "open_map": "Open map to pick location",
@@ -1375,16 +1441,24 @@
   },
 
   "related_passengers": {
+    "section_title": "Related Passengers",
     "add": "Add a passenger",
     "edit": "Edit passenger",
     "name_label": "Full name",
     "phone_label": "Phone",
+    "phone_placeholder": "010 1234 5678",
     "gender_label": "Gender",
+    "age_label": "Age",
+    "age_placeholder": "e.g. 22",
+    "relation_label": "Relation",
+    "relation_placeholder": "e.g. Son, Daughter, Colleague, Friend",
     "save": "Save passenger",
     "delete": "Remove passenger",
     "save_success": "Passenger saved",
     "save_failed": "Failed to save passenger",
-    "delete_success": "Passenger removed"
+    "delete_success": "Passenger removed",
+    "empty": "No related passengers yet.",
+    "empty_desc": "Add family members or colleagues who ride with you regularly"
   },
 
   "commute_prefs": {
@@ -1420,7 +1494,6 @@
     "time_window": "Time window",
     "pickup": "Pickup",
     "arrival": "Arrival",
-    "actual_start": "Actual start/end",
     "wallet_balance": "Wallet balance",
     "trip_cost": "Trip cost",
     "not_enough": "Not enough balance",
@@ -1455,7 +1528,15 @@
     "actual_end": "Actual end",
     "execution_timeline": "Trip Timeline",
     "pickup_event": "Pickup",
-    "dropoff_event": "Dropoff"
+    "dropoff_event": "Dropoff",
+    "driver": "Driver",
+    "driver_name": "Driver name",
+    "passenger": "Passenger",
+    "passenger_name": "Passenger name",
+    "trip_type_individual": "Individual",
+    "trip_type_group": "Group",
+    "group_type_friends": "Friends",
+    "group_type_public": "Public"
   },
 
   "trip_live": {
@@ -1607,62 +1688,6 @@
 
   "demo": {
     "step_labels": { "sign_up": "Sign Up", "car_info": "Car Info", "availability": "Availability", "preferences": "Preferences" },
-    "common": { "back": "Back", "step_progress": "Registration progress", "optional": "(optional)" },
-    "step1": {
-      "title": "Create your account",
-      "subtitle": "Join as a driver — takes 4 quick steps",
-      "full_name": "Full name", "full_name_placeholder": "Ahmed Mohamed", "full_name_error": "Full name is required (at least 3 characters).",
-      "email": "Email", "email_placeholder": "you@example.com", "email_error": "Enter a valid email address.",
-      "phone": "Phone number", "phone_placeholder": "01xxxxxxxxx", "phone_error": "Enter a valid Egyptian phone number.",
-      "whatsapp": "WhatsApp", "whatsapp_same": "Same as phone ✓", "whatsapp_same_btn": "Same as phone", "whatsapp_error": "Enter a valid WhatsApp number.",
-      "gender": "Gender", "gender_male": "Male", "gender_female": "Female",
-      "address": "Address",
-      "province": "Province", "province_placeholder": "Cairo", "province_error": "Province is required.",
-      "district": "District", "district_placeholder": "Nasr City", "district_error": "District is required.",
-      "password_section": "Password", "password": "Password", "password_placeholder": "Min. 8 characters", "password_error": "Password must be at least 8 characters.",
-      "confirm_password": "Confirm password", "confirm_password_placeholder": "Repeat your password", "confirm_password_error": "Passwords do not match.",
-      "continue_btn": "Continue to Car Info →", "already_account": "Already have an account?", "sign_in_link": "Sign in", "signup_failed": "Sign up failed. Please try again."
-    },
-    "step2": {
-      "title": "Your car details", "subtitle": "Tell us about the car you'll be driving",
-      "car_type": "Car type", "type_private": "Private", "type_taxi": "Taxi", "type_van": "Van",
-      "car_brand": "Car brand", "car_brand_placeholder": "Toyota", "car_brand_error": "Car brand is required.",
-      "car_model": "Car model", "car_model_placeholder": "Corolla", "car_model_error": "Car model is required.",
-      "car_year": "Car year", "car_year_placeholder": "Select year", "car_year_error": "Car year is required.",
-      "capacity": "Passenger capacity", "capacity_placeholder": "Select", "capacity_error": "Passenger capacity is required.",
-      "continue_btn": "Continue to Availability →", "save_failed": "Failed to save car details. Please try again."
-    },
-    "step3": {
-      "title": "Your availability", "subtitle": "When and where do you commute? You can add more days later.",
-      "days_label": "Days of the week", "days_error": "Please select at least one day.",
-      "sun": "Sunday", "mon": "Monday", "tue": "Tuesday", "wed": "Wednesday", "thu": "Thursday", "fri": "Friday", "sat": "Saturday",
-      "start_location": "Start location name", "start_location_placeholder": "e.g. Nasr City — Block 5", "start_location_error": "Start location is required.",
-      "end_location": "End location name", "end_location_placeholder": "e.g. Smart Village", "end_location_error": "End location is required.",
-      "start_time": "Start time", "start_time_error": "Start time is required.",
-      "end_time": "End time", "end_time_error": "End time is required.", "time_order_error": "End time must be after start time.",
-      "coords_note": "Location coordinates are set automatically. You can update them from your profile later.",
-      "continue_btn": "Continue to Preferences →", "save_failed": "Failed to save availability. Please try again."
-    },
-    "step4": {
-      "title": "Your preferences", "subtitle": "Set your pricing and passenger preferences",
-      "price_per_km": "Price per km (EGP)", "price_per_km_placeholder": "e.g. 5", "price_per_km_error": "Enter a valid price per km.",
-      "waiting_price": "Waiting price / hr (EGP)", "waiting_price_placeholder": "e.g. 20", "waiting_price_error": "Enter a valid waiting price.",
-      "passengers": "Accepted passengers", "male": "Male", "female": "Female", "mixed": "Mixed",
-      "complete_btn": "Complete Registration 🎉", "save_failed": "Failed to save preferences. Please try again."
-    },
-    "left_panel": {
-      "headline1": "Drive smarter.", "headline2": "Earn better.",
-      "desc": "Join Egypt's leading ride-pooling platform and grow your income on your schedule.",
-      "steps_label": "Registration steps:",
-      "step1": "Create your driver account", "step2": "Add your car details", "step3": "Set your weekly availability", "step4": "Configure your pricing",
-      "footer": "Demo portal — commuter.site"
-    },
-    "success": {
-      "title": "You're all set! 🎉",
-      "subtitle": "Your driver profile is complete. Our team will review your details and reach out soon.",
-      "step1_done": "Account created", "step2_done": "Car details saved", "step3_done": "Availability set", "step4_done": "Preferences configured",
-      "sign_in_btn": "Sign in to your account →",
-      "start_over": "Want to register another demo account?", "start_over_link": "Start over"
-    }
+    "common": { "back": "Back", "step_progress": "Registration progress", "optional": "(optional)" }
   }
 }

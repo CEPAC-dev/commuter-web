@@ -1,9 +1,13 @@
+'use client';
+
 import { Toaster } from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 import AuthSplitLayout from '@/components/shared/AuthSplitLayout';
 import DriverSignUpWizard from '@/components/auth/driver/DriverSignUpWizard';
 import { CheckCircle } from 'lucide-react';
 
 function DriverSignUpLeft() {
+  const t = useTranslations('driver_signup.left_panel');
   const checklist = [
     'Personal information',
     'Your car details',
@@ -14,11 +18,11 @@ function DriverSignUpLeft() {
     <div className="text-white">
       <div className="mb-8">
         <h2 className="text-4xl font-bold leading-tight mb-3">
-          Drive smarter.<br />
-          <span style={{ color: '#00C2A8' }}>Earn better.</span>
+          {t('headline1')}<br />
+          <span style={{ color: '#00C2A8' }}>{t('headline2')}</span>
         </h2>
         <p className="text-white/65 text-[15px] leading-relaxed">
-          Join Egypt&apos;s leading ride-pooling platform and grow your income on your schedule.
+          {t('desc')}
         </p>
       </div>
 

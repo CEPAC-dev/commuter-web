@@ -119,10 +119,10 @@ function PassengerFormModal({
       />
 
       {/* Panel — modal on desktop, bottom sheet on mobile */}
-      <div className="fixed z-[700] bg-white md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[480px] md:rounded-2xl md:shadow-2xl bottom-0 left-0 right-0 rounded-t-2xl shadow-2xl md:bottom-auto max-h-[90vh] overflow-y-auto">
+      <div className="fixed z-[700] bg-white md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[480px] md:rounded-2xl md:shadow-2xl bottom-0 left-0 right-0 rounded-t-2xl shadow-2xl md:bottom-auto max-h-[90vh] overflow-y-auto modal-desktop-center">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0] profile-section-header">
           <h2 className="text-base font-semibold text-[#0B1E3D]">
             {initial ? tr('edit') : tr('add')}
           </h2>
@@ -139,13 +139,13 @@ function PassengerFormModal({
 
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-[#0B1E3D] mb-1">
+            <label className="block text-sm font-medium text-[#0B1E3D] mb-1 text-right">
               {tr('name_label')} <span className="text-[#E74C3C]">*</span>
             </label>
             <input
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              placeholder="e.g. Mohamed Ashour"
+              placeholder={tc('full_name')}
               className={`w-full h-11 border rounded-lg px-3 text-sm focus:outline-none focus:border-[#00C2A8] focus:ring-2 focus:ring-[#00C2A8]/20 ${errors.name ? 'border-[#E74C3C]' : 'border-[#E2E8F0]'}`}
             />
             {errors.name && <p className="text-xs text-[#E74C3C] mt-1">{errors.name}</p>}
@@ -153,13 +153,13 @@ function PassengerFormModal({
 
           {/* Phone */}
           <div>
-            <label className="block text-sm font-medium text-[#0B1E3D] mb-1">
-              Phone number <span className="text-[#9AA0A6] font-normal ml-1">(optional)</span>
+            <label className="block text-sm font-medium text-[#0B1E3D] mb-1 text-right">
+              {tr('phone_label')} <span className="text-[#9AA0A6] font-normal ml-1">{tc('optional')}</span>
             </label>
             <input
               value={form.phone}
               onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-              placeholder="010 1234 5678"
+              placeholder={tr('phone_placeholder')}
               inputMode="tel"
               className={`w-full h-11 border rounded-lg px-3 text-sm focus:outline-none focus:border-[#00C2A8] focus:ring-2 focus:ring-[#00C2A8]/20 ${errors.phone ? 'border-[#E74C3C]' : 'border-[#E2E8F0]'}`}
             />
@@ -168,13 +168,13 @@ function PassengerFormModal({
 
           {/* Age */}
           <div>
-            <label className="block text-sm font-medium text-[#0B1E3D] mb-1">
-              Age <span className="text-[#E74C3C]">*</span>
+            <label className="block text-sm font-medium text-[#0B1E3D] mb-1 text-right">
+              {tr('age_label')} <span className="text-[#E74C3C]">*</span>
             </label>
             <input
               value={form.age || ''}
               onChange={(e) => setForm((f) => ({ ...f, age: Number(e.target.value) }))}
-              placeholder="e.g. 22"
+              placeholder={tr('age_placeholder')}
               type="number"
               min={1}
               max={120}
@@ -195,7 +195,7 @@ function PassengerFormModal({
                   key={g}
                   type="button"
                   onClick={() => setForm((f) => ({ ...f, gender: g }))}
-                  className={`flex-1 h-11 rounded-lg border-2 text-sm font-medium transition-colors capitalize ${form.gender === g ? 'border-[#00C2A8] bg-[#EFF7F6] text-[#0B1E3D]' : 'border-[#E2E8F0] bg-white text-[#5A6A7A]'}`}
+                  className={`flex-1 h-11 rounded-lg border-2 text-sm font-medium transition-colors capitalize flex items-center justify-center ${form.gender === g ? 'border-[#00C2A8] bg-[#EFF7F6] text-[#0B1E3D]' : 'border-[#E2E8F0] bg-white text-[#5A6A7A]'}`}
                 >
                   {g === 'male' ? '♂ Male' : '♀ Female'}
                 </button>
@@ -205,30 +205,30 @@ function PassengerFormModal({
 
           {/* Relation */}
           <div>
-            <label className="block text-sm font-medium text-[#0B1E3D] mb-1">
-              Relation <span className="text-[#9AA0A6] font-normal ml-1">(optional)</span>
+            <label className="block text-sm font-medium text-[#0B1E3D] mb-1 text-right">
+              {tr('relation_label')} <span className="text-[#9AA0A6] font-normal ml-1">{tc('optional')}</span>
             </label>
             <input
               value={form.relation}
               onChange={(e) => setForm((f) => ({ ...f, relation: e.target.value }))}
-              placeholder="e.g. Son, Daughter, Colleague, Friend"
+              placeholder={tr('relation_placeholder')}
               className="w-full h-11 border border-[#E2E8F0] rounded-lg px-3 text-sm focus:outline-none focus:border-[#00C2A8] focus:ring-2 focus:ring-[#00C2A8]/20"
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 px-5 pb-6 pt-2">
+        <div className="flex gap-3 px-5 pb-6 pt-2 profile-section-header justify-center">
           <button
             onClick={onClose}
-            className="flex-1 h-11 border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#5A6A7A] hover:bg-[#F8F9FA]"
+            className="w-24 h-11 border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#5A6A7A] hover:bg-[#F8F9FA] flex items-center justify-center"
           >
             {tc('cancel')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={isLoading}
-            className="flex-1 h-11 bg-[#0B1E3D] text-white rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-28 h-11 bg-[#0B1E3D] text-white rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           >
             {isLoading ? tc('loading') : tr('save')}
           </button>
@@ -547,8 +547,8 @@ export default function RelatedPassengersSection({ isMobilePage }: RelatedPassen
   const content = (
     <>
       {/* Header row */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-bold text-[#0B1E3D]">{tr('add')}</h3>
+      <div className="flex items-center justify-between mb-4 profile-section-header">
+        <h3 className="text-base font-bold text-[#0B1E3D]">{tr('section_title')}</h3>
         <button
           onClick={() => { setEditing(undefined); setFormOpen(true); }}
           className="flex items-center gap-1.5 text-sm font-semibold text-[#00C2A8] hover:text-[#009e88]"
@@ -562,9 +562,9 @@ export default function RelatedPassengersSection({ isMobilePage }: RelatedPassen
       ) : passengers.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-8 text-center">
           <span className="text-4xl">👥</span>
-          <p className="text-sm font-semibold text-[#0B1E3D]">No related passengers yet.</p>
+          <p className="text-sm font-semibold text-[#0B1E3D]">{tr('empty')}</p>
           <p className="text-xs text-[#5A6A7A] max-w-[260px]">
-            Add family members or colleagues who ride with you regularly.
+            {tr('empty_desc')}
           </p>
         </div>
       ) : (

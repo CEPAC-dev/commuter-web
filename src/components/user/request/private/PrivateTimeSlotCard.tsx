@@ -95,7 +95,7 @@ export default function PrivateTimeSlotCard({
   return (
     <div className="bg-white border border-[#E2E8F0] rounded-2xl p-4 space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between schedule-header-flex">
         <span className="text-sm font-semibold text-[#0B1E3D]">
           {tsl('label', { n: slotNumber })}
         </span>
@@ -176,7 +176,7 @@ export default function PrivateTimeSlotCard({
       {/* ── Days ─────────────────────────────────────────────────────────────── */}
       <div>
         <label className="block text-sm font-semibold text-[#0B1E3D] mb-2">{tf('days_label')}</label>
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap days-picker-flex">
           {ALL_DAYS_SUN_FIRST.map((day) => {
             const isSelected = slot.days.includes(day);
             const takenByOther = !isSelected && assignedDays.includes(day);
@@ -186,7 +186,7 @@ export default function PrivateTimeSlotCard({
                 type="button"
                 disabled={takenByOther}
                 onClick={() => !takenByOther && onDayToggle(day)}
-                className={`w-10 h-10 rounded-full text-xs font-medium border transition-colors ${
+                className={`w-10 h-10 rounded-full text-xs font-medium border transition-colors schedule-centered ${
                   isSelected
                     ? 'bg-[#00C2A8] border-[#00C2A8] text-white'
                     : takenByOther
@@ -217,7 +217,7 @@ export default function PrivateTimeSlotCard({
                 const dayStops = (slot.day_stops ?? {})[day] ?? [];
                 return (
                   <div key={day} className="rounded-xl border border-[#E2E8F0] bg-[#F8F9FA] p-3">
-                    <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center justify-between mb-1.5 schedule-header-flex">
                       <span className="text-xs font-semibold text-[#0B1E3D]">{dayLabel(day)}</span>
                       {dayStops.length < 2 && (
                         <button
@@ -237,7 +237,7 @@ export default function PrivateTimeSlotCard({
                         {dayStops.map((s, i) => (
                           <li
                             key={`${i}-${s.lat}`}
-                            className="flex items-start justify-between gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2"
+                            className="flex items-start justify-between gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 schedule-list-item"
                           >
                             <span className="text-xs text-[#0B1E3D] leading-snug">
                               <span className="font-semibold mr-1">{i + 1}.</span>{s.address}

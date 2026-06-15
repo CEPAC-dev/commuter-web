@@ -297,6 +297,141 @@ html[dir="rtl"] .seat-layout-ltr * {
   .text-balance { text-wrap: balance; }
 }
 
+/* ── Schedule Components RTL Support ────────────────────── */
+/* Header layout: slot label | delete button → button | label in RTL */
+html[dir="rtl"] .schedule-header-flex {
+  flex-direction: row-reverse;
+}
+
+/* Route display with dot indicators */
+html[dir="rtl"] .route-dot-flex {
+  flex-direction: row-reverse;
+}
+
+/* Days picker - maintain wrap but adjust direction */
+html[dir="rtl"] .days-picker-flex {
+  flex-direction: row-reverse;
+}
+
+/* Time slot cards - ensure proper grid flow in RTL */
+html[dir="rtl"] .time-slot-grid {
+  direction: rtl;
+}
+
+/* List items with flex justify-between */
+html[dir="rtl"] .schedule-list-item {
+  flex-direction: row-reverse;
+}
+
+/* Stop items with edit/remove buttons */
+html[dir="rtl"] .stop-item-buttons {
+  flex-direction: row-reverse;
+}
+
+/* ── Profile Section Headers RTL Support ────────────────────── */
+/* Headers with justify-between (e.g., Favorite Places, Related Passengers) */
+html[dir="rtl"] .profile-section-header {
+  flex-direction: row-reverse;
+}
+
+/* Ensure inline-flex button groups work in RTL */
+html[dir="rtl"] .button-group-row {
+  flex-direction: row-reverse;
+}
+
+/* ── Modal Centering RTL Support ────────────────────────────── */
+/* Desktop modals positioned at center (md:left-1/2 md:-translate-x-1/2) */
+html[dir="rtl"] .modal-desktop-center {
+  left: auto !important;
+  right: 50% !important;
+  transform: translateY(-50%) translateX(50%) !important;
+}
+
+/* ── Schedule Centering (works in both LTR and RTL) ──────── */
+/* Center text in elements */
+.schedule-center-text {
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Center single character or short text (days, trip type badges) */
+.schedule-centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Button text centering */
+.schedule-btn-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Trip type button centering (grid-based) */
+.trip-type-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  gap: 0 !important;
+  padding: 0 !important;
+}
+
+html[dir="rtl"] .trip-type-btn {
+  flex-direction: row;
+  text-align: center !important;
+}
+
+/* Modal header center in RTL and LTR */
+html[dir="rtl"] .schedule-header-center,
+.schedule-header-center {
+  text-align: center;
+}
+
+/* Section title container RTL - swap positions */
+html[dir="rtl"] .section-title-container {
+  flex-direction: row-reverse;
+}
+
+/* Right label text alignment in RTL */
+html[dir="rtl"] .section-title-label {
+  text-align: left;
+}
+
+html[dir="ltr"] .section-title-label,
+.section-title-label {
+  text-align: right;
+}
+
+/* Page header title centering in RTL */
+html[dir="rtl"] .page-header-container {
+  flex-direction: row-reverse;
+}
+
+html[dir="rtl"] .page-header-title {
+  text-align: center;
+  flex: 1;
+}
+
+/* Review section title centering in RTL */
+html[dir="rtl"] .review-section-title {
+  text-align: center;
+}
+
+/* Review submit button text center */
+html[dir="rtl"] .review-submit-btn,
+.review-submit-btn {
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* ══════════════════════════════════════════════════════════
    MAP — UBER-STYLE OVERLAYS
    ══════════════════════════════════════════════════════════ */

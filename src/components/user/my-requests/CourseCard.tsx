@@ -256,7 +256,7 @@ export default function CourseCard({ course, balance, onPaid: _onPaid, onRepeatS
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
-            {course.trip_type}
+            {course.trip_type === 'individual' ? t(`trip_type_individual`) : t(`trip_type_group`)}
           </span>
           <span style={{ fontSize: 15, fontWeight: 800, color: '#0B1E3D' }}>
             {tc('egp')} {estimatedTotalPrice.toLocaleString()}

@@ -21,6 +21,8 @@
     "loading": "جارٍ التحميل...",
     "error_generic": "حدث خطأ. يرجى المحاولة مجدداً.",
     "required_field": "هذا الحقل مطلوب",
+    "optional": "(اختياري)",
+    "full_name": "الاسم بالكامل",
     "egp": "EGP",
     "km": "km",
     "min": "دقيقة",
@@ -161,7 +163,16 @@
     "success_title": "تم إرسال الطلب!",
     "success_body": "استلمنا مستنداتك. سيراجع فريقنا طلبك خلال 24–48 ساعة.",
     "success_email_note": "سنرسل إليك بريداً إلكترونياً عند تفعيل حسابك.",
-    "go_to_signin": "الانتقال إلى تسجيل الدخول"
+    "go_to_signin": "الانتقال إلى تسجيل الدخول",
+    "left_panel": {
+      "headline1": "قُد بذكاء.", "headline2": "اكسب أكثر.",
+      "desc": "انضم إلى المنصة الرائدة لمشاركة الركوب في مصر واستثمر وقتك.",
+      "signin_desc": "انضم إلى منصة مشاركة الركوب الرائدة في مصر. تواصل مع ركاب الدورات الأسبوعية وسع دخلك حسب جدولك الخاص.",
+      "stat_drivers": "السائقون النشطون", "stat_earnings": "متوسط الكسب الشهري",
+      "steps_label": "خطوات التسجيل:",
+      "step1": "إنشاء حساب السائق", "step2": "إضافة بيانات السيارة", "step3": "تحديد أوقات التوفر", "step4": "ضبط الأسعار والتفضيلات",
+      "footer": "البوابة التجريبية — commuter.site"
+    }
   },
 
   "map": {
@@ -204,8 +215,7 @@
     "pick_stop": "انقر على الخريطة لإضافة محطة",
     "stops_locked_shared": "الرحلة المشتركة غير متاحة — نقاط التوقف تستلزم سيارة خاصة.",
     "cairo_only": "الأماكن المسموح بها داخل منطقة القاهرة الكبرى فقط",
-    "set_origin_dest": "حدد نقطة البداية والوجهة.",
-    "request_submitted": "تم إرسال طلب الرحلة!"
+    "set_origin_dest": "حدد نقطة البداية والوجهة."
   },
 
   "request_form": {
@@ -488,7 +498,50 @@
     "empty_upcoming": "لا توجد أيام قادمة",
     "empty_upcoming_desc": "اكتملت جميع الأيام المتبقية في هذه الدورة.",
     "empty_completed_days": "لا توجد أيام مكتملة حتى الآن",
-    "empty_completed_days_desc": "ستظهر الأيام المكتملة هنا."
+    "empty_completed_days_desc": "ستظهر الأيام المكتملة هنا.",
+    "trip": "رحلة",
+    "trips": "رحلات",
+    "direction_go": "ذهاب",
+    "direction_return": "عودة",
+    "status_assigned": "مكلفة",
+    "status_completed": "مكتملة",
+    "status_cancelled": "ملغاة",
+    "status_pending": "قيد الانتظار",
+    "group": "المجموعة",
+    "route": "المسار",
+    "from": "من",
+    "to": "إلى",
+    "distance": "المسافة",
+    "est_duration": "المدة المتوقعة",
+    "direction": "الاتجاه",
+    "schedule": "الجدول الزمني",
+    "date": "التاريخ",
+    "departure_window": "نافذة المغادرة",
+    "arrival_window": "نافذة الوصول",
+    "actual_start": "البداية الفعلية",
+    "actual_end": "النهاية الفعلية",
+    "matching": "المطابقة",
+    "status": "الحالة",
+    "group_code": "رمز المجموعة",
+    "price": "السعر",
+    "driver_price": "سعر السائق",
+    "participants": "المشاركون",
+    "user": "مستخدم",
+    "passenger": "راكب",
+    "execution_timeline": "جدول التنفيذ",
+    "coordinates": "الإحداثيات",
+    "pickup_latlng": "lat/lng الركوب",
+    "destination_latlng": "lat/lng الوجهة",
+    "trip_details": "تفاصيل الرحلة #{id}"
+  },
+
+  "trip_chat": {
+    "chat_with_driver": "المحادثة مع السائق",
+    "chat_with_passenger": "المحادثة مع الركاب",
+    "trip_ref": "رحلة #{id}",
+    "type_message": "اكتب رسالة…",
+    "no_messages": "لا توجد رسائل بعد. ابدأ المحادثة!",
+    "load_error": "فشل تحميل الرسائل."
   },
 
   "driver_availability": {
@@ -501,6 +554,7 @@
     "modal_subtitle": "حدد منطقة عملك وأيامك وساعاتك",
     "available_days": "الأيام المتاحة",
     "pickup_area": "منطقة الركوب",
+    "end_location": "موقع النهاية",
     "start_time": "وقت البداية",
     "end_time": "وقت النهاية",
     "save_btn": "حفظ التوفر",
@@ -676,6 +730,8 @@
     "topup_coming_soon": "بوابة الدفع قريباً. هذه الواجهة للعرض فقط.",
     "topup_confirm_btn": "تأكيد الشحن",
     "transaction_topup": "شحن المحفظة",
+    "transaction_deposit": "إيداع",
+    "transaction_withdraw": "سحب",
     "transaction_payment": "دفع دورة",
     "transaction_refund": "استرداد",
     "balance_after": "الرصيد",
@@ -711,6 +767,7 @@
     "redirect_failed": "فشل التحويل",
     "status_pending": "معلّق",
     "status_completed": "مكتمل",
+    "status_success": "ناجح",
     "status_failed": "فشل",
     "add_funds": "إضافة رصيد"
   },
@@ -1162,7 +1219,11 @@
     "status_matched": "متطابق",
     "status_payment_required": "الدفع مطلوب",
     "status_ongoing": "جارٍ",
-    "status_confirmed": "مؤكّد"
+    "status_confirmed": "مؤكّد",
+    "trip_type_individual": "فردي",
+    "trip_type_group": "مجموعة",
+    "group_type_friends": "أصدقاء",
+    "group_type_public": "عام"
   },
 
   "cycle_days": {
@@ -1366,6 +1427,11 @@
   "saved_locations": {
     "home": "المنزل",
     "work": "العمل",
+    "nickname": "الكنية",
+    "nickname_custom": "أو اكتب كنية مخصصة…",
+    "location_name": "اسم المكان",
+    "location_example": "مثل: منزل الأب، مكتب رئيسي",
+    "location_address": "عنوان المكان",
     "resolving": "جارٍ تحديد العنوان…",
     "save_place": "حفظ المكان",
     "open_map": "افتح الخريطة لاختيار المكان",
@@ -1374,16 +1440,24 @@
   },
 
   "related_passengers": {
+    "section_title": "مسافرون مرتبطون",
     "add": "إضافة راكب",
     "edit": "تعديل راكب",
     "name_label": "الاسم بالكامل",
     "phone_label": "الهاتف",
+    "phone_placeholder": "010 1234 5678",
     "gender_label": "الجنس",
+    "age_label": "العمر",
+    "age_placeholder": "مثلاً 22",
+    "relation_label": "العلاقة",
+    "relation_placeholder": "مثلاً ابن، ابنة، زميل، صديق",
     "save": "حفظ الراكب",
     "delete": "إزالة الراكب",
     "save_success": "تم حفظ الراكب",
     "save_failed": "فشل حفظ الراكب",
-    "delete_success": "تم إزالة الراكب"
+    "delete_success": "تم إزالة الراكب",
+    "empty": "لا توجد مسافرون مرتبطون بعد.",
+    "empty_desc": "أضف أفراد العائلة أو الزملاء الذين يركبون معك بانتظام"
   },
 
   "commute_prefs": {
@@ -1419,7 +1493,6 @@
     "time_window": "نافذة الوقت",
     "pickup": "الركوب",
     "arrival": "الوصول",
-    "actual_start": "البداية/النهاية الفعلية",
     "wallet_balance": "رصيد المحفظة",
     "trip_cost": "تكلفة الرحلة",
     "not_enough": "الرصيد غير كافٍ",
@@ -1454,7 +1527,15 @@
     "actual_end": "النهاية الفعلية",
     "execution_timeline": "جدول الرحلة",
     "pickup_event": "الركوب",
-    "dropoff_event": "النزول"
+    "dropoff_event": "النزول",
+    "driver": "السائق",
+    "driver_name": "اسم السائق",
+    "passenger": "الراكب",
+    "passenger_name": "اسم الراكب",
+    "trip_type_individual": "فردي",
+    "trip_type_group": "مجموعة",
+    "group_type_friends": "أصدقاء",
+    "group_type_public": "عام"
   },
 
   "trip_live": {
@@ -1652,6 +1733,8 @@
     "left_panel": {
       "headline1": "قُد بذكاء.", "headline2": "اكسب أكثر.",
       "desc": "انضم إلى المنصة الرائدة لمشاركة الركوب في مصر واستثمر وقتك.",
+      "signin_desc": "انضم إلى منصة مشاركة الركوب الرائدة في مصر. تواصل مع ركاب الدورات الأسبوعية وسع دخلك حسب جدولك الخاص.",
+      "stat_drivers": "السائقون النشطون", "stat_earnings": "متوسط الكسب الشهري",
       "steps_label": "خطوات التسجيل:",
       "step1": "إنشاء حساب السائق", "step2": "إضافة بيانات السيارة", "step3": "تحديد أوقات التوفر", "step4": "ضبط الأسعار والتفضيلات",
       "footer": "البوابة التجريبية — commuter.site"

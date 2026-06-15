@@ -11,6 +11,7 @@ import {
 import { getLastBalance } from '@/lib/api/wallet';
 import PageHeader from '@/components/shared/PageHeader';
 import BottomSheet from '@/components/shared/BottomSheet';
+import TripChatButton from '@/components/shared/TripChatButton';
 import { useLocale, useTranslations } from 'next-intl';
 
 // ── Status config ─────────────────────────────────────────────────────────────
@@ -338,7 +339,7 @@ function InstanceCard({ instance, onViewDetails }: { instance: CourseInstance; o
 
 // ── Instance detail sheet ─────────────────────────────────────────────────────
 
-function InstanceDetailSheet({ instance }: { instance: CourseInstance | null }) {
+function InstanceDetailSheet({ instance, courseId }: { instance: CourseInstance | null; courseId: number }) {
   const t = useTranslations('trip_detail');
   const tCommon = useTranslations('common');
   const locale = useLocale();
@@ -457,8 +458,8 @@ function InstanceDetailSheet({ instance }: { instance: CourseInstance | null }) 
           )}
           {instance.driver_id && (
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-              <span style={{ color: '#5A6A7A' }}>{t('driver_id')}</span>
-              <span style={{ fontWeight: 700, color: '#0B1E3D' }}>#{instance.driver_id}</span>
+              <span style={{ color: '#5A6A7A' }}>{t('driver')}</span>
+              <span style={{ fontWeight: 700, color: '#0B1E3D' }}>{t('driver_name') === 'Driver name' ? `#${instance.driver_id}` : t('driver_name')}</span>
             </div>
           )}
           {instance.driver_price && (
@@ -498,7 +499,7 @@ function InstanceDetailSheet({ instance }: { instance: CourseInstance | null }) 
                     </svg>
                   </span>
                   <span style={{ color: '#0B1E3D', fontWeight: 600 }}>
-                    {p.type === 'passenger' ? t('passenger_n', { n: p.passenger_id ?? 0 }) : t('user_n', { id: p.user_id ?? 0 })}
+                    {p.name || (p.type === 'passenger' ? `${t('passenger')} #${p.passenger_id ?? 0}` : `User #${p.user_id ?? 0}`)}
                   </span>
                 </div>
                 <span style={{
@@ -510,6 +511,13 @@ function InstanceDetailSheet({ instance }: { instance: CourseInstance | null }) 
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Chat — show once matched / active / ongoing / confirmed / completed */}
+      {!['draft', 'pending_payment', 'matching', 'matching_failed', 'partially_matched', 'cancelled'].includes(instance.status) && (
+        <div style={{ marginBottom: 16 }}>
+          <TripChatButton tripInstanceId={instance.id} role="user" courseId={courseId} />
         </div>
       )}
     </div>
@@ -706,7 +714,7 @@ export default function CourseDetailPage() {
             <OverviewRow icon={<IcCalendar />} label={t('dates')}  value={`${course.start_date} → ${course.end_date}`} />
             <OverviewRow icon={<IcPrice />}    label={t('price')}  value={`${tCommon('egp')} ${estimatedTotalPrice.toLocaleString()}`} />
             <OverviewRow icon={<IcWallet />}   label={t('wallet_label')} value={course.wallet_status} />
-            <OverviewRow icon={<IcCar />}      label={t('type_label')}   value={course.trip_type + (course.group_type ? ` · ${course.group_type}` : '')} />
+            <OverviewRow icon={<IcCar />}      label={t('type_label')}   value={`${course.trip_type === 'individual' ? t('trip_type_individual') : t('trip_type_group')}${course.group_type ? ` · ${course.group_type === 'friends' ? t('group_type_friends') : t('group_type_public')}` : ''}`} />
             {firstGo && (
               <OverviewRow
                 icon={<IcClock />}
@@ -924,6 +932,7 @@ export default function CourseDetailPage() {
       ) : (
         <InstanceDetailSheet
           instance={selectedInstance}
+          courseId={id}
         />
       )}
     </BottomSheet>

@@ -17,12 +17,20 @@ type Day = typeof ALL_DAYS[number];
 
 interface AvailabilityItem {
   id: number;
-  location_name: string;
-  lat: string | number;
-  lng: string | number;
-  days: Day[];
+  day: string;
+  start_location_name: string;
+  start_lat: string | number;
+  start_lng: string | number;
+  end_location_name: string;
+  end_lat: string | number;
+  end_lng: string | number;
   start_time: string;
   end_time: string;
+  // Legacy fields for backward compatibility
+  location_name?: string;
+  lat?: string | number;
+  lng?: string | number;
+  days?: Day[];
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -65,25 +73,23 @@ interface AddModalProps {
 function AddModal({ onClose, onAdded }: AddModalProps) {
   const t = useTranslations('driver_availability');
   const tc = useTranslations('common');
-  const [lat,       setLat]       = useState('');
-  const [lng,       setLng]       = useState('');
-  const [locName,   setLocName]   = useState('');
-  const [days,      setDays]      = useState<Day[]>([]);
-  const [startTime, setStartTime] = useState('09:00');
-  const [endTime,   setEndTime]   = useState('17:00');
-  const [saving,    setSaving]    = useState(false);
-  const [errors,    setErrors]    = useState<Record<string, string>>({});
-
-  function toggleDay(d: Day) {
-    setDays((prev) =>
-      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d],
-    );
-  }
+  const [day,           setDay]           = useState('monday');
+  const [startLat,      setStartLat]      = useState('');
+  const [startLng,      setStartLng]      = useState('');
+  const [startLocName,  setStartLocName]  = useState('');
+  const [endLat,        setEndLat]        = useState('');
+  const [endLng,        setEndLng]        = useState('');
+  const [endLocName,    setEndLocName]    = useState('');
+  const [startTime,     setStartTime]     = useState('09:00');
+  const [endTime,       setEndTime]       = useState('17:00');
+  const [saving,        setSaving]        = useState(false);
+  const [errors,        setErrors]        = useState<Record<string, string>>({});
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!lat || !lng) e.location = t('err_location');
-    if (days.length === 0) e.days = t('err_days');
+    if (!startLat || !startLng) e.start_location = t('err_location');
+    if (!endLat || !endLng) e.end_location = 'Destination is required';
+    if (!day) e.day = t('err_days');
     if (!startTime) e.start = t('err_start');
     if (!endTime)   e.end   = t('err_end');
     if (startTime && endTime && startTime >= endTime) e.end = t('err_end_after_start');
@@ -96,10 +102,13 @@ function AddModal({ onClose, onAdded }: AddModalProps) {
     setSaving(true);
     try {
       const res = await driverApi.addAvailability({
-        location_name: locName || `${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)}`,
-        lat:  parseFloat(lat),
-        lng:  parseFloat(lng),
-        days,
+        day,
+        start_location_name: startLocName || `${parseFloat(startLat).toFixed(4)}, ${parseFloat(startLng).toFixed(4)}`,
+        start_lat:  parseFloat(startLat),
+        start_lng:  parseFloat(startLng),
+        end_location_name: endLocName || `${parseFloat(endLat).toFixed(4)}, ${parseFloat(endLng).toFixed(4)}`,
+        end_lat:  parseFloat(endLat),
+        end_lng:  parseFloat(endLng),
         start_time: startTime,
         end_time:   endTime,
       });
@@ -170,55 +179,71 @@ function AddModal({ onClose, onAdded }: AddModalProps) {
         {/* Body */}
         <div style={{ padding: '22px 24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-          {/* Days */}
+          {/* Day */}
           <div>
             <label style={labelStyle}>
               <CalendarCheck size={13} style={{ display: 'inline', marginRight: 5, color: '#00C2A8', verticalAlign: 'middle' }} />
               {t('available_days')}
             </label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {ALL_DAYS.map((d) => {
-                const sel = days.includes(d);
-                return (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => toggleDay(d)}
-                    style={{
-                      padding: '8px 16px', borderRadius: 20, fontSize: 13, fontWeight: 700,
-                      fontFamily: 'inherit', cursor: 'pointer',
-                      border: `1.5px solid ${sel ? '#00C2A8' : '#E2E8F0'}`,
-                      background: sel ? '#00C2A8' : '#fff',
-                      color: sel ? '#0B1E3D' : '#5A6A7A',
-                      transition: 'all .15s',
-                    }}
-                  >
-                    {t(DAY_I18N[d])}
-                  </button>
-                );
-              })}
-            </div>
-            {errors.days && (
-              <p style={{ margin: '6px 0 0', fontSize: 12, color: '#E74C3C' }}>{errors.days}</p>
+            <select
+              value={day}
+              onChange={(e) => setDay(e.target.value)}
+              style={{
+                ...inputStyle,
+                appearance: 'none',
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%235A6A7A' d='M1 1l5 5 5-5'/%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 12px center',
+                paddingRight: 36,
+                borderColor: errors.day ? '#E74C3C' : '#E2E8F0',
+              }}
+            >
+              {ALL_DAYS.map((d) => (
+                <option key={d} value={d}>
+                  {t(DAY_I18N[d as Day])}
+                </option>
+              ))}
+            </select>
+            {errors.day && (
+              <p style={{ margin: '6px 0 0', fontSize: 12, color: '#E74C3C' }}>{errors.day}</p>
             )}
           </div>
 
-          {/* Location map */}
+          {/* Start Location map */}
           <div>
             <label style={{ ...labelStyle, marginBottom: 8 }}>
               <MapPin size={13} style={{ display: 'inline', marginRight: 5, color: '#00C2A8', verticalAlign: 'middle' }} />
               {t('pickup_area')}
             </label>
             <LocationPickerMap
-              lat={lat} lng={lng} name={locName}
+              lat={startLat} lng={startLng} name={startLocName}
               onChange={(newLat, newLng, newName) => {
-                setLat(newLat); setLng(newLng); setLocName(newName);
-                if (newLat && newLng) setErrors((e) => { const { location: _, ...rest } = e; return rest; });
+                setStartLat(newLat); setStartLng(newLng); setStartLocName(newName);
+                if (newLat && newLng) setErrors((e) => { const { start_location: _, ...rest } = e; return rest; });
               }}
-              error={errors.location}
+              error={errors.start_location}
             />
-            {errors.location && (
-              <p style={{ margin: '6px 0 0', fontSize: 12, color: '#E74C3C' }}>{errors.location}</p>
+            {errors.start_location && (
+              <p style={{ margin: '6px 0 0', fontSize: 12, color: '#E74C3C' }}>{errors.start_location}</p>
+            )}
+          </div>
+
+          {/* End Location map */}
+          <div>
+            <label style={{ ...labelStyle, marginBottom: 8 }}>
+              <MapPin size={13} style={{ display: 'inline', marginRight: 5, color: '#EF4444', verticalAlign: 'middle' }} />
+              {t('end_location')}
+            </label>
+            <LocationPickerMap
+              lat={endLat} lng={endLng} name={endLocName}
+              onChange={(newLat, newLng, newName) => {
+                setEndLat(newLat); setEndLng(newLng); setEndLocName(newName);
+                if (newLat && newLng) setErrors((e) => { const { end_location: _, ...rest } = e; return rest; });
+              }}
+              error={errors.end_location}
+            />
+            {errors.end_location && (
+              <p style={{ margin: '6px 0 0', fontSize: 12, color: '#E74C3C' }}>{errors.end_location}</p>
             )}
           </div>
 
@@ -300,18 +325,30 @@ function AvailabilityCard({ item, onDelete }: { item: AvailabilityItem; onDelete
   const t = useTranslations('driver_availability');
   const tc = useTranslations('common');
   const [deleting, setDeleting] = useState(false);
-  const [displayName, setDisplayName] = useState<string>(
-    item.location_name && !COORD_PATTERN.test(item.location_name)
-      ? item.location_name
+  const [startDisplayName, setStartDisplayName] = useState<string>(
+    item.start_location_name && !COORD_PATTERN.test(item.start_location_name)
+      ? item.start_location_name
+      : '',
+  );
+  const [endDisplayName, setEndDisplayName] = useState<string>(
+    item.end_location_name && !COORD_PATTERN.test(item.end_location_name)
+      ? item.end_location_name
       : '',
   );
 
   useEffect(() => {
-    if (!displayName) {
-      reverseGeocode(Number(item.lat), Number(item.lng)).then((addr) => {
+    if (!startDisplayName && item.start_lat && item.start_lng) {
+      reverseGeocode(Number(item.start_lat), Number(item.start_lng)).then((addr) => {
         const name = formatDisplayName(addr);
-        if (name && !COORD_PATTERN.test(name)) setDisplayName(name);
-        else setDisplayName(`${Number(item.lat).toFixed(5)}, ${Number(item.lng).toFixed(5)}`);
+        if (name && !COORD_PATTERN.test(name)) setStartDisplayName(name);
+        else setStartDisplayName(`${Number(item.start_lat).toFixed(5)}, ${Number(item.start_lng).toFixed(5)}`);
+      });
+    }
+    if (!endDisplayName && item.end_lat && item.end_lng) {
+      reverseGeocode(Number(item.end_lat), Number(item.end_lng)).then((addr) => {
+        const name = formatDisplayName(addr);
+        if (name && !COORD_PATTERN.test(name)) setEndDisplayName(name);
+        else setEndDisplayName(`${Number(item.end_lat).toFixed(5)}, ${Number(item.end_lng).toFixed(5)}`);
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -347,28 +384,17 @@ function AvailabilityCard({ item, onDelete }: { item: AvailabilityItem; onDelete
         (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 12px rgba(11,30,61,0.05)';
       }}
     >
-      {/* Top row: location + delete */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-          <div style={{
-            width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-            background: '#EFF7F5', border: '1px solid #C8E6E2',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <MapPin size={17} color="#00C2A8" strokeWidth={2} />
-          </div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#0B1E3D', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {displayName || <Loader2 size={14} style={{ animation: 'spin 0.8s linear infinite', color: '#94A3B8' }} />}
-            </div>
-          </div>
+      {/* Header: Day + Delete button */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#5A6A7A', textTransform: 'capitalize' }}>
+          {t(DAY_I18N[(item.day || 'monday') as Day] || 'day_mon')}
         </div>
         <button
           onClick={handleDelete}
           disabled={deleting}
           title={tc('delete')}
           style={{
-            flexShrink: 0, width: 34, height: 34, borderRadius: 9,
+            width: 34, height: 34, borderRadius: 9,
             border: '1.5px solid #FEE2E2', background: '#FFF5F5',
             color: '#EF4444', display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.6 : 1,
@@ -383,17 +409,52 @@ function AvailabilityCard({ item, onDelete }: { item: AvailabilityItem; onDelete
         </button>
       </div>
 
+      {/* Route */}
+      <div style={{ display: 'flex', gap: 12 }}>
+        {/* Start location */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flex: 1, minWidth: 0 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+            background: '#EFF7F5', border: '1.5px solid #C8E6E2',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <MapPin size={15} color="#00C2A8" strokeWidth={2.5} />
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 12, color: '#94A3B8', fontWeight: 600, marginBottom: 2 }}>From</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#0B1E3D', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {startDisplayName || <Loader2 size={12} style={{ animation: 'spin 0.8s linear infinite', color: '#94A3B8' }} />}
+            </div>
+          </div>
+        </div>
+
+        {/* Arrow */}
+        <div style={{ display: 'flex', alignItems: 'center', color: '#CBD5E0', fontSize: 18 }}>→</div>
+
+        {/* End location */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flex: 1, minWidth: 0 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+            background: '#FEF2F2', border: '1.5px solid #FECACA',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <MapPin size={15} color="#EF4444" strokeWidth={2.5} />
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 12, color: '#94A3B8', fontWeight: 600, marginBottom: 2 }}>To</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#0B1E3D', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {endDisplayName || <Loader2 size={12} style={{ animation: 'spin 0.8s linear infinite', color: '#94A3B8' }} />}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Time row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <Clock size={14} color="#00C2A8" strokeWidth={2} />
         <span style={{ fontSize: 13, fontWeight: 600, color: '#0B1E3D' }}>
           {fmtTime(item.start_time)} – {fmtTime(item.end_time)}
         </span>
-      </div>
-
-      {/* Days */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-        {dayPills(item.days, (d) => t(DAY_I18N[d]))}
       </div>
     </div>
   );

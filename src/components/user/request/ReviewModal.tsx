@@ -40,7 +40,7 @@ function ReviewRow({ label, value }: { label: string; value: React.ReactNode }) 
 function ReviewSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-5">
-      <h4 className="text-xs font-semibold text-[#9AA0A6] uppercase tracking-wide mb-2">{title}</h4>
+      <h4 className="text-xs font-semibold text-[#9AA0A6] uppercase tracking-wide mb-2 review-section-title">{title}</h4>
       {children}
     </div>
   );
@@ -116,11 +116,11 @@ export default function ReviewModal({
         }}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0] z-10">
-          <h3 className="text-base font-bold text-[#0B1E3D]">{trs('title')}</h3>
+        <div className="sticky top-0 bg-white flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0] z-10 schedule-header-flex">
+          <h3 className="text-base font-bold text-[#0B1E3D] text-center flex-1">{trs('title')}</h3>
           <button
             onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5A6A7A', fontSize: 20 }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5A6A7A', fontSize: 20, marginLeft: 'auto' }}
           >
             ✕
           </button>
@@ -151,9 +151,9 @@ export default function ReviewModal({
               return (
                 <div key={slot.id} className="mb-3 p-3 bg-[#F8F9FA] rounded-xl border border-[#E2E8F0]">
                   {/* Slot header */}
-                  <div className="flex items-center justify-between mb-2.5">
+                  <div className="flex items-center justify-between mb-2.5 schedule-header-flex">
                     <span className="text-xs font-semibold text-[#0B1E3D]">{tsl('label', { n: i + 1 })}</span>
-                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${slot.trip_type === 'round_trip' ? 'bg-[#EFF7F6] text-[#00C2A8]' : 'bg-[#F1F3F4] text-[#5A6A7A]'}`}>
+                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full schedule-centered ${slot.trip_type === 'round_trip' ? 'bg-[#EFF7F6] text-[#00C2A8]' : 'bg-[#F1F3F4] text-[#5A6A7A]'}`}>
                       {slot.trip_type === 'round_trip' ? tsl('round_trip') : tsl('one_way')}
                     </span>
                   </div>
@@ -231,7 +231,7 @@ export default function ReviewModal({
                     {DAY_ABBR.map(d => (
                       <span
                         key={d}
-                        className={`text-[10px] px-1.5 py-0.5 rounded ${slot.days.includes(d as WeekDay) ? 'bg-[#0B1E3D] text-white font-semibold' : 'bg-[#E2E8F0] text-[#9AA0A6]'}`}
+                        className={`inline-flex items-center justify-center text-[10px] px-1.5 py-0.5 rounded ${slot.days.includes(d as WeekDay) ? 'bg-[#0B1E3D] text-white font-semibold' : 'bg-[#E2E8F0] text-[#9AA0A6]'}`}
                       >
                         {td(d.toLowerCase() as 'sun')}
                       </span>

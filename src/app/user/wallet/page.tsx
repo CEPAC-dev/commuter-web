@@ -91,6 +91,7 @@ function StatusBadge({ status, label }: { status: string; label: string }) {
   const colorMap: Record<string, { bg: string; color: string }> = {
     PENDING:   { bg: '#FFF3E0', color: '#F57C00' },
     COMPLETED: { bg: '#E8F5E9', color: '#2E7D32' },
+    SUCCESS:   { bg: '#E8F5E9', color: '#2E7D32' },
     FAILED:    { bg: '#FFEBEE', color: '#C62828' },
   };
   const style = colorMap[upper] ?? { bg: '#F5F5F5', color: '#555' };
@@ -134,9 +135,19 @@ function TransactionCard({
   const statusLabels: Record<string, string> = {
     pending: t('status_pending'),
     completed: t('status_completed'),
+    success: t('status_success'),
     failed: t('status_failed'),
   };
   const statusLabel = statusLabels[tx.status] ?? tx.status.toUpperCase();
+
+  const operationTypes: Record<string, string> = {
+    topup: t('transaction_topup'),
+    deposit: t('transaction_deposit'),
+    withdraw: t('transaction_withdraw'),
+    payment: t('transaction_payment'),
+    refund: t('transaction_refund'),
+  };
+  const operationLabel = operationTypes[tx.operation_type] ?? tx.operation_type;
 
   async function handleDelete() {
     setDeleting(true);
@@ -191,7 +202,7 @@ function TransactionCard({
       {showDeleteDlg && (
         <ConfirmDialog
           title={t('delete_title')}
-          message={t('delete_message', { amount: Number(tx.transaction_amount).toFixed(2), type: tx.operation_type })}
+          message={t('delete_message', { amount: Number(tx.transaction_amount).toFixed(2), type: operationLabel })}
           confirmLabel={deleting ? t('deleting') : tCommon('delete')}
           cancelLabel={tCommon('cancel')}
           confirmColor="#E74C3C"
@@ -212,7 +223,7 @@ function TransactionCard({
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 15, fontWeight: 700, color: '#0B1E3D', textTransform: 'capitalize' }}>
-          {tx.operation_type}
+          {operationLabel}
         </span>
         <StatusBadge status={tx.status} label={statusLabel} />
       </div>

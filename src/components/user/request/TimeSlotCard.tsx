@@ -139,7 +139,7 @@ export default function TimeSlotCard({
       style={{ borderColor: palette.border, boxShadow: `0 0 0 1px ${palette.soft} inset` }}
     >
       {/* ── Header ── */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between schedule-header-flex">
         <span
           className="text-sm font-semibold px-2.5 py-1 rounded-full"
           style={{ color: palette.deep, background: palette.soft }}
@@ -164,21 +164,21 @@ export default function TimeSlotCard({
 
         {slot.route_set && slot.origin && slot.destination ? (
           <div className="bg-[#EFF7F6] border border-[#C8E8E4] rounded-xl p-3">
-            <div className="flex items-start gap-2 mb-1">
+            <div className="flex items-start gap-2 mb-1 route-dot-flex">
               <div className="w-2 h-2 rounded-full bg-[#0B1E3D] mt-1 flex-shrink-0" />
               <span className="text-sm font-medium text-[#0B1E3D] leading-snug">{slot.origin.address}</span>
             </div>
             {slot.stops.map((stop, i) => (
-              <div key={i} className="flex items-start gap-2 mb-1 pl-0.5">
+              <div key={i} className="flex items-start gap-2 mb-1 pl-0.5 route-dot-flex">
                 <div className="w-5 h-5 rounded-full bg-[#5A6A7A] flex items-center justify-center text-white flex-shrink-0" style={{ fontSize: 9, fontWeight: 700 }}>{i + 1}</div>
                 <span className="text-xs text-[#5A6A7A] leading-snug">{stop.address}</span>
               </div>
             ))}
-            <div className="flex items-start gap-2 mb-2">
+            <div className="flex items-start gap-2 mb-2 route-dot-flex">
               <div className="w-2 h-2 rounded-full bg-[#00C2A8] mt-1 flex-shrink-0" />
               <span className="text-sm font-medium text-[#0B1E3D] leading-snug">{slot.destination.address}</span>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between schedule-header-flex">
               <span className="text-xs text-[#5A6A7A]">
                 {slot.route
                   ? `${slot.route.distance_km.toFixed(1)} km · ~${Math.round(slot.route.duration_minutes)} min`
@@ -248,7 +248,7 @@ export default function TimeSlotCard({
                 type="button"
                 disabled={routeLocked}
                 onClick={() => onTripTypeChange(tripType)}
-                className="h-10 rounded-lg border text-sm font-medium transition-colors"
+                className="h-10 rounded-lg border text-sm font-medium transition-colors trip-type-btn"
                 style={slot.trip_type === tripType
                   ? { borderColor: palette.accent, background: palette.soft, color: palette.deep }
                   : { borderColor: '#E2E8F0', background: '#fff', color: '#5A6A7A' }}
@@ -443,7 +443,7 @@ export default function TimeSlotCard({
       {/* ── Days — locked until route is set ── */}
       <div className={routeLocked ? 'opacity-40 pointer-events-none select-none' : ''}>
         <label className="block text-xs font-medium text-[#5A6A7A] mb-2">{tf('days_label')}</label>
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap days-picker-flex">
           {ALL_DAYS.map((day) => {
             const isSelected   = slot.days.includes(day);
             const takenByOther = !isSelected && assignedDays.includes(day);
@@ -454,7 +454,7 @@ export default function TimeSlotCard({
                 type="button"
                 disabled={isDisabled}
                 onClick={() => !isDisabled && onDayToggle(day)}
-                className={`w-10 h-10 rounded-full text-xs font-medium border transition-colors ${
+                className={`w-10 h-10 rounded-full text-xs font-medium border transition-colors schedule-centered ${
                   isSelected
                     ? 'text-white'
                     : isDisabled

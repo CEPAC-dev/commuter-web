@@ -314,10 +314,10 @@ function AddLocationModal({ onClose, onSaved }: FormModalProps) {
   return (
     <>
       <div className="fixed inset-0 bg-black/40 z-[600]" onClick={onClose} />
-      <div className="fixed z-[700] bg-white md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[480px] md:rounded-2xl md:shadow-2xl bottom-0 left-0 right-0 rounded-t-2xl shadow-2xl md:bottom-auto max-h-[90vh] overflow-y-auto"
+      <div className="fixed z-[700] bg-white md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[480px] md:rounded-2xl md:shadow-2xl bottom-0 left-0 right-0 rounded-t-2xl shadow-2xl md:bottom-auto max-h-[90vh] overflow-y-auto modal-desktop-center"
         style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0] profile-section-header">
           <h2 className="text-base font-semibold text-[#0B1E3D]">{ts('save_place')}</h2>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F1F3F4] text-[#5A6A7A]">✕</button>
         </div>
@@ -325,8 +325,8 @@ function AddLocationModal({ onClose, onSaved }: FormModalProps) {
         <div className="px-5 py-5 space-y-4">
           {/* Nickname quick picks */}
           <div>
-            <label className="block text-sm font-medium text-[#0B1E3D] mb-2">
-              Nickname <span className="text-[#E74C3C]">*</span>
+            <label className="block text-sm font-medium text-[#0B1E3D] mb-2 text-right">
+              {ts('nickname')} <span className="text-[#E74C3C]">*</span>
             </label>
             <div className="flex gap-2 mb-2">
               {QUICK_NICK_KEYS.map((key) => {
@@ -336,7 +336,7 @@ function AddLocationModal({ onClose, onSaved }: FormModalProps) {
                   key={key}
                   type="button"
                   onClick={() => { setNickname(label); setErrors((p) => ({ ...p, nickname: '' })); }}
-                  className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
+                  className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors flex items-center justify-center ${
                     nickname === label
                       ? 'border-[#00C2A8] bg-[#EFF7F6] text-[#0B1E3D]'
                       : 'border-[#E2E8F0] bg-white text-[#5A6A7A]'
@@ -349,7 +349,7 @@ function AddLocationModal({ onClose, onSaved }: FormModalProps) {
             <input
               value={nickname}
               onChange={(e) => { setNickname(e.target.value); setErrors((p) => ({ ...p, nickname: '' })); }}
-              placeholder="Or type a custom nickname…"
+              placeholder={ts('nickname_custom')}
               className={`w-full h-11 border rounded-lg px-3 text-sm focus:outline-none focus:border-[#00C2A8] focus:ring-2 focus:ring-[#00C2A8]/20 ${errors.nickname ? 'border-[#E74C3C]' : 'border-[#E2E8F0]'}`}
             />
             {errors.nickname && <p className="text-xs text-[#E74C3C] mt-1">{errors.nickname}</p>}
@@ -357,13 +357,13 @@ function AddLocationModal({ onClose, onSaved }: FormModalProps) {
 
           {/* Location name */}
           <div>
-            <label className="block text-sm font-medium text-[#0B1E3D] mb-1">
-              Location name <span className="text-[#E74C3C]">*</span>
+            <label className="block text-sm font-medium text-[#0B1E3D] mb-1 text-right">
+              {ts('location_name')} <span className="text-[#E74C3C]">*</span>
             </label>
             <input
               value={locationName}
               onChange={(e) => { setLocationName(e.target.value); setErrors((p) => ({ ...p, locationName: '' })); }}
-              placeholder="e.g. Dad's house, Main office"
+              placeholder={ts('location_example')}
               className={`w-full h-11 border rounded-lg px-3 text-sm focus:outline-none focus:border-[#00C2A8] focus:ring-2 focus:ring-[#00C2A8]/20 ${errors.locationName ? 'border-[#E74C3C]' : 'border-[#E2E8F0]'}`}
             />
             {errors.locationName && <p className="text-xs text-[#E74C3C] mt-1">{errors.locationName}</p>}
@@ -371,13 +371,13 @@ function AddLocationModal({ onClose, onSaved }: FormModalProps) {
 
           {/* Location pick */}
           <div>
-            <label className="block text-sm font-medium text-[#0B1E3D] mb-1">
-              Location address 
+            <label className="block text-sm font-medium text-[#0B1E3D] mb-1 text-right">
+              {ts('location_address')}
             </label>
             <button
               type="button"
               onClick={() => setPickerOpen(true)}
-              className={`w-full h-12 border-2 rounded-xl flex items-center gap-3 px-4 text-sm transition-colors ${
+              className={`w-full h-12 border-2 rounded-xl flex items-center justify-center gap-3 px-4 text-sm transition-colors ${
                 lat !== null
                   ? 'border-[#00C2A8] bg-[#EFF7F6] text-[#0B1E3D]'
                   : errors.location
@@ -396,17 +396,17 @@ function AddLocationModal({ onClose, onSaved }: FormModalProps) {
           </div>
         </div>
 
-        <div className="flex gap-3 px-5 pb-6 pt-2">
+        <div className="flex gap-3 px-5 pb-6 pt-2 profile-section-header justify-center">
           <button
             onClick={onClose}
-            className="flex-1 h-11 border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#5A6A7A] hover:bg-[#F8F9FA]"
+            className="w-24 h-11 border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#5A6A7A] hover:bg-[#F8F9FA] flex items-center justify-center"
           >
             {tc('cancel')}
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 h-11 bg-[#0B1E3D] text-white rounded-xl text-sm font-semibold disabled:opacity-50"
+            className="w-28 h-11 bg-[#0B1E3D] text-white rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center justify-center"
           >
             {saving ? tc('loading') : ts('save_place')}
           </button>
@@ -448,7 +448,7 @@ export default function SavedLocationsSection() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 profile-section-header">
         <h3 className="text-base font-bold text-[#0B1E3D]">{tp('favorite_places')}</h3>
         <button
           onClick={() => setAddOpen(true)}
@@ -461,7 +461,11 @@ export default function SavedLocationsSection() {
       {loading ? (
         <div className="py-6 text-center text-sm text-[#8A9AB0]">{tc('loading')}</div>
       ) : places.length === 0 ? (
-        <div className="py-6 text-center text-sm text-[#5A6A7A]">{tp('locations_empty')}</div>
+        <div className="flex flex-col items-center gap-2 py-8 text-center">
+          <span className="text-4xl">📍</span>
+          <p className="text-sm font-semibold text-[#0B1E3D]">{tp('locations_empty')}</p>
+          <p className="text-xs text-[#5A6A7A] max-w-[260px]">{tp('locations_empty_desc')}</p>
+        </div>
       ) : (
         <div className="flex flex-col gap-2">
           {places.map((place) => (

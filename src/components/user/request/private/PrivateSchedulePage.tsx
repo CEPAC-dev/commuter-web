@@ -458,10 +458,10 @@ export default function PrivateSchedulePage() {
                         key={tt}
                         type="button"
                         onClick={() => setTripType(tt)}
-                        className={`h-10 rounded-lg border text-sm font-semibold transition-colors ${
+                        className={`h-10 rounded-lg border text-sm font-semibold transition-colors trip-type-btn ${
                           tripType === tt
-                            ? 'bg-[#A8EAE0] border-[#A8EAE0] text-[#0B1E3D]'
-                            : 'bg-white border-[#E2E8F0] text-[#5A6A7A]'
+                            ? 'border-[#00C2A8] bg-[#EFF7F6] text-[#0B1E3D]'
+                            : 'border-[#E2E8F0] bg-white text-[#5A6A7A]'
                         }`}
                       >
                         {tt === 'one_way' ? tsl('one_way') : tsl('round_trip')}
@@ -589,7 +589,7 @@ export default function PrivateSchedulePage() {
               setShowReview(true);
             }}
             disabled={submitting}
-            className="w-full py-4 rounded-xl text-white font-bold text-sm transition-colors bg-[#0B1E3D] hover:bg-[#132D52] disabled:opacity-60"
+            className="w-full py-4 rounded-xl text-white font-bold text-sm transition-colors bg-[#0B1E3D] hover:bg-[#132D52] disabled:opacity-60 review-submit-btn"
             style={{ border: 'none', fontFamily: 'inherit' }}
           >
             {trs('review_submit')}

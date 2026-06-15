@@ -34,7 +34,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <div className="border border-[#E2E8F0] rounded-xl overflow-hidden">
       <div className="px-4 py-2.5 bg-[#F8F9FA] border-b border-[#E2E8F0]">
-        <p className="text-xs font-bold text-[#5A6A7A] uppercase tracking-wide">{title}</p>
+        <p className="text-xs font-bold text-[#5A6A7A] uppercase tracking-wide review-section-title">{title}</p>
       </div>
       <div className="px-4 py-3 space-y-2">{children}</div>
     </div>
@@ -106,7 +106,7 @@ export default function ReviewModal({
         >
           {tcommon('back')}
         </button>
-        <h2 className="text-base font-bold text-[#0B1E3D] flex-1">{trs('title')}</h2>
+        <h2 className="text-base font-bold text-[#0B1E3D] flex-1 text-center">{trs('title')}</h2>
         <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#EFF7F6] text-[#00C2A8] border border-[#C8E8E4]">
           {trf('private')}
         </span>
@@ -177,7 +177,7 @@ export default function ReviewModal({
                         ? trsch('me')
                         : passengerMap.get(Number(key)) ?? trs('passenger_fallback', { id: key });
                       return (
-                        <div key={key} className="flex items-center justify-between text-sm">
+                        <div key={key} className="flex items-center justify-between text-sm schedule-list-item">
                           <span className="text-[#0B1E3D] font-medium">{name}</span>
                           <span className="text-xs text-[#5A6A7A] bg-[#F1F3F4] px-2 py-0.5 rounded-full">
                             {tseat(seat)}
@@ -266,8 +266,18 @@ export default function ReviewModal({
               <div style={{ display: 'flex', borderRadius: 10, border: '1.5px solid #E2E8F0', overflow: 'hidden', background: '#FAFAFA' }}>
                 <button
                   type="button"
+                  disabled={adjMax <= priceMax}
                   onClick={() => { const v = Math.max(priceMax, adjMax - 1); setAdjMax(v); setRawMax(String(v)); }}
-                  style={{ width: 48, height: 48, background: 'none', border: 'none', borderRight: '1px solid #E2E8F0', cursor: 'pointer', fontSize: 22, color: '#94A3B8', fontWeight: 500, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  style={{
+                    width: 48, height: 48, border: 'none', borderRight: '1px solid #E2E8F0',
+                    flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 22, fontWeight: 700,
+                    background: adjMax > priceMax ? '#00C2A8' : 'none',
+                    color: adjMax > priceMax ? '#fff' : '#D1D5DB',
+                    cursor: adjMax <= priceMax ? 'not-allowed' : 'pointer',
+                    opacity: adjMax <= priceMax ? 0.4 : 1,
+                    transition: 'background 0.2s, color 0.2s',
+                  }}
                 >−</button>
                 <input
                   type="text"

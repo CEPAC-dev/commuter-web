@@ -140,7 +140,7 @@ const driverApi = {
   raisePrice:           (id: string, price: number)          => call(`driver/requests/${id}/raise`, { method: 'POST', body: { new_price: price } }),
 
   // Cycles
-  getCycles:            ()                                   => call('driver/cycles'),
+  getCycles:            ()                                   => call('driver/assigned-trips'),
   cancelCycle:          (id: string)                         => call(`driver/cycles/${id}/cancel`, { method: 'POST' }),
 
   // Trip

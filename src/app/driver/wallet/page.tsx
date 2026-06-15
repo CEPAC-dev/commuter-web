@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 import driverApi from '@/lib/api/driver';
 
 const QUICK_AMOUNTS = [50, 100, 250, 500];
@@ -88,7 +89,7 @@ function formatDate(iso: string): string {
   return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()} · ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, label }: { status: string; label?: string }) {
   const upper = status.toUpperCase();
   const colorMap: Record<string, { bg: string; color: string }> = {
     PENDING:   { bg: '#FFF3E0', color: '#F57C00' },
@@ -109,15 +110,33 @@ function StatusBadge({ status }: { status: string }) {
         color: style.color,
       }}
     >
-      {upper}
+      {label || upper}
     </span>
   );
 }
 
 function TransactionCard({ tx }: { tx: DriverTransaction }) {
+  const t = useTranslations('wallet');
   const isDebit = tx.operation_type?.toLowerCase().includes('withdraw') || tx.operation_type?.toLowerCase().includes('debit');
   const amountColor = isDebit ? '#E74C3C' : '#2E7D32';
   const amountPrefix = isDebit ? '−' : '+';
+
+  const operationTypes: Record<string, string> = {
+    topup: t('transaction_topup'),
+    deposit: t('transaction_deposit'),
+    withdraw: t('transaction_withdraw'),
+    payment: t('transaction_payment'),
+    refund: t('transaction_refund'),
+  };
+  const operationLabel = operationTypes[tx.operation_type?.toLowerCase()] ?? tx.operation_type ?? 'Transaction';
+
+  const statusLabels: Record<string, string> = {
+    pending: t('status_pending'),
+    completed: t('status_completed'),
+    success: t('status_success'),
+    failed: t('status_failed'),
+  };
+  const statusLabel = statusLabels[tx.status?.toLowerCase()] ?? tx.status?.toUpperCase() ?? 'Unknown';
 
   return (
     <div
@@ -133,9 +152,9 @@ function TransactionCard({ tx }: { tx: DriverTransaction }) {
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 15, fontWeight: 700, color: '#0B1E3D', textTransform: 'capitalize' }}>
-          {tx.operation_type ?? 'Transaction'}
+          {operationLabel}
         </span>
-        <StatusBadge status={tx.status} />
+        <StatusBadge status={tx.status} label={statusLabel} />
       </div>
       <div style={{ fontSize: 20, fontWeight: 800, color: amountColor }}>
         {amountPrefix} EGP {Number(tx.transaction_amount).toFixed(2)}
