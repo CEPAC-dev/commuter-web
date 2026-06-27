@@ -80,7 +80,7 @@ export default function DriverNavbar() {
       }}
       className="cnav-bar hidden md:flex">
         {/* Logo — left */}
-        <Link href="/driver/my-requests" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', flexShrink: 0, position: 'relative', zIndex: 1 }}>
+        <Link href="/driver/my-cycles" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', flexShrink: 0, position: 'relative', zIndex: 1 }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: '#00C2A8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ color: '#0B1E3D', fontWeight: 900, fontSize: 16, lineHeight: 1 }}>C</span>
           </div>

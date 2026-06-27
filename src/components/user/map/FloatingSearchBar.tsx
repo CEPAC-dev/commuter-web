@@ -7,6 +7,7 @@ import type { SavedLocation } from '@/types/user';
 import { useMap } from '@/lib/MapContext';
 import { useIntent } from '@/lib/IntentContext';
 import { getFavouritePlaces, type FavouritePlace } from '@/lib/api/savedLocations';
+import { useIsRtl } from '@/lib/useIsRtl';
 
 
 export interface LocationValue {
@@ -55,6 +56,7 @@ export default function FloatingSearchBar({
   const { origin: from, destination: to, setOrigin, setDestination, stops, setStop, addStop, removeStop, swapOriginDestination } = useMap();
   const { intent } = useIntent();
   const isPrivate = intent.ride_type === 'private';
+  const isRtl = useIsRtl();
   const t = useTranslations('map');
   const [expanded, setExpanded] = useState(false);
   const [fromText, setFromText] = useState(from?.address ?? '');
@@ -377,7 +379,7 @@ export default function FloatingSearchBar({
         .fsb-swap:hover { background: #EFF7F6 !important; border-color: #00C2A8 !important; color: #00C2A8 !important; }
       `}</style>
 
-      <div ref={containerRef} dir="ltr" style={{ position: 'absolute', top: 16, left: 16, zIndex: 1000, width: 'min(420px, calc(100vw - 32px))' }}>
+      <div ref={containerRef} dir={isRtl ? 'rtl' : 'ltr'} style={{ position: 'absolute', top: 16, ...(isRtl ? { right: 16 } : { left: 16 }), zIndex: 1000, width: 'min(420px, calc(100vw - 32px))' }}>
 
         {/* ── Card ─────────────────────────────────────────────────── */}
         <div style={{

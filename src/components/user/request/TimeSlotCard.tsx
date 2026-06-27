@@ -278,7 +278,7 @@ export default function TimeSlotCard({
                 {tsl('pickup_max_note', { max: formatTime12h(pickupToMax), buffer: PICKUP_BUFFER_MIN, route: routeDuration })}
               </p>
             )}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 pickup-time-grid">
               <div>
                 <label className="block text-xs text-[#9AA0A6] mb-1">{tsl('pickup_from_label')}</label>
                 <select

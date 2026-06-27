@@ -512,7 +512,7 @@ export default function SchedulePage() {
                     type="button"
                     disabled={disabled}
                     onClick={() => setIncludeSelf(!include_self)}
-                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl border-2 mb-3 text-left transition-colors ${
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl border-2 mb-3 ltr:text-left rtl:text-right transition-colors passenger-card-row ${
                       checked
                         ? 'border-[#00C2A8] bg-[#EFF7F6]'
                         : disabled
@@ -563,7 +563,7 @@ export default function SchedulePage() {
                           type="button"
                           disabled={disabled}
                           onClick={toggle}
-                          className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl border-2 text-left transition-colors ${
+                          className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl border-2 ltr:text-left rtl:text-right transition-colors passenger-card-row ${
                             checked
                               ? 'border-[#00C2A8] bg-[#EFF7F6]'
                               : disabled
@@ -638,7 +638,7 @@ export default function SchedulePage() {
                 placeholder={t('notes_placeholder')}
                 className="w-full p-3 rounded-xl border border-[#E2E8F0] text-sm text-[#0B1E3D] resize-none focus:outline-none focus:border-[#00C2A8]"
               />
-              <span className="absolute bottom-2 right-3 text-[10px] text-[#9AA0A6]">
+              <span className="absolute bottom-2 ltr:right-3 rtl:left-3 text-[10px] text-[#9AA0A6]">
                 {(wizard.notes ?? '').length}/500
               </span>
             </div>

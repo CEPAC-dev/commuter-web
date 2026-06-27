@@ -560,7 +560,7 @@ export default function PrivateSchedulePage() {
                 placeholder={tps('notes_placeholder')}
                 className="w-full p-3 rounded-xl border border-[#E2E8F0] text-sm text-[#0B1E3D] resize-none focus:outline-none focus:border-[#00C2A8]"
               />
-              <span className="absolute bottom-2 right-3 text-[10px] text-[#9AA0A6]">
+              <span className="absolute bottom-2 ltr:right-3 rtl:left-3 text-[10px] text-[#9AA0A6]">
                 {(wizard.notes ?? '').length}/500
               </span>
             </div>

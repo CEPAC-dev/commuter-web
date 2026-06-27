@@ -302,7 +302,7 @@ export default function DriverOnboardingPage() {
             <strong className="text-[#0B1E3D]"> 24–48 hours</strong>.
           </p>
           <button
-            onClick={() => router.replace('/driver/my-requests')}
+            onClick={() => router.replace('/driver/my-cycles')}
             className="w-full h-[52px] rounded-lg text-sm font-bold transition-opacity hover:opacity-90"
             style={{ background: '#00C2A8', color: '#fff' }}
           >

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
 export default function DriverPage() {
-  redirect('/driver/my-requests');
+  redirect('/driver/my-cycles');
 }

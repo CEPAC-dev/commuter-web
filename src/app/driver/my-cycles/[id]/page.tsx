@@ -49,6 +49,8 @@ export default function DriverTripDetailPage() {
   const [trip, setTrip] = useState<CourseInstance | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [startingTrip, setStartingTrip] = useState(false);
+  const [startMessage, setStartMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     (driverApi.getCycles() as Promise<{ data: CourseInstance[] } | CourseInstance[]>)
@@ -61,6 +63,65 @@ export default function DriverTripDetailPage() {
       .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Failed to load'))
       .finally(() => setLoading(false));
   }, [id]);
+
+  async function handleStartTrip() {
+    if (!trip || !id) return;
+
+    setStartingTrip(true);
+    setStartMessage(null);
+
+    try {
+      // Get current location
+      const position = await new Promise<GeolocationCoordinates>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve(pos.coords),
+          (err) => reject(err),
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      });
+
+      // Call the API to start the trip
+      const response = await fetch(`/api/driver/trips/${id}/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          latitude: position.latitude,
+          longitude: position.longitude,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || 'Failed to start trip');
+      }
+
+      await response.json();
+      
+      setStartMessage({
+        type: 'success',
+        text: 'Trip started successfully! Redirecting...',
+      });
+
+      // Update trip status
+      setTrip((prev) => prev ? { ...prev, status: 'in_progress' } : null);
+      
+      // Redirect after a short delay
+      setTimeout(() => router.push('/driver/my-cycles'), 1500);
+    } catch (err) {
+      const message = err instanceof GeolocationPositionError
+        ? 'Unable to get your location. Please enable location services.'
+        : err instanceof Error
+        ? err.message
+        : 'Failed to start trip';
+      
+      setStartMessage({
+        type: 'error',
+        text: message,
+      });
+      
+      setStartingTrip(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -171,6 +232,54 @@ export default function DriverTripDetailPage() {
         <TripChatButton tripInstanceId={trip.id} role="driver" courseId={Number(id)} />
       </div>
 
+      {/* Start Trip Button */}
+      {(trip.status === 'assigned' || trip.status === 'pending') && (
+        <>
+          {startMessage && (
+            <div
+              className="mb-4 p-4 rounded-lg text-sm font-medium"
+              style={{
+                background: startMessage.type === 'success' ? '#E8F5E9' : '#FFEBEE',
+                color: startMessage.type === 'success' ? '#2E7D32' : '#C62828',
+                border: `1px solid ${startMessage.type === 'success' ? '#C8E6C9' : '#FFCDD2'}`,
+              }}
+            >
+              {startMessage.text}
+            </div>
+          )}
+          <button
+            onClick={handleStartTrip}
+            disabled={startingTrip}
+            className="w-full py-3 px-4 rounded-xl font-semibold text-white mb-4"
+            style={{
+              background: startingTrip ? '#D0D5DD' : 'linear-gradient(135deg, #00C2A8 0%, #00A896 100%)',
+              cursor: startingTrip ? 'not-allowed' : 'pointer',
+              opacity: startingTrip ? 0.7 : 1,
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {startingTrip ? (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <span
+                  style={{
+                    width: 16,
+                    height: 16,
+                    border: '2px solid rgba(255,255,255,0.4)',
+                    borderTopColor: '#fff',
+                    borderRadius: '50%',
+                    display: 'inline-block',
+                    animation: 'spin 0.6s linear infinite',
+                  }}
+                />
+                Starting trip…
+              </span>
+            ) : (
+              '▶ Start Trip'
+            )}
+          </button>
+        </>
+      )}
+
       {/* Execution Timeline */}
       {trip.execution_timeline && trip.execution_timeline.length > 0 && (
         <Section title={t('execution_timeline')}>
@@ -184,7 +293,11 @@ export default function DriverTripDetailPage() {
         </Section>
       )}
 
-
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

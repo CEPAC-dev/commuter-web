@@ -398,6 +398,26 @@ html[dir="rtl"] .section-title-container {
   flex-direction: row-reverse;
 }
 
+/* Section title inner (bar + text) RTL - bar on right */
+html[dir="rtl"] .section-title-text {
+  flex-direction: row-reverse;
+}
+
+/* Pickup time 2-col grid RTL - swap From/To column order */
+html[dir="rtl"] .pickup-time-grid {
+  direction: rtl;
+}
+
+/* Passenger / related-person card row RTL */
+html[dir="rtl"] .passenger-card-row {
+  flex-direction: row-reverse;
+}
+
+/* OutboundRouteCard numbered row RTL */
+html[dir="rtl"] .outbound-row-item {
+  flex-direction: row-reverse;
+}
+
 /* Right label text alignment in RTL */
 html[dir="rtl"] .section-title-label {
   text-align: left;

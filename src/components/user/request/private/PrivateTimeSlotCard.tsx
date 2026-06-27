@@ -155,7 +155,7 @@ export default function PrivateTimeSlotCard({
             {tsl('pickup_max_note', { max: formatTime12h(pickupToMax), buffer: PICKUP_BUFFER_MIN, route: routeDuration })}
           </p>
         )}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 pickup-time-grid">
           <SelectBox
             label={tsl('pickup_from_label')}
             value={slot.pickup_from}

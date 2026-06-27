@@ -24,7 +24,7 @@ function Row({
   index, title, hint, value, action, notSetLabel,
 }: { index: number; title: string; hint: string; value: string | null; action: React.ReactNode; notSetLabel: string }) {
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-[#E2E8F0] bg-white p-3">
+    <div className="flex items-start gap-3 rounded-xl border border-[#E2E8F0] bg-white p-3 outbound-row-item">
       <span className="w-7 h-7 rounded-full bg-[#F1F3F4] text-[#0B1E3D] flex items-center justify-center text-xs font-bold flex-shrink-0">
         {index}
       </span>
